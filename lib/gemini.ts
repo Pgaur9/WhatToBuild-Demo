@@ -56,39 +56,11 @@ export class GeminiService {
   }
 
   private cleanMermaidDiagram(diagram: string): string {
-    console.log('Backend cleaning diagram:', diagram);
-    
-    // Remove HTML tags
-    let cleaned = diagram.replace(/<[^>]*>/g, '');
-    
-    // Fix nested parentheses in node labels - this is the critical fix
-    // Replace "Mobile Application(Android/iOS Demos)" with "Mobile Application"
-    cleaned = cleaned.replace(/\[([^\]]*?)\([^)]*\)([^\]]*)\]/g, (match, before, inner, after) => {
-      console.log('Backend fixing nested parentheses:', match);
-      return `[${before}${after}]`;
-    });
-    
-    // Also handle cases where we have multiple nested parentheses
-    cleaned = cleaned.replace(/\[([^\]]*?)\([^)]*\)\]/g, '[$1]');
-    
-    // Remove ALL parentheses from labels to be safe
-    cleaned = cleaned.replace(/\([^)]*\)/g, '');
-    
-    // Remove invalid characters that cause parsing errors
-    cleaned = cleaned.replace(/[\u2013\u2014\u2015]/g, '-'); // Replace em/en dashes with hyphens
-    cleaned = cleaned.replace(/[\u201C\u201D]/g, '"'); // Replace smart quotes
-    cleaned = cleaned.replace(/[\u2018\u2019]/g, "'"); // Replace smart apostrophes
-    
-    // Remove lines that contain only dashes (decorative separators)
-    cleaned = cleaned.replace(/^\s*-{3,}\s*$/gm, '');
-    
-    // Ensure proper line breaks
-    cleaned = cleaned.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    
-    // Remove empty lines
-    cleaned = cleaned.split('\n').filter(line => line.trim().length > 0).join('\n');
-    
-    console.log('Backend cleaned diagram:', cleaned);
+    // Just basic cleaning - React Flow will handle the rest
+    let cleaned = diagram.replace(/<[^>]*>/g, ''); // Remove HTML
+    cleaned = cleaned.replace(/[\u2013\u2014\u2015]/g, '-'); // Fix dashes
+    cleaned = cleaned.replace(/[\u201C\u201D]/g, '"'); // Fix quotes
+    cleaned = cleaned.replace(/\([^)]*\)/g, ''); // Remove parentheses
     return cleaned.trim();
   }
 

@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import axios from 'axios';
 import dynamic from 'next/dynamic';
 
-const MermaidDiagram = dynamic(() => import('@/components/MermaidDiagram'), {
+const FlowDiagram = dynamic(() => import('@/components/FlowDiagram'), {
   ssr: false,
   loading: () => (
     <div className="border-2 border-dashed border-gray-700 bg-gray-900/20 rounded-lg min-h-[500px] flex items-center justify-center p-8">
@@ -71,7 +71,7 @@ function VisualizePageContent() {
         )}
         {error && <p className="text-red-500 text-center p-8 bg-red-900/20 rounded-lg">{error}</p>}
         {diagram && !isLoading && (
-          <MermaidDiagram 
+                    <FlowDiagram 
             chart={diagram} 
             title="Repository Architecture" 
             prompt={prompt} 

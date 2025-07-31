@@ -32,19 +32,12 @@ export default function MermaidDiagram({
   const cleanMermaidSyntax = (diagram: string): string => {
     console.log('Original diagram:', diagram);
     
+    if (!diagram || typeof diagram !== 'string') {
+      return '';
+    }
+    
     // Remove HTML tags like <br/>, <div>, etc.
     let cleaned = diagram.replace(/<[^>]*>/g, '');
-    
-    // Fix nested parentheses in node labels - this is the critical fix
-    // Replace "Mobile Application(Android/iOS Demos)" with "Mobile Application"
-    cleaned = cleaned.replace(/\[([^\]]*?)\([^)]*\)([^\]]*)\]/g, (match, before, inner, after) => {
-      console.log('Fixing nested parentheses:', match);
-      // Remove the inner parentheses completely
-      return `[${before}${after}]`;
-    });
-    
-    // Also handle cases where we have multiple nested parentheses
-    cleaned = cleaned.replace(/\[([^\]]*?)\([^)]*\)\]/g, '[$1]');
     
     // Replace smart quotes and dashes with standard ones
     cleaned = cleaned.replace(/[\u2013\u2014\u2015]/g, '-');
@@ -54,14 +47,87 @@ export default function MermaidDiagram({
     // Remove decorative separators
     cleaned = cleaned.replace(/^\s*-{3,}\s*$/gm, '');
     
-    // Fix common syntax issues
-    cleaned = cleaned.replace(/\([^)]*\)/g, ''); // Remove all parentheses from labels
-    
-    // Ensure proper line breaks
+    // Ensure proper line breaks first
     cleaned = cleaned.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
     
-    // Remove empty lines
-    cleaned = cleaned.split('\n').filter(line => line.trim().length > 0).join('\n');
+    // Split into lines for processing
+    let lines = cleaned.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    
+    // Process each line
+    lines = lines.map((line, index) => {
+      // Handle diagram type declarations - ensure they're on their own line
+      if (line.match(/^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|journey|gantt|pie|gitgraph)/i)) {
+        // Check if there's content after the graph declaration on the same line
+        const match = line.match(/^(graph\s+\w+|flowchart\s+\w+)\s+(.+)$/i);
+        if (match) {
+          // Split graph declaration from the rest
+          const [, graphDecl, rest] = match;
+          console.log('Splitting graph declaration:', line);
+          // We'll handle this by returning the declaration and processing the rest separately
+          lines.splice(index + 1, 0, rest); // Insert the rest as next line
+          return graphDecl;
+        }
+        return line;
+      }
+      
+      // Skip subgraph declarations
+      if (line.match(/^\s*(subgraph|end)\s/i) || line.trim() === 'end') {
+        return line;
+      }
+      
+      // Skip style declarations
+      if (line.match(/^\s*style\s+/i)) {
+        return line;
+      }
+      
+      // Fix nodes that don't have brackets
+      // Handle patterns like: "User --> UserInterface" where both should have brackets
+      line = line.replace(/^(\w+(?:\s+\w+)*)(?!\[)\s*(-->|---|--|==)\s*(\w+(?:\s+\w+)*)(?!\[)/g, (match, source, arrow, target) => {
+        console.log('Adding missing brackets to both nodes:', match);
+        return `${source}[${source}] ${arrow} ${target}[${target}]`;
+      });
+      
+      // Fix incomplete target nodes: "Source[Source] --> Target" where "Target" should be "Target[Target]"
+      line = line.replace(/(\w+(?:\s+\w+)*\[[^\]]+\])\s*(-->|---|--|==)\s*(\w+(?:\s+\w+)*)(?!\[)/g, (match, source, arrow, target) => {
+        console.log('Adding missing brackets to target:', match);
+        return `${source} ${arrow} ${target}[${target}]`;
+      });
+      
+      // Fix incomplete source nodes: "Source --> Target[Target]" where "Source" should be "Source[Source]"
+      line = line.replace(/^(\w+(?:\s+\w+)*)(?!\[)\s*(-->|---|--|==)\s*(\w+(?:\s+\w+)*\[[^\]]+\])/g, (match, source, arrow, target) => {
+        console.log('Adding missing brackets to source:', match);
+        return `${source}[${source}] ${arrow} ${target}`;
+      });
+      
+      // Fix unclosed square brackets in existing labels
+      line = line.replace(/(\w+(?:\s+\w+)*)\[([^\]]*?)(?=\s*(?:-->|---|--|==|;|$))/g, (match, nodeName, content) => {
+        console.log('Fixing unclosed bracket:', match);
+        return `${nodeName}[${content}]`;
+      });
+      
+      // Fix nested parentheses in node labels
+      line = line.replace(/\[([^\]]*?)\([^)]*\)([^\]]*)\]/g, (match, before, inner, after) => {
+        console.log('Fixing nested parentheses:', match);
+        return `[${before.trim()}${after.trim() ? ' ' + after.trim() : ''}]`;
+      });
+      
+      // Remove any remaining parentheses from labels
+      line = line.replace(/\[([^\]]*)\([^)]*\)([^\]]*)\]/g, '[$1$2]');
+      
+      return line;
+    });
+    
+    // Join lines back together with proper newlines
+    cleaned = lines.join('\n');
+    
+    // Clean up any multiple spaces within lines but preserve line structure
+    cleaned = cleaned.replace(/[ \t]+/g, ' ');
+    
+    // Fix any remaining formatting issues
+    cleaned = cleaned.replace(/\]\s*\[/g, '] ['); // Ensure space between node definitions
+    
+    // Ensure proper spacing around arrows
+    cleaned = cleaned.replace(/\s*(-->|---|--|==)\s*/g, ' $1 ');
     
     console.log('Cleaned diagram:', cleaned);
     return cleaned.trim();
@@ -72,57 +138,91 @@ export default function MermaidDiagram({
       startOnLoad: true,
       theme: 'dark',
       securityLevel: 'loose',
-      fontFamily: 'monospace'
+      fontFamily: 'monospace',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: false
+      }
     });
   }, []);
 
   useEffect(() => {
+    setEditableChart(chart);
+  }, [chart]);
+
+  useEffect(() => {
     let isMounted = true;
+    let abortController = new AbortController();
     
     const renderDiagram = async () => {
-      if (mermaidRef.current && !isEditing && editableChart.trim() && isMounted) {
-        setIsRendering(true);
+      if (!mermaidRef.current || isEditing || !editableChart.trim() || !isMounted) {
+        return;
+      }
+      
+      setIsRendering(true);
+      
+      try {
+        // Clear previous content safely - avoid removeChild errors
+        const container = mermaidRef.current;
+        if (container) {
+          // Use innerHTML instead of removeChild to avoid React conflicts
+          container.innerHTML = '';
+        }
         
-        try {
-          // Clean previous content safely
-          if (mermaidRef.current) {
-            mermaidRef.current.innerHTML = '';
-          }
-          
-          const cleanedChart = cleanMermaidSyntax(editableChart);
-          console.log('Rendering cleaned chart:', cleanedChart);
-          
-          // Use try-catch for individual render
-          const { svg } = await mermaid.render(`mermaid-${Date.now()}`, cleanedChart);
-          
-          if (isMounted && mermaidRef.current) {
-            mermaidRef.current.innerHTML = svg;
-          }
-        } catch (error) {
-          console.error('Mermaid rendering error:', error);
-          if (isMounted && mermaidRef.current) {
-            mermaidRef.current.innerHTML = `
-              <div class="text-red-400 p-4 bg-red-900/20 rounded-lg border border-red-800">
-                <p class="font-semibold mb-2">⚠️ Diagram Rendering Error</p>
-                <p class="text-sm text-red-300">${error instanceof Error ? error.message : 'Invalid Mermaid syntax'}</p>
-                <p class="text-xs text-red-400 mt-2">Please check the diagram syntax or try refreshing.</p>
-              </div>
-            `;
-          }
-        } finally {
-          if (isMounted) {
-            setIsRendering(false);
-          }
+        const cleanedChart = cleanMermaidSyntax(editableChart);
+        console.log('Rendering cleaned chart:', cleanedChart);
+        
+        // Validate that we have actual content to render
+        if (!cleanedChart.trim()) {
+          throw new Error('No valid diagram content after cleaning');
+        }
+        
+        // Generate a completely unique ID for this render
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substr(2, 9);
+        const uniqueId = `mermaid-${timestamp}-${random}`;
+        
+        // Render the diagram
+        const renderResult = await mermaid.render(uniqueId, cleanedChart);
+        
+        // Check if component is still mounted and not aborted
+        if (isMounted && container && !abortController.signal.aborted) {
+          container.innerHTML = renderResult.svg;
+        }
+        
+      } catch (error) {
+        console.error('Mermaid rendering error:', error);
+        if (isMounted && mermaidRef.current && !abortController.signal.aborted) {
+          mermaidRef.current.innerHTML = `
+            <div class="text-red-400 p-4 bg-red-900/20 rounded-lg border border-red-800">
+              <p class="font-semibold mb-2">⚠️ Diagram Rendering Error</p>
+              <p class="text-sm text-red-300 mb-2">${error instanceof Error ? error.message : 'Invalid Mermaid syntax'}</p>
+              <details class="text-xs text-red-400">
+                <summary class="cursor-pointer mb-2">Show original diagram content</summary>
+                <pre class="bg-red-950/50 p-2 rounded overflow-auto max-h-32">${editableChart}</pre>
+              </details>
+              <details class="text-xs text-red-400 mt-2">
+                <summary class="cursor-pointer mb-2">Show cleaned diagram content</summary>
+                <pre class="bg-red-950/50 p-2 rounded overflow-auto max-h-32">${cleanMermaidSyntax(editableChart)}</pre>
+              </details>
+              <p class="text-xs text-red-400 mt-2">Please check the diagram syntax or try editing it manually.</p>
+            </div>
+          `;
+        }
+      } finally {
+        if (isMounted) {
+          setIsRendering(false);
         }
       }
     };
 
-    renderDiagram();
+    // Use longer delay to prevent rapid re-renders
+    const timeoutId = setTimeout(renderDiagram, 200);
     
     return () => {
       isMounted = false;
-      // Cleanup handled by React; avoid manual DOM removal to prevent removeChild errors
-      // (Manual innerHTML clearing caused React to attempt to remove an already-detached node)
+      abortController.abort();
+      clearTimeout(timeoutId);
     };
   }, [editableChart, isEditing]);
 
@@ -171,7 +271,8 @@ export default function MermaidDiagram({
               onClick={copyPromptToClipboard}
               className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
             >
-              {promptCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />} <span className="ml-2">Copy Prompt</span>
+              {promptCopied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />} 
+              <span className="ml-2">Copy Prompt</span>
             </Button>
           )}
           <Button
@@ -180,7 +281,8 @@ export default function MermaidDiagram({
             onClick={copyToClipboard}
             className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
           >
-            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />} <span className="ml-2">Copy Diagram</span>
+            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />} 
+            <span className="ml-2">Copy Diagram</span>
           </Button>
           {editable && (
             <Button
@@ -190,6 +292,7 @@ export default function MermaidDiagram({
               className="bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700"
             >
               {isEditing ? <Eye className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
+              <span className="ml-2">{isEditing ? 'Preview' : 'Edit'}</span>
             </Button>
           )}
         </div>
@@ -228,7 +331,10 @@ export default function MermaidDiagram({
             className="w-full overflow-auto bg-white rounded-lg p-4 min-h-[200px] flex items-center justify-center"
           >
             {isRendering && (
-              <div className="text-gray-500">Rendering diagram...</div>
+              <div className="text-gray-500 animate-pulse">Rendering diagram...</div>
+            )}
+            {!isRendering && !editableChart.trim() && (
+              <div className="text-gray-500">No diagram content available</div>
             )}
           </div>
         )}
