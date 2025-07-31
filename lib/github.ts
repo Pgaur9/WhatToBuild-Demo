@@ -8,6 +8,7 @@ export interface GitHubRepo {
   html_url: string;
   stargazers_count: number;
   forks_count: number;
+  watchers_count: number;
   language: string;
   topics: string[];
   updated_at: string;
@@ -23,6 +24,7 @@ export interface GitHubRepo {
     avatar_url: string;
     html_url: string;
   };
+  homepage?: string;
   relevance_score?: number;
 }
 
@@ -38,7 +40,7 @@ export interface RepoContent {
 export interface RepoAnalysis {
   repo: GitHubRepo;
   fileStructure: RepoContent[];
-  packageJson?: any;
+  packageJson?: Record<string, unknown>;
   readme?: string;
   mainFiles: RepoContent[];
 }
@@ -217,6 +219,7 @@ export class GitHubService {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getFullFileTree(repoFullName: string): Promise<any[]> {
     const [owner, repo] = repoFullName.split('/');
     try {
@@ -228,7 +231,15 @@ export class GitHubService {
 
       const treeResponse = await axios.get(`${this.baseURL}/repos/${owner}/${repo}/git/trees/${treeSha}?recursive=1`, { headers: this.getHeaders() });
       
-      return treeResponse.data.tree.filter((node: any) => node.type === 'blob');
+      interface TreeNode {
+        path: string;
+        mode: string;
+        type: string;
+        sha: string;
+        size?: number;
+        url: string;
+      }
+      return treeResponse.data.tree.filter((node: TreeNode) => node.type === 'blob');
     } catch (error) {
       console.error(`Failed to fetch file tree for ${repoFullName}:`, error);
       throw new Error('Could not fetch the repository file tree.');

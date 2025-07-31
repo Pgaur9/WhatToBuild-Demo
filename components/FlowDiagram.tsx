@@ -118,9 +118,9 @@ const FlowDiagramInner = ({
 
   const createFlowElements = (parsedNodes: ParsedNode[], parsedEdges: ParsedEdge[]) => {
     const flowNodes: Node[] = parsedNodes.map((node, index) => {
-      const cols = Math.ceil(Math.sqrt(parsedNodes.length));
-      const x = (index % cols) * 240 + 140;
-      const y = Math.floor(index / cols) * 140 + 100;
+      const cols = Math.min(Math.ceil(Math.sqrt(parsedNodes.length)), 5);
+      const x = (index % cols) * 220 + 50;
+      const y = Math.floor(index / cols) * 120 + 50;
 
       return {
         id: node.id,
@@ -130,19 +130,22 @@ const FlowDiagramInner = ({
           label: node.label,
         },
         style: {
-          background: 'rgba(15, 23, 42, 0.4)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          color: '#e2e8f0',
-          border: '1px solid rgba(71, 85, 105, 0.3)',
-          borderRadius: '16px',
-          fontSize: '13px',
-          fontWeight: '500',
-          padding: '14px 20px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.37), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
-          minWidth: '140px',
-          minHeight: '50px',
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(20px) saturate(200%)',
+          color: '#ffffff',
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          borderRadius: '12px',
+          fontSize: '12px',
+          fontWeight: '600',
+          padding: '12px 16px',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+          minWidth: '120px',
+          minHeight: '40px',
           textAlign: 'center',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
         },
       };
     });
@@ -154,26 +157,28 @@ const FlowDiagramInner = ({
       label: edge.label,
       type: 'smoothstep',
       style: { 
-        stroke: 'rgba(59, 130, 246, 0.6)',
+        stroke: 'rgba(255, 255, 255, 0.4)',
         strokeWidth: 2,
-        strokeDasharray: edge.label ? undefined : '5,3',
+        strokeDasharray: edge.label ? undefined : '6,4',
+        filter: 'drop-shadow(0 0 4px rgba(255, 255, 255, 0.2))',
       },
       labelStyle: { 
-        fill: '#cbd5e1', 
+        fill: '#e8eaed', 
         fontSize: '11px',
         fontWeight: '500',
       },
       labelBgStyle: {
-        fill: 'rgba(15, 23, 42, 0.8)',
+        fill: 'rgba(0, 0, 0, 0.7)',
         fillOpacity: 1,
         rx: 8,
         ry: 8,
-        stroke: 'rgba(71, 85, 105, 0.4)',
-        strokeWidth: 1
+        stroke: 'rgba(255, 255, 255, 0.1)',
+        strokeWidth: 1,
+        backdropFilter: 'blur(20px)'
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: 'rgba(59, 130, 246, 0.6)',
+        color: 'rgba(255, 255, 255, 0.5)',
         width: 18,
         height: 18
       },
@@ -231,7 +236,7 @@ const FlowDiagramInner = ({
     
     try {
       const canvas = await html2canvas(downloadRef.current, {
-        backgroundColor: 'rgba(3, 7, 18, 0.95)',
+        backgroundColor: 'rgba(10, 10, 12, 0.98)',
         scale: 2,
         useCORS: true,
         allowTaint: true,
@@ -269,41 +274,41 @@ const FlowDiagramInner = ({
   // Fullscreen overlay
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-sm">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/20 via-slate-800/10 to-slate-900/20" />
+      <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-black/20 via-gray-900/10 to-black/20" />
         
         {/* Fullscreen Header */}
-        <div className="relative z-10 flex items-center justify-between p-4 border-b border-slate-700/20 backdrop-blur-xl bg-slate-900/20">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 bg-blue-500/80 rounded-full animate-pulse"></div>
-              <div className="w-1.5 h-1.5 bg-cyan-500/80 rounded-full animate-pulse delay-75"></div>
-              <div className="w-1 h-1 bg-slate-400/80 rounded-full animate-pulse delay-150"></div>
+        <div className="relative z-10 flex items-center justify-between p-6 border-b border-white/10 backdrop-blur-2xl bg-black/20">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></div>
+              <div className="w-1.5 h-1.5 bg-white/50 rounded-full animate-pulse delay-75"></div>
+              <div className="w-1 h-1 bg-white/40 rounded-full animate-pulse delay-150"></div>
             </div>
-            <h2 className="text-lg font-semibold text-slate-200">
+            <h2 className="text-xl font-medium text-white/90 tracking-wide">
               {title || 'Architecture Diagram'}
             </h2>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="sm"
               onClick={downloadImage}
               disabled={downloading}
-              className="h-8 px-3 bg-slate-800/40 border border-slate-700/30 text-slate-300 hover:bg-slate-700/50 transition-all duration-200 backdrop-blur-xl rounded-lg"
+              className="h-10 px-4 bg-black/30 border border-white/20 text-white/80 hover:bg-black/40 hover:border-white/30 transition-all duration-300 backdrop-blur-xl rounded-xl shadow-lg hover:text-white"
             >
               {downloading ? (
-                <div className="w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
               ) : (
-                <Download className="w-3.5 h-3.5" />
+                <Download className="w-4 h-4" />
               )}
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleFullscreen}
-              className="h-8 px-3 bg-slate-800/40 border border-slate-700/30 text-slate-300 hover:bg-slate-700/50 transition-all duration-200 backdrop-blur-xl rounded-lg"
+              className="h-10 px-4 bg-black/30 border border-white/20 text-white/80 hover:bg-black/40 hover:border-white/30 transition-all duration-300 backdrop-blur-xl rounded-xl shadow-lg hover:text-white"
             >
               <X className="w-4 h-4" />
             </Button>
@@ -313,7 +318,7 @@ const FlowDiagramInner = ({
         {/* Fullscreen Content */}
         <div 
           ref={downloadRef}
-          className="relative flex-1 h-[calc(100vh-80px)] bg-gradient-to-br from-slate-950/60 via-slate-900/40 to-slate-950/60 backdrop-blur-xl"
+          className="relative flex-1 h-[calc(100vh-88px)] bg-gradient-to-br from-black/50 via-gray-900/30 to-black/50 backdrop-blur-2xl"
         >
           <ReactFlow
             nodes={nodes}
@@ -323,8 +328,9 @@ const FlowDiagramInner = ({
             onConnect={onConnect}
             fitView
             className="bg-transparent"
+            proOptions={{ hideAttribution: true }}
             fitViewOptions={{
-              padding: 0.1,
+              padding: 0.2,
               includeHiddenNodes: false,
               maxZoom: 2,
               minZoom: 0.1,
@@ -338,16 +344,16 @@ const FlowDiagramInner = ({
             zoomOnDoubleClick={false}
           >
             <Controls 
-              className="!bg-slate-900/40 !border-slate-700/30 backdrop-blur-xl !shadow-2xl [&>button]:!bg-slate-800/40 [&>button]:!border-slate-700/30 [&>button]:!text-slate-300 [&>button:hover]:!bg-slate-700/50 [&>button]:!transition-all [&>button]:!duration-200 !rounded-xl !m-6"
+              className="!bg-white/[0.03] !border-white/10 backdrop-blur-2xl !shadow-2xl [&>button]:!bg-white/[0.05] [&>button]:!border-white/10 [&>button]:!text-white/80 [&>button:hover]:!bg-white/[0.08] [&>button:hover]:!border-white/20 [&>button]:!transition-all [&>button]:!duration-300 !rounded-2xl !m-6 hover:!shadow-indigo-500/10"
               showZoom={true}
               showFitView={true}
               showInteractive={false}
             />
             <MiniMap 
-              className="!bg-slate-900/40 !border-slate-700/30 backdrop-blur-xl !rounded-xl !shadow-2xl !m-6"
-              maskColor="rgba(15, 23, 42, 0.6)"
-              nodeColor="rgba(51, 65, 85, 0.8)"
-              nodeStrokeColor="rgba(100, 116, 139, 0.6)"
+              className="!bg-black/60 !border-white/30 backdrop-blur-2xl !rounded-xl !shadow-2xl !m-6"
+              maskColor="rgba(0, 0, 0, 0.8)"
+              nodeColor="rgba(255, 255, 255, 0.2)"
+              nodeStrokeColor="rgba(255, 255, 255, 0.4)"
               nodeBorderRadius={12}
               nodeStrokeWidth={1}
               pannable={true}
@@ -355,10 +361,10 @@ const FlowDiagramInner = ({
             />
             <Background 
               variant={BackgroundVariant.Dots} 
-              gap={20} 
-              size={1} 
-              color="rgba(51, 65, 85, 0.3)" 
-              className="opacity-50"
+              gap={30} 
+              size={1.5} 
+              color="rgba(255, 255, 255, 0.1)" 
+              className="opacity-30"
             />
           </ReactFlow>
         </div>
@@ -369,82 +375,82 @@ const FlowDiagramInner = ({
   return (
     <div className="w-full">
       {/* Main Container */}
-      <div className="relative overflow-hidden rounded-2xl bg-slate-900/30 backdrop-blur-xl border border-slate-700/20 shadow-2xl">
-        {/* Subtle background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-800/10 via-transparent to-slate-900/10 pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl bg-black/20 backdrop-blur-2xl border border-white/20 shadow-2xl shadow-black/20">
+        {/* Ambient background effects */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/10 via-gray-800/5 to-black/10 pointer-events-none" />
         
         {/* Header */}
-        <div className="relative p-4 sm:p-5 border-b border-slate-700/20 backdrop-blur-xl bg-slate-900/20">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="relative p-6 border-b border-white/10 backdrop-blur-2xl bg-black/20">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             {/* Title Section */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 bg-blue-500/80 rounded-full animate-pulse"></div>
-                <div className="w-1.5 h-1.5 bg-cyan-500/80 rounded-full animate-pulse delay-75"></div>
-                <div className="w-1 h-1 bg-slate-400/80 rounded-full animate-pulse delay-150"></div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 bg-white/60 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-white/50 rounded-full animate-pulse delay-75"></div>
+                <div className="w-1.5 h-1.5 bg-white/40 rounded-full animate-pulse delay-150"></div>
               </div>
-              <h2 className="text-base sm:text-lg font-semibold text-slate-200">
+              <h2 className="text-lg sm:text-xl font-medium text-white/90 tracking-wide">
                 {title || 'Repository Architecture'}
               </h2>
             </div>
             
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-3">
               {prompt && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={copyPromptToClipboard}
-                  className="h-8 px-3 bg-slate-800/40 border border-slate-700/30 text-slate-300 hover:bg-slate-700/50 transition-all duration-200 backdrop-blur-xl rounded-lg text-xs"
+                  className="h-10 px-4 bg-black/30 border border-white/20 text-white/70 hover:bg-black/40 hover:border-white/30 transition-all duration-300 backdrop-blur-xl rounded-xl text-sm font-medium shadow-lg hover:text-white/90"
                 >
                   {promptCopied ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <Check className="w-4 h-4 text-emerald-400" />
                   ) : (
-                    <FileText className="w-3.5 h-3.5" />
+                    <FileText className="w-4 h-4" />
                   )}
-                  <span className="ml-1.5 hidden sm:inline">Prompt</span>
+                  <span className="ml-2 hidden sm:inline">Prompt</span>
                 </Button>
               )}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={copyToClipboard}
-                className="h-8 px-3 bg-slate-800/40 border border-slate-700/30 text-slate-300 hover:bg-slate-700/50 transition-all duration-200 backdrop-blur-xl rounded-lg text-xs"
+                className="h-10 px-4 bg-black/30 border border-white/20 text-white/70 hover:bg-black/40 hover:border-white/30 transition-all duration-300 backdrop-blur-xl rounded-xl text-sm font-medium shadow-lg hover:text-white/90"
               >
                 {copied ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <Check className="w-4 h-4 text-emerald-400" />
                 ) : (
-                  <Code className="w-3.5 h-3.5" />
+                  <Code className="w-4 h-4" />
                 )}
-                <span className="ml-1.5 hidden sm:inline">Code</span>
+                <span className="ml-2 hidden sm:inline">Code</span>
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={downloadImage}
                 disabled={downloading}
-                className="h-8 px-3 bg-slate-800/40 border border-slate-700/30 text-slate-300 hover:bg-slate-700/50 transition-all duration-200 backdrop-blur-xl rounded-lg text-xs"
+                className="h-10 px-4 bg-black/30 border border-white/20 text-white/70 hover:bg-black/40 hover:border-white/30 transition-all duration-300 backdrop-blur-xl rounded-xl text-sm font-medium shadow-lg hover:text-white/90 disabled:opacity-50"
               >
                 {downloading ? (
-                  <div className="w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white/50 border-t-indigo-400 rounded-full animate-spin" />
                 ) : (
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-4 h-4" />
                 )}
-                <span className="ml-1.5 hidden sm:inline">Save</span>
+                <span className="ml-2 hidden sm:inline">Save</span>
               </Button>
               {editable && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsEditing(!isEditing)}
-                  className="h-8 px-3 bg-slate-800/40 border border-slate-700/30 text-slate-300 hover:bg-slate-700/50 transition-all duration-200 backdrop-blur-xl rounded-lg text-xs"
+                  className="h-10 px-4 bg-black/30 border border-white/20 text-white/70 hover:bg-black/40 hover:border-white/30 transition-all duration-300 backdrop-blur-xl rounded-xl text-sm font-medium shadow-lg hover:text-white/90"
                 >
                   {isEditing ? (
-                    <Eye className="w-3.5 h-3.5" />
+                    <Eye className="w-4 h-4" />
                   ) : (
-                    <Edit className="w-3.5 h-3.5" />
+                    <Edit className="w-4 h-4" />
                   )}
-                  <span className="ml-1.5 hidden sm:inline">{isEditing ? 'Preview' : 'Edit'}</span>
+                  <span className="ml-2 hidden sm:inline">{isEditing ? 'Preview' : 'Edit'}</span>
                 </Button>
               )}
             </div>
@@ -452,14 +458,14 @@ const FlowDiagramInner = ({
         </div>
 
         {/* Content */}
-        <div className="relative p-4 sm:p-5">
+        <div className="relative p-6">
           {isEditing ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="relative">
                 <textarea
                   value={editableChart}
                   onChange={(e) => setEditableChart(e.target.value)}
-                  className="w-full h-64 sm:h-80 p-4 bg-slate-900/40 border border-slate-700/30 rounded-xl text-slate-200 font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 backdrop-blur-xl placeholder:text-slate-500"
+                  className="w-full h-64 sm:h-80 p-6 bg-black/20 border border-white/20 rounded-2xl text-white/90 font-mono text-sm resize-none focus:outline-none focus:ring-1 focus:ring-white/30 focus:border-white/40 transition-all duration-300 backdrop-blur-2xl placeholder:text-white/40 shadow-inner"
                   placeholder={`Enter Mermaid diagram syntax...
 
 Example:
@@ -470,15 +476,15 @@ graph TD
     C --> E[Database]
     D --> E`}
                 />
-                <div className="absolute top-3 right-3 text-xs text-slate-400 bg-slate-800/60 px-2 py-1 rounded-md backdrop-blur-sm border border-slate-700/30">
-                  Mermaid
+                <div className="absolute top-4 right-4 text-xs text-white/50 bg-black/30 px-3 py-1.5 rounded-xl backdrop-blur-xl border border-white/20 font-medium">
+                 
                 </div>
               </div>
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   onClick={handleSave}
                   size="sm"
-                  className="bg-blue-600/80 hover:bg-blue-600/90 text-white font-medium px-6 py-2 transition-all duration-200 rounded-lg border-0"
+                  className="bg-gradient-to-r from-gray-600/80 to-gray-700/80 hover:from-gray-600/90 hover:to-gray-700/90 text-white font-medium px-8 py-3 transition-all duration-300 rounded-xl border-0 shadow-lg"
                 >
                   Save Changes
                 </Button>
@@ -486,7 +492,7 @@ graph TD
                   onClick={handleCancel}
                   variant="ghost"
                   size="sm"
-                  className="bg-slate-800/40 border border-slate-700/30 text-slate-300 hover:bg-slate-700/50 transition-all duration-200 backdrop-blur-xl font-medium px-6 py-2 rounded-lg"
+                  className="bg-black/30 border border-white/20 text-white/70 hover:bg-black/40 hover:border-white/30 transition-all duration-300 backdrop-blur-xl font-medium px-8 py-3 rounded-xl hover:text-white/90 shadow-lg"
                 >
                   Cancel
                 </Button>
@@ -495,7 +501,7 @@ graph TD
           ) : (
             <div 
               ref={downloadRef}
-              className="w-full h-[400px] sm:h-[500px] lg:h-[600px] bg-slate-950/40 rounded-xl border border-slate-700/20 overflow-hidden shadow-2xl relative backdrop-blur-xl"
+              className="w-full h-[400px] sm:h-[500px] lg:h-[600px] bg-black/10 rounded-2xl border border-white/20 overflow-hidden shadow-2xl relative backdrop-blur-2xl"
             >
               <ReactFlow
                 nodes={nodes}
@@ -505,11 +511,12 @@ graph TD
                 onConnect={onConnect}
                 fitView
                 className="bg-transparent"
+                proOptions={{ hideAttribution: true }}
                 fitViewOptions={{
-                  padding: 0.1,
+                  padding: 0.2,
                   includeHiddenNodes: false,
-                  maxZoom: 1.5,
-                  minZoom: 0.3,
+                  maxZoom: 1.2,
+                  minZoom: 0.4,
                 }}
                 nodesDraggable={true}
                 nodesConnectable={true}
@@ -520,34 +527,34 @@ graph TD
                 zoomOnDoubleClick={false}
               >
                 <Controls 
-                  className="!bg-slate-900/40 !border-slate-700/30 backdrop-blur-xl !shadow-xl [&>button]:!bg-slate-800/40 [&>button]:!border-slate-700/30 [&>button]:!text-slate-300 [&>button:hover]:!bg-slate-700/50 [&>button]:!transition-all [&>button]:!duration-200 !rounded-xl !m-4"
+                  className="!bg-white/10 !border-white/40 backdrop-blur-2xl !shadow-2xl [&>button]:!bg-white/20 [&>button]:!border-white/50 [&>button]:!text-white [&>button:hover]:!bg-white/30 [&>button:hover]:!border-white/60 [&>button:hover]:!text-white [&>button]:!transition-all [&>button]:!duration-300 !rounded-2xl !m-6 [&>button]:!shadow-2xl [&>button]:!w-12 [&>button]:!h-12 [&>button]:!text-lg [&>button]:!font-bold"
                   showZoom={true}
                   showFitView={true}
                   showInteractive={false}
                 />
                 <MiniMap 
-                  className="!bg-slate-900/40 !border-slate-700/30 backdrop-blur-xl !rounded-xl !shadow-xl !m-4"
-                  maskColor="rgba(15, 23, 42, 0.6)"
-                  nodeColor="rgba(51, 65, 85, 0.8)"
-                  nodeStrokeColor="rgba(100, 116, 139, 0.6)"
-                  nodeBorderRadius={12}
-                  nodeStrokeWidth={1}
+                  className="!bg-white/5 !border-white/30 backdrop-blur-2xl !rounded-2xl !shadow-2xl !m-6 !w-48 !h-32"
+                  maskColor="rgba(0, 0, 0, 0.8)"
+                  nodeColor="rgba(255, 255, 255, 0.4)"
+                  nodeStrokeColor="rgba(255, 255, 255, 0.6)"
+                  nodeBorderRadius={8}
+                  nodeStrokeWidth={2}
                   pannable={true}
                   zoomable={true}
                 />
                 <Background 
                   variant={BackgroundVariant.Dots} 
-                  gap={20} 
-                  size={1} 
-                  color="rgba(51, 65, 85, 0.3)" 
-                  className="opacity-50"
+                  gap={30} 
+                  size={1.5} 
+                  color="rgba(255, 255, 255, 0.1)" 
+                  className="opacity-30"
                 />
-                <Panel position="top-right" className="m-4">
+                <Panel position="top-right" className="m-6">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={toggleFullscreen}
-                    className="h-8 w-8 p-0 bg-slate-900/40 border border-slate-700/30 text-slate-300 hover:bg-slate-700/50 transition-all duration-200 backdrop-blur-xl rounded-lg"
+                    className="h-12 w-12 p-0 bg-white/20 border-2 border-white/50 text-white hover:bg-white/30 hover:border-white/70 hover:text-white transition-all duration-300 backdrop-blur-xl rounded-2xl shadow-2xl hover:shadow-white/20 hover:scale-105"
                   >
                     <Maximize2 className="w-4 h-4" />
                   </Button>

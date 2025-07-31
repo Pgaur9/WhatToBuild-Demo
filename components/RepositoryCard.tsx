@@ -121,15 +121,15 @@ const MarkdownRenderer = ({ content }: { content: string }) => {
 const FileTree = ({ files }: { files: RepoContent[] }) => (
   <ul className="space-y-2 font-mono text-sm">
     {files.map(file => (
-      <li key={file.path} className="flex items-center gap-2 text-gray-300">
+      <li key={file.path} className="flex items-center gap-2 text-white/80 p-2 rounded-lg hover:bg-white/5 transition-colors">
         {file.type === 'dir' ? (
-          <Folder className="w-4 h-4 text-blue-400" />
+          <Folder className="w-4 h-4 text-indigo-400" />
         ) : (
-          <File className="w-4 h-4 text-gray-500" />
+          <File className="w-4 h-4 text-cyan-400" />
         )}
         <span>{file.name}</span>
         {file.size && file.type === 'file' && (
-          <span className="text-xs text-gray-500 ml-auto">
+          <span className="text-xs text-white/50 ml-auto bg-white/10 px-2 py-0.5 rounded-full">
             {(file.size / 1024).toFixed(1)}KB
           </span>
         )}
@@ -141,48 +141,54 @@ const FileTree = ({ files }: { files: RepoContent[] }) => (
 const OverviewTab = ({ repo, analysis }: { repo: GitHubRepo; analysis: RepoAnalysis }) => (
   <div className="space-y-4">
     <div className="grid grid-cols-2 gap-4">
-      <div className="bg-gray-800/50 rounded-lg p-4">
-        <h3 className="text-white font-semibold mb-2">Repository Stats</h3>
+      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 shadow-md transition-all duration-300 hover:bg-white/10 hover:border-white/20">
+        <h3 className="text-white font-semibold mb-3 flex items-center">
+          <Star className="w-4 h-4 text-yellow-400 mr-2" />
+          Repository Stats
+        </h3>
         <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-400">Stars:</span>
-            <span className="text-white">{formatNumber(repo.stargazers_count)}</span>
+          <div className="flex justify-between items-center py-1 border-b border-white/10">
+            <span className="text-white/60">Stars:</span>
+            <span className="text-white font-medium">{formatNumber(repo.stargazers_count)}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Forks:</span>
-            <span className="text-white">{formatNumber(repo.forks_count)}</span>
+          <div className="flex justify-between items-center py-1 border-b border-white/10">
+            <span className="text-white/60">Forks:</span>
+            <span className="text-white font-medium">{formatNumber(repo.forks_count)}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Language:</span>
-            <span className="text-white">{repo.language || 'Not specified'}</span>
+          <div className="flex justify-between items-center py-1 border-b border-white/10">
+            <span className="text-white/60">Language:</span>
+            <span className="text-white font-medium">{repo.language || 'Not specified'}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Size:</span>
-            <span className="text-white">{(repo.size / 1024).toFixed(1)} MB</span>
+          <div className="flex justify-between items-center py-1">
+            <span className="text-white/60">Size:</span>
+            <span className="text-white font-medium">{(repo.size / 1024).toFixed(1)} MB</span>
           </div>
         </div>
       </div>
       
-      <div className="bg-gray-800/50 rounded-lg p-4">
-        <h3 className="text-white font-semibold mb-2">Analysis Summary</h3>
+      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4 shadow-md transition-all duration-300 hover:bg-white/10 hover:border-white/20">
+        <h3 className="text-white font-semibold mb-3 flex items-center">
+          <Code className="w-4 h-4 text-indigo-400 mr-2" />
+          Analysis Summary
+        </h3>
         <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-gray-400">Total Files:</span>
-            <span className="text-white">{analysis.fileStructure.length}</span>
+          <div className="flex justify-between items-center py-1 border-b border-white/10">
+            <span className="text-white/60">Total Files:</span>
+            <span className="text-white font-medium">{analysis.fileStructure.length}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Has Package.json:</span>
-            <span className="text-white">{analysis.packageJson ? 'Yes' : 'No'}</span>
+          <div className="flex justify-between items-center py-1 border-b border-white/10">
+            <span className="text-white/60">Has Package.json:</span>
+            <span className="text-white font-medium">{analysis.packageJson ? 'Yes' : 'No'}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Dependencies:</span>
-            <span className="text-white">
+          <div className="flex justify-between items-center py-1 border-b border-white/10">
+            <span className="text-white/60">Dependencies:</span>
+            <span className="text-white font-medium">
               {analysis.packageJson?.dependencies ? Object.keys(analysis.packageJson.dependencies).length : 0}
             </span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-gray-400">Has README:</span>
-            <span className="text-white">{analysis.readme ? 'Yes' : 'No'}</span>
+          <div className="flex justify-between items-center py-1">
+            <span className="text-white/60">Has README:</span>
+            <span className="text-white font-medium">{analysis.readme ? 'Yes' : 'No'}</span>
           </div>
         </div>
       </div>
@@ -215,7 +221,8 @@ const RepositoryCard: React.FC<RepositoryCardProps> = ({ repo, analysis, onAnaly
   };
 
   return (
-    <Card className="w-full bg-gray-900/50 border-gray-700 hover:bg-gray-900/70 transition-colors">
+    <Card className="w-full bg-black/30 backdrop-blur-xl border border-white/20 hover:bg-black/40 hover:border-white/30 transition-all duration-300 shadow-lg shadow-black/20 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 pointer-events-none" />
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -224,29 +231,29 @@ const RepositoryCard: React.FC<RepositoryCardProps> = ({ repo, analysis, onAnaly
                 href={repo.html_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="hover:text-blue-400 transition-colors flex items-center gap-2"
+                className="hover:text-indigo-400 transition-colors flex items-center gap-2"
               >
                 {repo.name}
                 <ExternalLink className="w-4 h-4" />
               </a>
             </CardTitle>
-            <p className="text-gray-300 text-sm mb-3">{repo.description}</p>
+            <p className="text-white/80 text-sm mb-3">{repo.description}</p>
             
-            <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+            <div className="flex flex-wrap gap-4 text-sm text-white/70">
               <div className="flex items-center gap-1">
-                <Star className="w-4 h-4" />
+                <Star className="w-4 h-4 text-yellow-400" />
                 {formatNumber(repo.stargazers_count)}
               </div>
               <div className="flex items-center gap-1">
-                <GitFork className="w-4 h-4" />
+                <GitFork className="w-4 h-4 text-indigo-400" />
                 {formatNumber(repo.forks_count)}
               </div>
               <div className="flex items-center gap-1">
-                <Calendar className="w-4 h-4" />
+                <Calendar className="w-4 h-4 text-cyan-400" />
                 Updated {formatDate(repo.updated_at)}
               </div>
               <div className="flex items-center gap-1">
-                <User className="w-4 h-4" />
+                <User className="w-4 h-4 text-purple-400" />
                 {repo.owner.login}
               </div>
             </div>
@@ -254,7 +261,7 @@ const RepositoryCard: React.FC<RepositoryCardProps> = ({ repo, analysis, onAnaly
           
           <div className="flex flex-col items-end gap-2">
             {repo.language && (
-              <Badge variant="secondary" className="bg-blue-600/20 text-blue-300">
+              <Badge variant="secondary" className="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
                 {repo.language}
               </Badge>
             )}
@@ -263,7 +270,7 @@ const RepositoryCard: React.FC<RepositoryCardProps> = ({ repo, analysis, onAnaly
                 onClick={() => onAnalyze?.(repo)} 
                 disabled={isAnalyzing} 
                 size="sm" 
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-gradient-to-br from-indigo-600/80 to-purple-600/80 hover:from-indigo-600/90 hover:to-purple-600/90 text-white border-0 shadow-lg"
               >
                 {isAnalyzing ? 'Analyzing...' : 'Analyze'}
               </Button>
@@ -277,7 +284,7 @@ const RepositoryCard: React.FC<RepositoryCardProps> = ({ repo, analysis, onAnaly
               <Badge 
                 key={topic} 
                 variant="outline" 
-                className="text-xs border-gray-600 text-gray-300"
+                className="text-xs border-white/20 text-white/80 bg-white/5 backdrop-blur-sm"
               >
                 {topic}
               </Badge>
@@ -285,7 +292,7 @@ const RepositoryCard: React.FC<RepositoryCardProps> = ({ repo, analysis, onAnaly
             {repo.topics.length > 6 && (
               <Badge 
                 variant="outline" 
-                className="text-xs border-gray-600 text-gray-300"
+                className="text-xs border-white/20 text-white/80 bg-white/5 backdrop-blur-sm"
               >
                 +{repo.topics.length - 6} more
               </Badge>
@@ -293,91 +300,98 @@ const RepositoryCard: React.FC<RepositoryCardProps> = ({ repo, analysis, onAnaly
           </div>
         )}
       </CardHeader>
+      
+      {/* Animated glow effect */}
+      <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/0 via-indigo-500/10 to-purple-500/0 blur-xl opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-500 -z-10"></div>
 
       {analysis && (
         <CardContent>
           <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-            <TabsList className="grid w-full grid-cols-4 bg-gray-800">
+            <TabsList className="grid w-full grid-cols-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-xl overflow-hidden">
               <TabsTrigger 
                 value="overview" 
-                className="text-gray-300 data-[state=active]:bg-gray-700 data-[state=active]:text-white"
+                className="text-white/70 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
               >
                 Overview
               </TabsTrigger>
               <TabsTrigger 
                 value="architecture" 
-                className="text-gray-300 data-[state=active]:bg-gray-700 data-[state=active]:text-white"
+                className="text-white/70 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
               >
                 Architecture
               </TabsTrigger>
               <TabsTrigger 
                 value="files" 
-                className="text-gray-300 data-[state=active]:bg-gray-700 data-[state=active]:text-white"
+                className="text-white/70 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
               >
                 Files
               </TabsTrigger>
               <TabsTrigger 
                 value="readme" 
-                className="text-gray-300 data-[state=active]:bg-gray-700 data-[state=active]:text-white"
+                className="text-white/70 data-[state=active]:bg-white/10 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200"
               >
                 README
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="mt-4">
-              <OverviewTab repo={repo} analysis={analysis} />
+              <div className="bg-black/30 backdrop-blur-xl border border-white/20 rounded-xl p-4 shadow-lg shadow-black/20 overflow-hidden">
+                <OverviewTab repo={repo} analysis={analysis} />
+              </div>
             </TabsContent>
 
             <TabsContent value="architecture" className="mt-4">
-              <MermaidDiagram 
-                chart={
-                  analysis.packageJson?.dependencies 
-                    ? generateDependencyGraph(analysis.packageJson.dependencies)
-                    : 'graph TD\n    A[No dependency info found]'
-                } 
-                title="Dependency Graph" 
-              />
+              <div className="bg-black/30 backdrop-blur-xl border border-white/20 rounded-xl p-4 shadow-lg shadow-black/20 overflow-hidden">
+                <MermaidDiagram 
+                  chart={
+                    analysis.packageJson?.dependencies
+                      ? generateDependencyGraph(analysis.packageJson.dependencies as Record<string, string>)
+                      : 'graph TD\n    A[No dependency info found]'
+                  } 
+                  title="Dependency Graph" 
+                />
+              </div>
             </TabsContent>
 
             <TabsContent value="files" className="mt-4">
-              <div className="bg-gray-800/50 rounded-lg p-4 max-h-80 overflow-y-auto">
+              <div className="bg-black/30 backdrop-blur-xl border border-white/20 rounded-xl p-4 shadow-lg shadow-black/20 max-h-80 overflow-y-auto">
                 <FileTree files={analysis.fileStructure} />
               </div>
             </TabsContent>
 
             <TabsContent value="readme" className="mt-4">
-              <div className="bg-gray-800/50 p-4 rounded-lg max-h-96 overflow-y-auto">
+              <div className="bg-black/30 backdrop-blur-xl border border-white/20 rounded-xl p-4 shadow-lg shadow-black/20 max-h-96 overflow-y-auto">
                 {analysis.readme ? (
                   <MarkdownRenderer content={analysis.readme} />
                 ) : (
-                  <p className="text-gray-400">No README found.</p>
+                  <p className="text-white/60">No README found.</p>
                 )}
               </div>
             </TabsContent>
           </Tabs>
         </CardContent>
       )}
-      <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-700/50">
-        <div className="flex items-center space-x-2 text-sm text-gray-500">
-          {repo.language && <Badge variant="outline" className="border-cyan-400/50 text-cyan-400">{repo.language}</Badge>}
+      <div className="flex justify-between items-center mt-4 pt-4 border-t border-white/10">
+        <div className="flex items-center space-x-2 text-sm text-white/60">
+          {repo.language && <Badge variant="outline" className="border-indigo-400/30 text-indigo-300 bg-indigo-500/10">{repo.language}</Badge>}
           <span>Updated {formatDate(repo.updated_at)}</span>
         </div>
         <div className="flex items-center space-x-2">
           <Link href={`/visualize?repo=${repo.full_name}`} passHref>
-            <Button variant="outline" size="sm" className="border-purple-400/50 text-purple-400 hover:bg-purple-400/10">
-              <Eye className="w-4 h-4 mr-2" />
+            <Button variant="outline" size="sm" className="bg-black/30 backdrop-blur-xl border border-white/20 text-white/80 hover:bg-black/40 hover:border-white/30 hover:text-white transition-all duration-300 shadow-sm">
+              <Eye className="w-4 h-4 mr-2 text-purple-400" />
               Visualize
             </Button>
           </Link>
           <Link href={`/analyze?repo=${repo.full_name}`} passHref>
-            <Button variant="outline" size="sm" className="border-green-400/50 text-green-400 hover:bg-green-400/10 w-full">
-              <BarChart2 className="w-4 h-4 mr-2" />
+            <Button variant="outline" size="sm" className="bg-black/30 backdrop-blur-xl border border-white/20 text-white/80 hover:bg-black/40 hover:border-white/30 hover:text-white transition-all duration-300 shadow-sm">
+              <BarChart2 className="w-4 h-4 mr-2 text-cyan-400" />
               Analyze
             </Button>
           </Link>
           <a href={repo.html_url} target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" size="sm" className="border-gray-500 text-gray-400 hover:bg-gray-700/20">
-              <ExternalLink className="w-4 h-4 mr-2" />
+            <Button variant="outline" size="sm" className="bg-black/30 backdrop-blur-xl border border-white/20 text-white/80 hover:bg-black/40 hover:border-white/30 hover:text-white transition-all duration-300 shadow-sm">
+              <ExternalLink className="w-4 h-4 mr-2 text-indigo-400" />
               GitHub
             </Button>
           </a>
