@@ -201,15 +201,52 @@ export default function SearchPage() {
     setError(null);
 
     if (searchMode === 'find') {
-      // Direct GitHub API search without AI ranking
-        const githubService = new GitHubService();
-        try {
-          const results = await githubService.searchRepositories([query], undefined, 0, 1);
-          setRepositories(results || []);
-        } catch (err) {
-          console.error('Error in direct GitHub search:', err);
-          setError('Failed to fetch repositories. Please try again.');
+      // Direct GitHub repo search by exact repo name or URL
+      try {
+        let repoQuery = query.trim();
+        
+        // Extract repo name from GitHub URL if provided
+        const githubUrlMatch = repoQuery.match(/github\.com\/([^/]+\/[^/]+)/);
+        if (githubUrlMatch) {
+          repoQuery = githubUrlMatch[1];
         }
+        
+        // If it looks like a repo name (owner/repo), search for exact match
+        if (repoQuery.includes('/')) {
+          const response = await axios.get('/api/search-repos', {
+            params: { 
+              query: `repo:${repoQuery}`, 
+              page: 1,
+              per_page: 1
+            },
+          });
+          
+          if (response.data.items && response.data.items.length > 0) {
+            setRepositories(response.data.items);
+            setTotalPages(1);
+          } else {
+            setRepositories([]);
+            setError(`Repository "${repoQuery}" not found. Please check the repository name or URL.`);
+          }
+        } else {
+          // Regular search for repo names containing the query
+          const response = await axios.get('/api/search-repos', {
+            params: { 
+              query: repoQuery, 
+              page: 1,
+              per_page: itemsPerPage
+            },
+          });
+          
+          setRepositories(response.data.items || []);
+          const totalCount = response.data.total_count || 0;
+          const maxResults = Math.min(totalCount, 1000);
+          setTotalPages(Math.ceil(maxResults / itemsPerPage) || 1);
+        }
+      } catch (err) {
+        console.error('Error in direct GitHub search:', err);
+        setError('Failed to fetch repository. Please check the repository name or URL and try again.');
+      }
     } else {
       // Use AI for ranking
       await fetchAndRankRepos(query, 1);
@@ -256,32 +293,7 @@ export default function SearchPage() {
     }, 100);
   };
 
-  const handleLoadMore = async () => {
-    if (!query || isLoading || isLoadingMore || !hasMore) return;
-
-    const nextPage = page + 1;
-    if (nextPage > totalPages) return;
-    
-    setIsLoadingMore(true);
-
-    if (searchMode === 'find') {
-      // Direct GitHub API search without AI ranking
-       const githubService = new GitHubService();
-       try {
-         const results = await githubService.searchRepositories([query], undefined, 0, nextPage);
-         setRepositories(prevRepos => [...prevRepos, ...(results || [])]);
-       } catch (err) {
-         console.error('Error in direct GitHub search:', err);
-         setError('Failed to load more repositories. Please try again.');
-       }
-    } else {
-      // Use AI for ranking
-      await fetchAndRankRepos(query, nextPage);
-    }
-
-    setPage(nextPage);
-    setIsLoadingMore(false);
-  };
+  // Load More functionality removed - using pagination instead
   
   const openRepoDetails = (repo: GitHubRepo) => {
     setSelectedRepo(repo);
@@ -357,7 +369,7 @@ export default function SearchPage() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={
                   searchMode === 'repo' ? "Search for repositories (e.g., 'react-native')" :
-                  searchMode === 'find' ? "Find specific GitHub repositories (e.g., 'facebook/react')" :
+                  searchMode === 'find' ? "Enter GitHub repo URL or owner/repo (e.g., 'facebook/react' or 'https://github.com/facebook/react')" :
                   "Describe your project idea (e.g., 'a chat app with react')"
                 }
                 className="flex-grow p-6 text-lg bg-transparent border-0 text-white/90 placeholder:text-white/40 focus-visible:ring-0 focus-visible:outline-none transition-all duration-300 focus:scale-[1.02]"
@@ -381,7 +393,7 @@ export default function SearchPage() {
             {searchMode === 'repo' ? 
               "Search for specific GitHub repositories by name or keywords" :
               searchMode === 'find' ? 
-              "Direct GitHub API search without AI ranking - faster results" :
+              "Find exact repositories by GitHub URL or owner/repo name" :
               "Describe what you want to build and find matching open-source projects"}
           </div>
         </form>
@@ -550,29 +562,7 @@ export default function SearchPage() {
           </div>
         )}
 
-        {/* Load More Button */}
-        {sortedRepositories.length > 0 && hasMore && (
-          <div className="flex justify-center mt-8">
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-white/0 via-white/10 to-white/0 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 rounded-xl"></div>
-              <button
-                onClick={handleLoadMore}
-                disabled={isLoadingMore}
-                className="px-6 py-3 bg-black/30 backdrop-blur-xl border border-white/20 text-white/80 hover:bg-black/40 hover:border-white/30 hover:text-white rounded-xl transition-all duration-300 shadow-sm relative overflow-hidden group-hover:shadow-md"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-                {isLoadingMore ? (
-                  <div className="flex items-center">
-                    <RefreshCw className="w-5 h-5 animate-spin mr-2" />
-                    <span>Loading...</span>
-                  </div>
-                ) : (
-                  'Load More'
-                )}
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Load More functionality removed - using pagination instead */}
       </main>
       
       {/* Repository Details Dialog */}

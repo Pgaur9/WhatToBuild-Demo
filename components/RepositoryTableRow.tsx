@@ -21,13 +21,16 @@ export default function RepositoryTableRow({ repo, onViewDetails }: RepositoryTa
       <td className="py-4 px-6">
         <div className="flex flex-col">
           <h3 
-            className="text-lg font-semibold text-white group-hover:text-indigo-300 transition-colors cursor-pointer"
-            onClick={() => onViewDetails ? onViewDetails(repo) : null}
+            className="text-lg font-semibold text-white group-hover:text-indigo-300 transition-colors cursor-pointer hover:underline"
+            onClick={() => onViewDetails && onViewDetails(repo)}
           >
             {repo.full_name || repo.name}
           </h3>
-          <p className="text-white/70 text-sm mt-1 line-clamp-2 md:line-clamp-1 lg:line-clamp-2">
-            {repo.description || 'No description available'}
+          <p className="text-white/70 text-sm mt-1 line-clamp-2">
+            {repo.description ? 
+              (repo.description.length > 120 ? `${repo.description.substring(0, 120)}...` : repo.description) 
+              : 'No description available'
+            }
           </p>
           {repo.topics && repo.topics.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2 max-w-full overflow-hidden">
