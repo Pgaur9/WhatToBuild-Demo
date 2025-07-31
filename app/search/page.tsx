@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { GitHubRepo, GitHubService } from '@/lib/github';
 import { useRouter, useSearchParams } from 'next/navigation';
-import RepositoryTableRow from '@/components/RepositoryTableRow';
+import RepositoryTable from '@/components/RepositoryTable';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { 
@@ -471,45 +471,15 @@ export default function SearchPage() {
           </div>
         )}
 
-        {/* Repository Results Table with Truncation for Overflow */}
-         {sortedRepositories.length > 0 && (
-           <div ref={resultsRef} id="results-container" className="bg-black/30 backdrop-blur-xl border border-white/20 rounded-xl overflow-hidden shadow-lg relative group animate-in fade-in zoom-in-95 duration-500">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-black/50 border-b border-white/10">
-                  <tr>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-white/90 uppercase tracking-wider">
-                      Repository
-                    </th>
-                    <th className="text-left py-4 px-4 text-sm font-semibold text-white/90 uppercase tracking-wider hidden sm:table-cell">
-                      Language
-                    </th>
-                    <th className="text-left py-4 px-4 text-sm font-semibold text-white/90 uppercase tracking-wider hidden sm:table-cell">
-                      Stars
-                    </th>
-                    <th className="text-left py-4 px-4 text-sm font-semibold text-white/90 uppercase tracking-wider hidden md:table-cell">
-                      Relevance
-                    </th>
-                    <th className="text-left py-4 px-6 text-sm font-semibold text-white/90 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/10">
-                  {sortedRepositories.map((repo, index) => (
-                    <RepositoryTableRow 
-                      key={repo.id} 
-                      repo={repo} 
-                      onViewDetails={(repo) => {
-                        setSelectedRepo(repo);
-                        setShowRepoDetails(true);
-                      }}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+        {/* Repository Results Table */}
+        {sortedRepositories.length > 0 && (
+          <div ref={resultsRef} id="results-container">
+            <RepositoryTable 
+              repositories={sortedRepositories}
+              onViewDetails={(repo) => {
+                setSelectedRepo(repo);
+              }}
+            />
           </div>
         )}
 
@@ -527,6 +497,70 @@ export default function SearchPage() {
             </div>
           </div>
         )}
+
+        {/* Repository Details Modal */}
+        <Dialog open={!!selectedRepo} onOpenChange={(open) => !open && setSelectedRepo(null)}>
+          {selectedRepo && (
+            <DialogContent className="max-w-3xl w-full bg-black/50 backdrop-blur-2xl border-white/20 text-white rounded-2xl shadow-2xl shadow-indigo-500/20 animate-in fade-in zoom-in-95 duration-500">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-rye text-indigo-300 tracking-wider">
+                  {selectedRepo.full_name}
+                </DialogTitle>
+                <DialogDescription className="text-white/70 pt-2 line-clamp-3">
+                  {selectedRepo.description || 'No description available.'}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 text-sm">
+                <div className="md:col-span-2 space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-white/90 mb-2">Topics</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedRepo.topics?.length > 0 ? (
+                        selectedRepo.topics.map((topic) => (
+                          <Badge key={topic} variant="secondary" className="bg-black/30 border-white/20 backdrop-blur-xl hover:bg-black/40 transition-colors">
+                            {topic}
+                          </Badge>
+                        ))
+                      ) : (
+                        <p className="text-white/50">No topics listed.</p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-white/90 mb-2">Language</h4>
+                    <p className="text-indigo-300 font-medium">{selectedRepo.language || 'Not specified'}</p>
+                  </div>
+                </div>
+                <div className="space-y-3 bg-black/20 p-4 rounded-lg border border-white/10">
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/70">Stars</span>
+                    <span className="font-bold text-yellow-400 flex items-center gap-1">
+                      <Star className="w-4 h-4 fill-current" />
+                      {selectedRepo.stargazers_count.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/70">Forks</span>
+                    <span className="font-bold text-white">{selectedRepo.forks_count.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/70">Watchers</span>
+                    <span className="font-bold text-white">{selectedRepo.watchers_count.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white/70">Open Issues</span>
+                    <span className="font-bold text-white">{selectedRepo.open_issues_count.toLocaleString()}</span>
+                  </div>
+                  <div className="pt-2 border-t border-white/10">
+                    <a href={selectedRepo.html_url} target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline flex items-center gap-1.5 justify-end">
+                      View on GitHub <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          )}
+        </Dialog>
 
         {/* Pagination Controls */}
         {totalPages > 1 && (

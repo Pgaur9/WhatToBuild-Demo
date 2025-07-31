@@ -81,8 +81,8 @@ export default function RepositoryTableRow({ repo, onViewDetails }: RepositoryTa
           <span className="text-white/50 text-sm">-</span>
         )}
       </td>
-      <td className="py-4 px-6">
-        <div className="flex flex-wrap gap-2 justify-end">
+      <td className="py-4 px-6 text-right">
+      <div className="flex gap-2 justify-end items-center">
           <button
             onClick={() => router.push(`/visualize?repo=${encodeURIComponent(repo.full_name)}`)}
             className="bg-black/30 backdrop-blur-xl border border-white/20 text-white/80 hover:bg-black/40 hover:border-white/30 hover:text-white px-3 py-1.5 rounded-xl transition-all duration-300 text-xs sm:text-sm font-medium flex items-center space-x-1 shadow-sm"
