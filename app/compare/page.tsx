@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { BackgroundParticles } from './animation';
 import GlassShineAnimation from './animation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -284,6 +285,7 @@ Check out the full battle at:`;
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden custom-scrollbar">
+      <BackgroundParticles />
       {/* Rye font import for header */}
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Rye&display=swap');
         .rye-regular { font-family: "Rye", serif; font-weight: 400; font-style: normal; }
@@ -313,19 +315,12 @@ Check out the full battle at:`;
               </p>
             </div>
             {/* Input Section */}
-            <div className="bg-black/30 backdrop-blur-xl border border-white/20 rounded-2xl p-8 max-w-2xl mx-auto shadow-2xl">
+            <div className="bg-black/30 backdrop-blur-xl border border-white/20 rounded-2xl p-14 max-w-4xl mx-auto shadow-2xl" style={{ minHeight: '340px' }}>
               {/* Enhanced glassmorphic effect: inner shadow, increased blur, faint white border with glow, and animated glass shine */}
               <div className="absolute inset-0 pointer-events-none rounded-2xl z-0">
                 {/* Animated Glass Shine Overlay */}
                 <GlassShineAnimation />
-                {/* Pronounced diagonal gradient overlay */}
-                <div className="w-full h-full rounded-2xl" style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.22) 10%, rgba(255,255,255,0.12) 40%, rgba(255,255,255,0.00) 80%)',
-                  opacity: 0.85,
-                  mixBlendMode: 'screen',
-                  pointerEvents: 'none',
-                  filter: 'blur(8px)',
-                }} />
+                {/* Removed blurred gradient overlay under the box to eliminate shadow/reflection */}
                 {/* Soft inner shadow for depth */}
                 <div className="w-full h-full rounded-2xl" style={{
                   boxShadow: 'inset 0 2px 24px 0 rgba(255,255,255,0.18), inset 0 1px 8px 0 rgba(255,255,255,0.10)',
@@ -340,47 +335,76 @@ Check out the full battle at:`;
               </div>
               <div className="flex flex-col md:flex-row gap-4 mb-6 relative z-10">
                 <div className="flex-1">
-                  <label className="block text-white/80 text-sm font-medium mb-2">GitHub Username 1</label>
+                  <label className="block text-white/80 text-lg font-bold mb-4 flex items-center gap-3">
+                    <Github className="w-5 h-5 text-white/80" />
+                    Dev 1
+                  </label>
                   <Input
                     placeholder="octocat"
                     value={username1}
                     onChange={(e) => setUsername1(e.target.value)}
-                    className="bg-black/40 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 text-lg py-4 px-5 rounded-xl"
+                    className="bg-black/40 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 text-xl py-6 px-7 rounded-2xl"
                   />
                 </div>
                 <div className="flex items-end justify-center">
-                  <div className="text-white/60 font-bold text-2xl">VS</div>
+                  <div
+                    className={`text-white/60 font-bold text-2xl transition-all ${username1 && username2 ? 'animate-pulse-vs' : ''}`}
+                    style={{
+                      display: 'inline-block',
+                    }}
+                  >
+                    VS
+                  </div>
                 </div>
                 <div className="flex-1">
-                  <label className="block text-white/80 text-sm font-medium mb-2">GitHub Username 2</label>
+                  <label className="block text-white/80 text-lg font-bold mb-4 flex items-center gap-3">
+                    <Github className="w-5 h-5 text-white/80" />
+                    Dev 2
+                  </label>
                   <Input
                     placeholder="torvalds"
                     value={username2}
                     onChange={(e) => setUsername2(e.target.value)}
-                    className="bg-black/40 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 text-lg py-4 px-5 rounded-xl"
+                    className="bg-black/40 border-white/20 text-white placeholder:text-white/50 focus:border-white/40 text-xl py-6 px-7 rounded-2xl"
                   />
                 </div>
               </div>
               <Button
                 onClick={handleCompare}
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white font-semibold py-3 rounded-xl border border-white/20 hover:border-white/30 transition-all"
+                className="mx-auto flex items-center justify-center bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white font-bold text-2xl py-6 px-12 rounded-full border border-white/30 shadow-[0_2px_24px_0_rgba(255,255,255,0.18),0_1px_8px_0_rgba(255,255,255,0.10)] hover:border-white/40 transition-all mt-16 relative overflow-visible max-w-xs min-w-[120px]"
               >
+                {/* Enhanced glass shine and 3D liquid glass effect */}
+                <span className="absolute inset-0 rounded-full pointer-events-none z-0" style={{
+                  background: 'linear-gradient(120deg, rgba(255,255,255,0.22) 10%, rgba(255,255,255,0.10) 40%, rgba(255,255,255,0.00) 70%)',
+                  opacity: 0.7,
+                  mixBlendMode: 'screen',
+                  boxShadow: '0 0 32px 8px rgba(255,255,255,0.10), 0 2px 24px 0 rgba(255,255,255,0.18)',
+                }} />
+              
                 {isLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Preparing the Battle...
+                    Preparing...
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <Zap className="w-5 h-5" />
-                    Start the Battle!
-                  </div>
+                  <span className="flex items-center justify-center gap-2 rye-regular text-4xl font-bold">
+                    
+                    Battle
+                  </span>
                 )}
               </Button>
               {error && (
-                <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-300 text-sm">
-                  {error}
+                <div className="mt-6 px-6 py-4 bg-gradient-to-r from-red-500/30 via-black/40 to-orange-500/20 backdrop-blur-xl border border-red-500/30 rounded-2xl shadow-lg text-red-200 text-base font-semibold flex items-center gap-3 animate-fade-in relative overflow-hidden">
+                  <span className="absolute inset-0 pointer-events-none rounded-2xl z-0" style={{
+                    background: 'linear-gradient(120deg, rgba(255,255,255,0.10) 10%, rgba(255,255,255,0.00) 70%)',
+                    opacity: 0.5,
+                    mixBlendMode: 'screen',
+                  }} />
+                  <span className="flex items-center justify-center z-10">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="mr-3 text-red-400 drop-shadow-lg" xmlns="http://www.w3.org/2000/svg"><path d="M12 9v4m0 4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    {error}
+                  </span>
                 </div>
               )}
             </div>
