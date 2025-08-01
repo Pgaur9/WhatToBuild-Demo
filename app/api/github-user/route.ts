@@ -5,27 +5,42 @@ interface Repo {
   language: string | null;
 }
 
-// Generate mock contribution data (in a real app, you'd use GitHub's GraphQL API for accurate data)
-function generateMockContributions(baseActivity: number): number[] {
-  const days = 365;
-  const data = [];
-  const intensity = Math.max(0.1, baseActivity / 100);
-  
-  for (let i = 0; i < days; i++) {
-    // Generate realistic contribution patterns
-    const dayOfWeek = i % 7;
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-    const baseContributions = isWeekend ? 0.3 : 1.0;
-    
-    const contributions = Math.floor(
-      Math.random() * 10 * intensity * baseContributions + 
-      (Math.random() > 0.8 ? Math.random() * 5 : 0)
-    );
-    
-    data.push(Math.min(contributions, 20)); // Cap at 20 contributions per day
+// Fetch real contribution data using GitHub GraphQL API
+async function fetchRealContributions(username: string, githubToken: string): Promise<number[]> {
+  const query = `
+    query($login: String!) {
+      user(login: $login) {
+        contributionsCollection {
+          contributionCalendar {
+            weeks {
+              contributionDays {
+                contributionCount
+                date
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+  const response = await fetch('https://api.github.com/graphql', {
+    method: 'POST',
+    headers: {
+      'Authorization': `bearer ${githubToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ query, variables: { login: username } }),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch contribution data');
   }
-  
-  return data;
+  const result = await response.json();
+  const weeks = result?.data?.user?.contributionsCollection?.contributionCalendar?.weeks || [];
+  // Flatten the weeks into a single array of days
+  const days = weeks.flatMap((week: any) => week.contributionDays);
+  // Get the last 365 days (GitHub returns 53 weeks sometimes)
+  const last365 = days.slice(-365);
+  return last365.map((day: any) => day.contributionCount);
 }
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -63,21 +78,13 @@ export async function GET(request: NextRequest) {
 
     const repos: Repo[] = await reposResponse.json();
 
-    // Fetch contribution data (last year)
-    const contributionResponse = await fetch(`https://api.github.com/users/${username}/events?per_page=100`, {
-      headers: {
-        'Authorization': `token ${process.env.GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-      },
-    });
-
-    let contributionData = [];
-    if (contributionResponse.ok) {
-      const events = await contributionResponse.json();
-      // Generate mock contribution data for visualization (in a real app, you'd use GitHub's GraphQL API)
-      contributionData = generateMockContributions(events.length);
-    } else {
-      contributionData = generateMockContributions(0);
+    // Fetch real contribution data using GraphQL API
+    let contributionData: number[] = [];
+    try {
+      contributionData = await fetchRealContributions(username, process.env.GITHUB_TOKEN!);
+    } catch (e) {
+      // fallback to empty array if error
+      contributionData = [];
     }
 
     // Calculate stats
