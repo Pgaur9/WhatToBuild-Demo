@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+
 import { cn } from "@/lib/utils";
+import LiquidGlassHeader from "@/components/LiquidGlassHeader";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -25,7 +27,8 @@ export default function RootLayout({
       background: "radial-gradient(125% 125% at 50% 10%, #000000 40%, #2b092b 100%)",
     }}
   />
-          <main className="relative z-10">
+          <LiquidGlassHeader />
+          <main className="relative z-10 pt-24">
             {children}
           </main>
         </div>

@@ -165,6 +165,7 @@ Make it actionable and complete so the AI IDE can build the entire project.
     return result.response.text();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async analyzeRepository(repoData: any): Promise<{
     architecture: string;
     dependencies: string;

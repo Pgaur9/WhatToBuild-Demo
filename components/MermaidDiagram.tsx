@@ -152,7 +152,7 @@ export default function MermaidDiagram({
 
   useEffect(() => {
     let isMounted = true;
-    let abortController = new AbortController();
+    const abortController = new AbortController();
     
     const renderDiagram = async () => {
       if (!mermaidRef.current || isEditing || !editableChart.trim() || !isMounted) {

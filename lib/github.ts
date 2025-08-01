@@ -45,6 +45,29 @@ export interface RepoAnalysis {
   mainFiles: RepoContent[];
 }
 
+export interface GitHubIssue {
+  id: number;
+  number: number;
+  title: string;
+  state: string;
+  html_url: string;
+  created_at: string;
+  updated_at: string;
+  body: string;
+  user: {
+    login: string;
+    avatar_url: string;
+    html_url: string;
+  };
+  labels: {
+    id: number;
+    name: string;
+    color: string;
+    description?: string;
+  }[];
+  comments: number;
+}
+
 export class GitHubService {
   private token = process.env.GITHUB_TOKEN;
   private baseURL = 'https://api.github.com';
@@ -243,6 +266,27 @@ export class GitHubService {
     } catch (error) {
       console.error(`Failed to fetch file tree for ${repoFullName}:`, error);
       throw new Error('Could not fetch the repository file tree.');
+    }
+  }
+
+  async getRepositoryIssues(repoFullName: string, state: 'open' | 'closed' | 'all' = 'open', perPage = 10, page = 1): Promise<GitHubIssue[]> {
+    const [owner, repo] = repoFullName.split('/');
+    try {
+      const response = await axios.get(`${this.baseURL}/repos/${owner}/${repo}/issues`, {
+        headers: this.getHeaders(),
+        params: {
+          state,
+          per_page: perPage,
+          page,
+          sort: 'updated',
+          direction: 'desc'
+        }
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error(`Failed to fetch issues for ${repoFullName}:`, error);
+      return [];
     }
   }
 }

@@ -73,7 +73,7 @@ const FlowDiagramInner = ({
 
       const connectionMatch = line.match(/^(.+?)\s*(-->|---|--)\s*(.+?)(?:\s*:\s*(.+))?$/);
       if (connectionMatch) {
-        let [, source, arrow, target, label] = connectionMatch;
+        const [, source, arrow, target, label] = connectionMatch;
         
         const extractNode = (nodeStr: string) => {
           const match = nodeStr.match(/^(\w+)(?:\[([^\]]+)\])?/);
