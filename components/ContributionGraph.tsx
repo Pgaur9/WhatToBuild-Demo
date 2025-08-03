@@ -1,8 +1,34 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Activity, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
+import { Activity, TrendingUp, TrendingDown } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+
+interface ContributionGraphProps {
+  data: number[];
+  totalContributions: number;
+}
+
+// Custom tooltip component with glassmorphism styling
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{ payload: { displayDate: string; contributions: number } }>;
+}
+
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-black/80 backdrop-blur-xl border border-white/20 rounded-lg p-3 shadow-xl">
+        <p className="text-white/90 text-sm font-medium">{data.displayDate}</p>
+        <p className="text-green-400 text-xs">
+          {data.contributions} contribution{data.contributions !== 1 ? 's' : ''}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
 
 interface ContributionGraphProps {
   data: number[];
@@ -10,7 +36,7 @@ interface ContributionGraphProps {
   totalContributions: number;
 }
 
-export default function ContributionGraph({ data, username, totalContributions }: ContributionGraphProps) {
+export default function ContributionGraph({ data, totalContributions }: ContributionGraphProps) {
   const [viewMode, setViewMode] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
   // Process data for chart
@@ -93,136 +119,132 @@ export default function ContributionGraph({ data, username, totalContributions }
     };
   }, [data, chartData, totalContributions]);
 
-  // Custom tooltip
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-black/90 backdrop-blur-xl border border-white/20 rounded-lg p-3 shadow-xl">
-          <p className="text-white font-medium">{data.displayDate}</p>
-          <p className="text-green-400">
-            <span className="font-bold">{payload[0].value}</span> contributions
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
   return (
-    <div className="relative bg-black/50 backdrop-blur-2xl border border-white/30 rounded-2xl p-3 shadow-2xl overflow-hidden">
-      {/* Liquid glass overlays */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/10 pointer-events-none rounded-2xl opacity-80" />
-      <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/10 via-purple-500/20 to-pink-500/10 blur-2xl opacity-40 -z-10 rounded-2xl" />
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent pointer-events-none rounded-2xl" />
+    <div className="relative rounded-xl border border-white/10 p-3 overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
+        backdropFilter: 'blur(10px)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08)',
+      }}>
       <div className="relative z-10">
         {/* Header with View Toggle - Compact */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Activity className="w-4 h-4 text-green-400" />
-            <span className="text-white font-semibold text-sm">Contributions</span>
+            <Activity className="w-3 h-3 text-white/70" />
+            <span className="text-white/80 font-medium text-xs">Activity</span>
           </div>
-          <div className="flex bg-white/10 rounded-full p-0.5 border border-white/20">
+          <div className="flex rounded-lg border border-white/10"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%)',
+            }}>
             {['daily', 'weekly', 'monthly'].map((mode) => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode as 'daily' | 'weekly' | 'monthly')}
-                className={`px-2 py-0.5 text-xs font-semibold rounded-full transition-all ${
+                className={`px-2 py-0.5 text-xs font-medium rounded-md transition-all ${
                   viewMode === mode
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30 shadow'
-                    : 'text-white/60 hover:text-white/80'
+                    ? 'bg-white/10 text-white/90 border border-white/20'
+                    : 'text-white/50 hover:text-white/70'
                 }`}
-                style={{ minWidth: 48 }}
+                style={{ minWidth: 36 }}
               >
-                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                {mode.charAt(0).toUpperCase()}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Stats - More Compact */}
+        {/* Compact Stats */}
         <div className="grid grid-cols-4 gap-1 mb-2">
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl px-0.5 py-0.5 text-center border border-white/20">
-            <div className="text-white font-bold text-sm leading-tight">{totalContributions.toLocaleString()}</div>
-            <div className="text-white/60 text-xs leading-tight">Total</div>
+          <div className="text-center py-1 px-1 rounded border border-white/5"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.005) 100%)',
+            }}>
+            <div className="text-white/90 font-semibold text-xs leading-tight">{totalContributions.toLocaleString()}</div>
+            <div className="text-white/40 text-xs leading-tight">Total</div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl px-0.5 py-0.5 text-center border border-white/20">
-            <div className="text-white font-bold text-sm leading-tight">{stats.avgDaily.toFixed(1)}</div>
-            <div className="text-white/60 text-xs leading-tight">Avg/Day</div>
+          <div className="text-center py-1 px-1 rounded border border-white/5"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.005) 100%)',
+            }}>
+            <div className="text-white/90 font-semibold text-xs leading-tight">{stats.avgDaily.toFixed(1)}</div>
+            <div className="text-white/40 text-xs leading-tight">Avg</div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl px-0.5 py-0.5 text-center border border-white/20">
-            <div className="text-white font-bold text-sm leading-tight">{stats.maxDaily}</div>
-            <div className="text-white/60 text-xs leading-tight">Max Day</div>
+          <div className="text-center py-1 px-1 rounded border border-white/5"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.005) 100%)',
+            }}>
+            <div className="text-white/90 font-semibold text-xs leading-tight">{stats.maxDaily}</div>
+            <div className="text-white/40 text-xs leading-tight">Max</div>
           </div>
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl px-0.5 py-0.5 text-center flex items-center justify-center border border-white/20">
+          <div className="text-center py-1 px-1 rounded border border-white/5 flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.005) 100%)',
+            }}>
             <div className="flex items-center gap-1">
               {stats.isPositiveTrend ? (
-                <TrendingUp className="w-3 h-3 text-green-400" />
+                <TrendingUp className="w-2 h-2 text-white/60" />
               ) : (
-                <TrendingDown className="w-3 h-3 text-red-400" />
+                <TrendingDown className="w-2 h-2 text-white/60" />
               )}
-              <span className={`text-xs font-bold ${
-                stats.isPositiveTrend ? 'text-green-400' : 'text-red-400'
-              }`}>
+              <span className="text-xs font-medium text-white/70">
                 {Math.abs(stats.trend).toFixed(0)}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Interactive Bar Chart - Compact */}
-        <div className="h-24 w-full mb-1">
+        {/* Compact Bar Chart */}
+        <div className="h-16 w-full mb-2">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.08)" vertical={false} />
+              <CartesianGrid strokeDasharray="2 2" stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis 
                 dataKey="period"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 9 }}
+                tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 8 }}
                 interval="preserveStartEnd"
               />
               <YAxis hide />
               <Tooltip content={<CustomTooltip />} />
               <Bar 
                 dataKey="contributions" 
-                fill="url(#contributionGradient)"
-                radius={[2, 2, 0, 0]}
+                fill="url(#dynamicGradient)"
+                radius={[1, 1, 0, 0]}
                 className="hover:opacity-80 transition-opacity"
+                animationDuration={800}
               />
               <defs>
-                <linearGradient id="contributionGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#22c55e" stopOpacity={0.8} />
-                  <stop offset="100%" stopColor="#16a34a" stopOpacity={0.3} />
+                <linearGradient id="dynamicGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="rgba(34, 197, 94, 0.8)" stopOpacity={0.9} />
+                  <stop offset="50%" stopColor="rgba(22, 163, 74, 0.6)" stopOpacity={0.7} />
+                  <stop offset="100%" stopColor="rgba(15, 118, 110, 0.4)" stopOpacity={0.5} />
                 </linearGradient>
               </defs>
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Activity Level Indicator - Compact */}
-        <div className="flex items-center justify-between pt-1 border-t border-white/10 mt-1">
-          <div className="flex items-center gap-2 text-xs text-white/60">
-            <Calendar className="w-3 h-3" />
-            <span>
-              {viewMode === 'daily' && 'Last 30 days'}
-              {viewMode === 'weekly' && 'Last 6 months'}
-              {viewMode === 'monthly' && 'Last year'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-white/60">
+        {/* Activity Level Indicator */}
+        <div className="flex items-center justify-between text-xs text-white/40">
+          <span>
+            {viewMode === 'daily' && 'Last 30 days'}
+            {viewMode === 'weekly' && 'Last 6 months'}
+            {viewMode === 'monthly' && 'Last year'}
+          </span>
+          <div className="flex items-center gap-1">
             <span>Less</span>
             <div className="flex gap-0.5">
               {[0, 1, 2, 3, 4].map((level) => (
                 <div
                   key={level}
-                  className="w-2 h-2 rounded-sm"
+                  className="w-1.5 h-1.5 rounded-sm"
                   style={{
                     backgroundColor: level === 0 ? 'rgba(255,255,255,0.1)' : 
-                      level === 1 ? 'rgba(34,197,94,0.3)' :
-                      level === 2 ? 'rgba(34,197,94,0.5)' :
-                      level === 3 ? 'rgba(34,197,94,0.7)' : 'rgba(34,197,94,0.9)'
+                      level === 1 ? 'rgba(255,255,255,0.2)' :
+                      level === 2 ? 'rgba(255,255,255,0.4)' :
+                      level === 3 ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.8)'
                   }}
                 />
               ))}

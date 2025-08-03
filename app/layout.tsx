@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -19,16 +20,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={cn(inter.className, "bg-black text-white")}>
-        <div className="min-h-screen w-full relative bg-black">
-        <div
-    className="absolute inset-0 z-0"
-    style={{
-      background: "radial-gradient(125% 125% at 50% 10%, #000000 40%, #2b092b 100%)",
-    }}
-  />
+      <body className={cn(inter.className, "bg-black text-white")}> 
+        <div className="min-h-screen w-full relative">
           <LiquidGlassHeader />
-          <main className="relative z-10 pt-24">
+          <main className="relative z-10">
             {children}
           </main>
         </div>
