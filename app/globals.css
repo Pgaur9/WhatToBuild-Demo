@@ -3,6 +3,31 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Z-index layers */
+:root {
+  --radius: 0.625rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.2 0 0);
+
+  --z-header: 9999;
+  --z-dialog: 10000;
+  --z-dialog-overlay: 10001;
+  --z-sheet: 10000;
+}
+
+/* Global styles for dialog and header management */
+body.dialog-open header {
+  display: none !important;
+}
+
+/* Ensure dialog overlays are above everything */
+[data-radix-popper-content-wrapper],
+[data-radix-dialog-overlay],
+[data-radix-dialog-content],
+[data-vaul-drawer-wrapper] {
+  z-index: var(--z-dialog-overlay) !important;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

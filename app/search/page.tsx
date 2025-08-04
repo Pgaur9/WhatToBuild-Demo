@@ -306,12 +306,12 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="container mx-auto p-4 md:p-8">
+    <div className="container mx-auto p-4 md:p-8 pt-24 md:pt-32">
       {/* Ambient background effects */}
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-black/80 via-gray-900/60 to-black/80 pointer-events-none" />
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent opacity-60 pointer-events-none" />
       
-      <header className="text-center my-8 md:my-12">
+      <header className="text-center mt-24 md:mt-32 mb-8 md:mb-12">
         <div className="relative inline-block">
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-400">
             Find Your Next Project

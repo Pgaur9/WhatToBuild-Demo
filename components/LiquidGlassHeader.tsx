@@ -52,19 +52,28 @@ export default function LiquidGlassHeader() {
   }, [lastScrollY]);
 
   return (
-    <header 
-      className={`fixed top-6 left-1/2 -translate-x-1/2 z-[9999] transition-all duration-500 ease-out transform-gpu ${
-        isVisible 
-          ? 'translate-y-0 opacity-100 scale-100' 
-          : isScrollingDown 
-            ? '-translate-y-28 opacity-0 scale-95' 
-            : 'translate-y-0 opacity-100 scale-100'
-      }`}
-      style={{
-        filter: isVisible ? 'blur(0px)' : 'blur(4px)',
-        willChange: 'transform, opacity, filter'
-      }}
-    >
+    <>
+      {/* CSS to hide header when dialogs are open */}
+      <style jsx global>{`
+        body.dialog-open header {
+          display: none !important;
+        }
+      `}</style>
+      
+      <header 
+        className={`fixed top-6 left-1/2 -translate-x-1/2 transition-all duration-500 ease-out transform-gpu ${
+          isVisible 
+            ? 'translate-y-0 opacity-100 scale-100' 
+            : isScrollingDown 
+              ? '-translate-y-28 opacity-0 scale-95' 
+              : 'translate-y-0 opacity-100 scale-100'
+        }`}
+        style={{
+          filter: isVisible ? 'blur(0px)' : 'blur(4px)',
+          willChange: 'transform, opacity, filter',
+          zIndex: 'var(--z-header, 9999)'
+        }}
+      >
       {/* Desktop Navigation */}
       <nav className="hidden md:flex items-center gap-6 px-8 py-4 bg-black/50 backdrop-blur-2xl border border-white/30 rounded-full shadow-2xl hover:shadow-indigo-500/20 transition-all duration-300 hover:border-white/40">
         {/* Enhanced Liquid glass effect */}
@@ -187,5 +196,6 @@ export default function LiquidGlassHeader() {
         </div>
       </nav>
     </header>
+    </>
   );
 }

@@ -5,7 +5,8 @@ import GlassShineAnimation from './animation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Github, Users, Star, Download, Trophy, Code, Flame, RotateCcw } from 'lucide-react';
-import domtoimage from 'dom-to-image';
+import { toPng } from 'html-to-image';
+import { saveAs } from 'file-saver';
 import Image from 'next/image';
 import { LucideIcon } from 'lucide-react';
 import ContributionGraph from '@/components/ContributionGraph';
@@ -258,230 +259,53 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
   };
 
   const downloadAsImage = async () => {
-    // Select the entire comparison section including roast and cards
-    const comparisonSection = document.getElementById('comparison-card');
-    if (!comparisonSection) return;
+    const element = document.getElementById('comparison-card');
+    if (!element) return;
 
     try {
-      // Scroll to top to avoid off-screen rendering bugs
-      window.scrollTo(0, 0);
-      
-      // Wait a moment for scroll to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Clone the entire comparison section
-      const clonedSection = comparisonSection.cloneNode(true) as HTMLElement;
-      
-      // Create a container for the image
-      const container = document.createElement('div');
-      container.style.cssText = `
-        position: fixed;
-        top: -9999px;
-        left: -9999px;
-        z-index: 9999;
-        background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
-        padding: 40px;
-        border-radius: 24px;
-        width: auto;
-        max-width: none;
-        font-family: system-ui, -apple-system, sans-serif;
-      `;
-      
-      // Style the cloned section
-      clonedSection.style.cssText = `
-        position: relative;
-        z-index: auto;
-        transform: none;
-        margin: 0;
-        width: auto;
-        max-width: 1400px;
-      `;
-      
-      // Remove backdrop-filter and fix transparency issues
-      const allElements = clonedSection.querySelectorAll('*');
-      allElements.forEach((el: Element) => {
-        const element = el as HTMLElement;
-        
-        // Remove backdrop filter which doesn't work in screenshots
-        if (element.style.backdropFilter) {
-          element.style.backdropFilter = 'none';
-        }
-        
-        // Fix semi-transparent backgrounds
-        if (typeof element.className === 'string' && element.className.includes('bg-black/40')) {
-          element.style.background = 'rgba(15, 15, 15, 0.98)';
-          element.style.border = '1px solid rgba(255,255,255,0.18)';
-        }
-        
-        // Fix text transparency
-        const computedStyle = window.getComputedStyle(element);
-        if (computedStyle.color.includes('rgba') && computedStyle.color.includes('0.')) {
-          element.style.color = '#fff';
-        }
+      const dataUrl = await toPng(element, { 
+        cacheBust: true, 
+        quality: 0.95,
+        backgroundColor: '#000000',
       });
-      
-      // Fix all images for cross-origin
-      const imgElements = clonedSection.querySelectorAll('img');
-      const imgPromises = Array.from(imgElements).map((img: Element) => {
-        const image = img as HTMLImageElement;
-        image.crossOrigin = 'anonymous';
-        
-        if (!image.complete) {
-          return new Promise((resolve) => {
-            image.onload = () => resolve(true);
-            image.onerror = () => resolve(true);
-            // Fallback timeout
-            setTimeout(() => resolve(true), 2000);
-          });
-        }
-        return Promise.resolve(true);
-      });
-      
-      container.appendChild(clonedSection);
-      document.body.appendChild(container);
-      
-      // Wait for all images to load
-      await Promise.all(imgPromises);
-      
-      // Wait for DOM to be ready
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      // Use dom-to-image to capture the entire section
-      const dataUrl = await domtoimage.toPng(container, {
-        quality: 1.0,
-        bgcolor: '#111',
-        cacheBust: true,
-        width: container.offsetWidth,
-        height: container.offsetHeight,
-      });
-
-      // Clean up
-      document.body.removeChild(container);
-
-      // Download the image
-      const link = document.createElement('a');
-      link.download = `github-battle-${username1}-vs-${username2}-${Date.now()}.png`;
-      link.href = dataUrl;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
+      saveAs(dataUrl, `github-battle-${username1}-vs-${username2}.png`);
     } catch (error) {
-      console.error('Failed to generate image:', error);
+      console.error('oops, something went wrong!', error);
       alert('Failed to generate image. Please try again.');
     }
   };
 
   const shareToTwitter = async () => {
     const element = document.getElementById('comparison-card');
-    if (element) {
-      try {
-        // Create a wrapper for the image with proper styling
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = `
-          background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
-          padding: 40px;
-          border-radius: 24px;
-          width: fit-content;
-          max-width: 1200px;
-          margin: 0 auto;
-          font-family: system-ui, -apple-system, sans-serif;
-          position: fixed;
-          top: -9999px;
-          left: -9999px;
-          z-index: 9999;
-        `;
-        
-        const clonedElement = element.cloneNode(true) as HTMLElement;
-        clonedElement.style.background = 'transparent';
-        clonedElement.style.maxWidth = '1200px';
-        
-        // Fix transparency issues for sharing
-        const allElements = clonedElement.querySelectorAll('*');
-        allElements.forEach((el: Element) => {
-          const element = el as HTMLElement;
-          if (element.style.backdropFilter) {
-            element.style.backdropFilter = 'none';
-          }
-          if (typeof element.className === 'string' && element.className.includes('bg-black/40')) {
-            element.style.background = 'rgba(15, 15, 15, 0.98)';
-            element.style.border = '1px solid rgba(255,255,255,0.18)';
-          }
-        });
-        
-        // Fix images
-        const imgElements = clonedElement.querySelectorAll('img');
-        imgElements.forEach((img: Element) => {
-          const image = img as HTMLImageElement;
-          image.crossOrigin = 'anonymous';
-        });
-        
-        wrapper.appendChild(clonedElement);
-        document.body.appendChild(wrapper);
-        
-        // Wait for images to load
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        // Generate image
-        const dataUrl = await domtoimage.toPng(wrapper, {
-          quality: 0.95,
-          bgcolor: '#000000',
-          cacheBust: true,
-          width: wrapper.offsetWidth,
-          height: wrapper.offsetHeight,
-        });
-        
-        document.body.removeChild(wrapper);
-        
-        // Convert dataURL to blob and create a temporary file
-        const response = await fetch(dataUrl);
-        const blob = await response.blob();
-        
-        // Create a temporary download link for the image
-        const imageUrl = URL.createObjectURL(blob);
-        const tempLink = document.createElement('a');
-        tempLink.href = imageUrl;
-        tempLink.download = `github-battle-${username1}-vs-${username2}.png`;
-        tempLink.style.display = 'none';
-        document.body.appendChild(tempLink);
-        
-        // Share text with call to action
-        const text = `🔥 EPIC GitHub Battle: @${username1} vs @${username2}! 
+    if (!element) return;
 
-The roast is ABSOLUTELY SAVAGE! 💀 
+    try {
+      const blob = await toPng(element, { 
+        cacheBust: true, 
+        quality: 0.95,
+        backgroundColor: '#000000',
+      }).then(dataUrl => fetch(dataUrl).then(res => res.blob()));
 
-Who's the better dev? The results will shock you! 👑
+      const file = new File([blob], `github-battle-${username1}-vs-${username2}.png`, { type: 'image/png' });
 
-Download the image to see the full brutal comparison! 
+      const shareData = {
+        title: 'GitHub Battle',
+        text: `🔥 EPIC GitHub Battle: @${username1} vs @${username2}!\n\nThe roast is ABSOLUTELY SAVAGE! 💀\n\nWho's the better dev? The results will shock you! 👑\n\n#GitHubBattle #DevRoast #CodingShowdown #GitHubWarriors`,
+        files: [file],
+      };
 
-#GitHubBattle #DevRoast #CodingShowdown #GitHubWarriors
-
-Check out the full battle at:`;
-        
-        const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-        
-        // Open Twitter in new tab
-        window.open(shareUrl, '_blank');
-        
-        // Alert user about the image download
-        setTimeout(() => {
-          if (confirm('Twitter/X opened for sharing! Would you like to download the battle image to attach manually?')) {
-            tempLink.click();
-          }
-          // Clean up
-          setTimeout(() => {
-            document.body.removeChild(tempLink);
-            URL.revokeObjectURL(imageUrl);
-          }, 1000);
-        }, 500);
-        
-      } catch (error) {
-        console.error('Failed to prepare image for sharing:', error);
-        // Fallback to text-only sharing
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback for browsers that do not support navigator.share
         const text = `🔥 BRUTAL GitHub Battle: @${username1} vs @${username2}! The roast is SAVAGE! 💀 Who's the better dev? 👑 #GitHubBattle #DevRoast #CodingShowdown`;
         const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
         window.open(url, '_blank');
+        alert('Sharing not supported on this browser. Opened Twitter in a new tab.');
       }
+    } catch (error) {
+      console.error('oops, something went wrong!', error);
+      alert('Failed to generate image for sharing. Please try again.');
     }
   };
 

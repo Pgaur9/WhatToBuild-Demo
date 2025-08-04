@@ -26,6 +26,8 @@ export interface GitHubRepo {
   };
   homepage?: string;
   relevance_score?: number;
+  issue_count?: number;
+  sample_issues?: GitHubIssue[];
 }
 
 export interface RepoContent {
@@ -109,6 +111,19 @@ export class GitHubService {
     } catch (error) {
       console.error('GitHub search error:', error);
       return [];
+    }
+  }
+
+  async getRepository(repoFullName: string): Promise<GitHubRepo | null> {
+    try {
+      const response = await axios.get(`${this.baseURL}/repos/${repoFullName}`, {
+        headers: this.getHeaders()
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('GitHub get repository error:', error);
+      return null;
     }
   }
 
@@ -269,18 +284,85 @@ export class GitHubService {
     }
   }
 
-  async getRepositoryIssues(repoFullName: string, state: 'open' | 'closed' | 'all' = 'open', perPage = 10, page = 1): Promise<GitHubIssue[]> {
+  async getRepositoryIssues(
+    repoFullName: string, 
+    state: 'open' | 'closed' | 'all' = 'open', 
+    perPage = 10, 
+    page = 1,
+    labels?: string
+  ): Promise<GitHubIssue[]> {
     const [owner, repo] = repoFullName.split('/');
     try {
+      // If labels are provided, try each label individually since GitHub treats
+      // comma-separated labels as AND (must have all) not OR (can have any)
+      if (labels) {
+        const labelVariants = labels.split(',').map(label => label.trim());
+        const allIssues: GitHubIssue[] = [];
+        const seenIssueIds = new Set<number>();
+
+        // Try each label variant individually
+        for (const label of labelVariants) {
+          try {
+            const params = {
+              state,
+              per_page: Math.min(perPage * 2, 100), // Get more results to account for duplicates
+              page: 1, // Always start from page 1 for each label
+              sort: 'updated',
+              direction: 'desc',
+              labels: label
+            };
+
+            const response = await axios.get(`${this.baseURL}/repos/${owner}/${repo}/issues`, {
+              headers: this.getHeaders(),
+              params
+            });
+
+            // Add unique issues (avoid duplicates)
+            for (const issue of response.data) {
+              if (!seenIssueIds.has(issue.id)) {
+                seenIssueIds.add(issue.id);
+                allIssues.push(issue);
+              }
+            }
+          } catch (labelError) {
+            // Continue with next label if one fails
+            console.warn(`Failed to fetch issues for label "${label}" in ${repoFullName}:`, labelError);
+            continue;
+          }
+        }
+
+        // Sort by updated date and return requested page
+        allIssues.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+        
+        // Handle pagination for the combined results
+        const startIndex = (page - 1) * perPage;
+        const endIndex = startIndex + perPage;
+        return allIssues.slice(startIndex, endIndex);
+      }
+
+      // Fallback to original behavior for single label or no labels
+      const params: {
+        state: string;
+        per_page: number;
+        page: number;
+        sort: string;
+        direction: string;
+        labels?: string;
+      } = {
+        state,
+        per_page: perPage,
+        page,
+        sort: 'updated',
+        direction: 'desc'
+      };
+
+      if (labels) {
+        params.labels = labels;
+      }
+
       const response = await axios.get(`${this.baseURL}/repos/${owner}/${repo}/issues`, {
         headers: this.getHeaders(),
-        params: {
-          state,
-          per_page: perPage,
-          page,
-          sort: 'updated',
-          direction: 'desc'
-        }
+        params
       });
       
       return response.data;

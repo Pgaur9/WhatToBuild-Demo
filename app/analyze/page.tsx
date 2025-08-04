@@ -317,7 +317,7 @@ function AnalyzePageContent() {
 
   if (!repoFullName) {
     return (
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pt-24 md:pt-32">
         <div className="bg-black/30 backdrop-blur-xl border border-white/20 rounded-xl overflow-hidden shadow-lg p-8">
           <h1 className="text-2xl font-bold text-red-500">Error: Repository not specified.</h1>
           <p className="text-white/70">Please go back and select a repository to analyze.</p>
@@ -327,7 +327,7 @@ function AnalyzePageContent() {
   }
 
   return (
-    <main className="container mx-auto px-4 py-8">
+    <main className="container mx-auto px-4 py-8 pt-24 md:pt-32">
       <div className="bg-black/30 backdrop-blur-xl border border-white/20 rounded-xl overflow-hidden shadow-lg relative group animate-in fade-in zoom-in-95 duration-500 mb-8">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
         <div className="p-6">

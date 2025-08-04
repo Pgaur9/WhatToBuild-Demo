@@ -353,4 +353,15 @@ Here are the files to summarize:
       throw new Error('Failed to summarize files.');
     }
   }
+
+  async generateContent(prompt: string): Promise<string> {
+    try {
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error) {
+      console.error('Error generating content with Gemini:', error);
+      throw new Error('Failed to generate content.');
+    }
+  }
 }

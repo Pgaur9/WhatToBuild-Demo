@@ -16,9 +16,18 @@ import {
 interface RepositoryTableProps {
   repositories: GitHubRepo[];
   onViewDetails?: (repo: GitHubRepo) => void;
+  actionButtonText?: string;
+  showIssueCount?: boolean;
+  filterType?: string;
 }
 
-export default function RepositoryTable({ repositories, onViewDetails }: RepositoryTableProps) {
+export default function RepositoryTable({ 
+  repositories, 
+  onViewDetails, 
+  actionButtonText = 'View Details',
+  showIssueCount = false,
+  filterType = ''
+}: RepositoryTableProps) {
   const router = useRouter();
 
   return (
@@ -116,6 +125,23 @@ export default function RepositoryTable({ repositories, onViewDetails }: Reposit
                 </TableCell>
                 <TableCell className="py-4 px-2 text-right">
                   <div className="flex gap-1.5 justify-end items-center flex-nowrap">
+                    {onViewDetails && (
+                      <button
+                        onClick={() => onViewDetails(repo)}
+                        className="bg-indigo-500/20 backdrop-blur-xl border border-indigo-500/30 text-white/90 hover:bg-indigo-500/30 hover:border-indigo-500/50 hover:text-white px-2 py-1.5 rounded-lg transition-all duration-300 text-xs font-medium flex items-center space-x-1 shadow-sm flex-shrink-0"
+                        title={showIssueCount && repo.issue_count ? `${actionButtonText} (${repo.issue_count})` : actionButtonText}
+                      >
+                        <Search className="w-3.5 h-3.5 text-white/70" />
+                        <span className="hidden sm:inline">
+                          {actionButtonText}
+                          {showIssueCount && repo.issue_count && (
+                            <span className="ml-1 bg-indigo-600/50 px-1.5 py-0.5 rounded text-xs">
+                              {repo.issue_count}
+                            </span>
+                          )}
+                        </span>
+                      </button>
+                    )}
                     <button
                       onClick={() => router.push(`/visualize?repo=${encodeURIComponent(repo.full_name)}`)}
                       className="bg-white/10 backdrop-blur-xl border border-white/20 text-white/80 hover:bg-white/15 hover:border-white/30 hover:text-white px-2 py-1.5 rounded-lg transition-all duration-300 text-xs font-medium flex items-center space-x-1 shadow-sm flex-shrink-0"
