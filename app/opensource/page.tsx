@@ -681,19 +681,19 @@ export default function OpenSourcePage() {
                 <div className="flex-shrink-0 p-4 sm:p-6 pb-4">
                   <div className="bg-black/30 backdrop-blur-xl border border-white/10 rounded-lg p-3 sm:p-4 shadow-sm relative overflow-hidden group hover:bg-black/40 hover:border-white/20 transition-all duration-300">
                     <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-white flex items-center gap-2 flex-wrap pr-8 sm:pr-0">
-                      <span className="break-all text-sm sm:text-base md:text-lg">{selectedRepo.full_name}</span>
+                    <div className="text-lg sm:text-xl md:text-2xl font-bold text-white flex items-start gap-2 flex-wrap pr-8 sm:pr-0">
+                      <span className="break-all text-sm sm:text-base md:text-lg overflow-wrap-anywhere" style={{ wordBreak: 'break-word' }}>{selectedRepo.full_name}</span>
                       <a 
                         href={selectedRepo.html_url} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-white/80 hover:text-white ml-2 inline-flex items-center"
+                        className="text-white/80 hover:text-white ml-2 inline-flex items-center flex-shrink-0"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5" />
                       </a>
                     </div>
-                    <div className="text-white/70 text-sm sm:text-base mt-2 break-words">
+                    <div className="text-white/70 text-sm sm:text-base mt-2 break-words overflow-wrap-anywhere" style={{ wordBreak: 'break-word' }}>
                       {selectedRepo.description || 'No description available'}
                     </div>
                   </div>
@@ -850,15 +850,23 @@ export default function OpenSourcePage() {
       {/* Explanation Sheet */}
       <Sheet open={showExplanation} onOpenChange={setShowExplanation}>
         <SheetContent 
-          className="w-full sm:w-[1200px] xl:w-[40vw] max-w-full sm:max-w-screen-2xl bg-black/90 backdrop-blur-xl border-white/20 text-white overflow-hidden flex flex-col h-[98vh] sm:h-full px-4 sm:px-8 xl:px-12 rounded-none sm:rounded-2xl [&>button]:hidden"
+          className="w-full sm:w-[1200px] xl:w-[40vw] max-w-full sm:max-w-screen-2xl bg-black/90 backdrop-blur-xl border-white/20 text-white overflow-hidden flex flex-col h-[98vh] sm:h-full px-4 sm:px-8 xl:px-12 rounded-none sm:rounded-2xl"
           style={{ zIndex: 'var(--z-sheet, 10000)' }}
         >
-          {/* Mobile Close Button */}
+          {/* Liquid Glass Close Button (all devices) */}
           <button
             onClick={() => setShowExplanation(false)}
-            className="absolute top-4 right-4 z-20 sm:hidden bg-black/50 backdrop-blur-xl border border-white/20 rounded-full p-2 text-white/70 hover:text-white hover:bg-black/70 transition-all duration-300"
+            className="absolute top-4 right-4 z-20 flex items-center justify-center w-10 h-10 bg-gradient-to-br from-white/10 via-indigo-500/10 to-purple-500/10 backdrop-blur-xl border border-white/20 rounded-full shadow-lg hover:bg-white/20 hover:border-white/30 transition-all duration-300"
+            style={{
+              boxShadow: '0 4px 24px 0 rgba(80, 0, 160, 0.12)',
+              WebkitBackdropFilter: 'blur(16px) saturate(180%)',
+              backdropFilter: 'blur(16px) saturate(180%)',
+            }}
+            aria-label="Close"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 text-white/80 drop-shadow" />
+            <span className="sr-only">Close</span>
+            <span className="absolute inset-0 pointer-events-none rounded-full bg-gradient-to-tr from-white/20 via-indigo-400/10 to-purple-400/10 opacity-30 animate-pulse" />
           </button>
           
           <SheetHeader className="border-b border-white/10 pb-4 mb-4 sm:mb-6 flex-shrink-0 pt-12 sm:pt-8 lg:pt-12">
