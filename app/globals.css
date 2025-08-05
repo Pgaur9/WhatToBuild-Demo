@@ -217,3 +217,89 @@ body.dialog-open header {
 .duration-500 {
   animation-duration: 500ms;
 }
+
+/* Missing CSS classes for Hero component */
+.bg-radial {
+  background: radial-gradient(var(--tw-gradient-stops));
+}
+
+.bg-linear-to-r {
+  background: linear-gradient(to right, var(--tw-gradient-stops));
+}
+
+.scale-200 {
+  transform: scale(2);
+}
+
+.animate-appear {
+  animation: appear 0.6s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-appear-zoom {
+  animation: appear-zoom 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes appear-zoom {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Fade bottom effect */
+.fade-bottom {
+  position: relative;
+}
+
+.fade-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(transparent, var(--background));
+  pointer-events: none;
+}
+
+/* Max container width */
+.max-w-container {
+  max-width: 1200px;
+}
+
+/* Hide all scrollbars globally but keep them functional */
+html, body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Apply to all elements */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+}
+
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

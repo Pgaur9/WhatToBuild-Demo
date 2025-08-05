@@ -2,13 +2,24 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Search, BarChart3, Eye, Github, Zap } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { motion } from 'framer-motion';
+import { Menu, X, Home, Search, BarChart3, Eye, Github, Zap, Code } from 'lucide-react';
+
+const navItems = [
+  { href: '/search', icon: Search, label: 'Search' },
+  { href: '/opensource', icon: Code, label: 'Open Source' },
+  // { href: '/analyze', icon: BarChart3, label: 'Analyze' },
+  { href: '/compare', icon: Zap, label: 'Compare' },
+  // { href: '/visualize', icon: Eye, label: 'Visualize' },
+];
 
 export default function LiquidGlassHeader() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrollingDown, setIsScrollingDown] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     let ticking = false;
@@ -88,23 +99,29 @@ export default function LiquidGlassHeader() {
         
         <div className="w-px h-6 bg-gradient-to-b from-transparent via-white/30 to-transparent relative z-10" />
         
-        <div className="flex items-center gap-2 text-white/80 text-sm relative z-10">
-          <Link href="/search" className="flex items-center gap-2 hover:text-white hover:scale-110 transition-all duration-300 px-4 py-2 rounded-full hover:bg-white/15 hover:shadow-lg hover:shadow-white/10">
-            <Search className="w-4 h-4" />
-            Search
-          </Link>
-          <Link href="/analyze" className="flex items-center gap-2 hover:text-white hover:scale-110 transition-all duration-300 px-4 py-2 rounded-full hover:bg-white/15 hover:shadow-lg hover:shadow-white/10">
-            <BarChart3 className="w-4 h-4" />
-            Analyze
-          </Link>
-          <Link href="/compare" className="flex items-center gap-2 hover:text-white hover:scale-110 transition-all duration-300 px-4 py-2 rounded-full hover:bg-white/15 hover:shadow-lg hover:shadow-white/10">
-            <Zap className="w-4 h-4" />
-            Compare
-          </Link>
-          <Link href="/visualize" className="flex items-center gap-2 hover:text-white hover:scale-110 transition-all duration-300 px-4 py-2 rounded-full hover:bg-white/15 hover:shadow-lg hover:shadow-white/10">
-            <Eye className="w-4 h-4" />
-            Visualize
-          </Link>
+        <div className="flex items-center gap-1 text-white/80 text-sm relative z-10">
+          {
+            navItems.map(item => {
+              const isActive = pathname === item.href;
+              return (
+                <Link 
+                  key={item.href} 
+                  href={item.href} 
+                  className={`relative flex items-center gap-2 transition-colors duration-300 px-3 py-2 rounded-full text-sm font-medium ${isActive ? 'text-white' : 'text-white/70 hover:text-white'}`}>
+                  {isActive && (
+                    <motion.div
+                      layoutId="active-pill"
+                      className="absolute inset-0 bg-white/10 rounded-full"
+                      style={{ borderRadius: 9999 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                  <item.icon className="w-4 h-4 z-10" />
+                  <span className="z-10 whitespace-nowrap">{item.label}</span>
+                </Link>
+              )
+            })
+          }
           <a 
             href="https://github.com/NiladriHazra/WhatToBuild" 
             target="_blank" 
@@ -149,43 +166,36 @@ export default function LiquidGlassHeader() {
             <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 via-purple-500/30 to-pink-500/20 blur-2xl opacity-60 -z-10 rounded-2xl" />
             
             <div className="flex flex-col gap-2 relative z-10 text-base sm:text-lg">
-              <Link 
-                href="/search" 
-                className="flex items-center gap-3 text-white hover:text-white transition-all duration-300 p-4 rounded-xl hover:bg-white/20 hover:scale-105 font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Search className="w-5 h-5" />
-                Search Repositories
-              </Link>
-              <Link 
-                href="/analyze" 
-                className="flex items-center gap-3 text-white hover:text-white transition-all duration-300 p-4 rounded-xl hover:bg-white/20 hover:scale-105 font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <BarChart3 className="w-5 h-5" />
-                Analyze Repository
-              </Link>
-              <Link 
-                href="/compare" 
-                className="flex items-center gap-3 text-white hover:text-white transition-all duration-300 p-4 rounded-xl hover:bg-white/20 hover:scale-105 font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Zap className="w-5 h-5" />
-                Compare Users
-              </Link>
-              <Link 
-                href="/visualize" 
-                className="flex items-center gap-3 text-white hover:text-white transition-all duration-300 p-4 rounded-xl hover:bg-white/20 hover:scale-105 font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                <Eye className="w-5 h-5" />
-                Visualize Project
-              </Link>
+              {
+                navItems.map(item => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link 
+                      key={item.href} 
+                      href={item.href} 
+                      className={`relative flex items-center gap-3 text-white transition-all duration-300 p-3 rounded-lg font-medium ${isActive ? '' : 'hover:bg-white/10'}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="active-mobile-pill"
+                          className="absolute inset-0 bg-white/20 rounded-lg"
+                          style={{ borderRadius: 8 }}
+                          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                        />
+                      )}
+                      <item.icon className="w-5 h-5 z-10" />
+                      <span className="z-10">{item.label}</span>
+                    </Link>
+                  )
+                })
+              }
+              <div className="my-2 border-t border-white/20"></div>
               <a 
                 href="https://github.com/NiladriHazra/WhatToBuild" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="flex items-center gap-3 text-white hover:text-white transition-all duration-300 p-4 rounded-xl hover:bg-white/20 hover:scale-105 font-medium"
+                className="flex items-center gap-3 text-white hover:text-white transition-all duration-300 p-3 rounded-lg hover:bg-white/10 font-medium"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <Github className="w-5 h-5" />
