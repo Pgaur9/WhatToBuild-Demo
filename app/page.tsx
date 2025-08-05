@@ -1,6 +1,6 @@
 import React from 'react'
 import Hero from '@/components/sections/hero/default'
-import { BentoCrad } from '@/components/Hero/BentoCrad'
+
 
 const page = () => {
   return (
@@ -13,17 +13,10 @@ const page = () => {
           href: "/search",
           text: "Search Projects",
           variant: "default"
-        }]}
+        }]} 
       />
 
-      <div className=" px-4 py-16 sm:px-6 lg:px-8">
-        <div className="max-w-container mx-auto">
-          <BentoCrad />
-        </div>
-      </div>
-      
-      {/* Add spacing and continue background */}
-      
+       
     </div>
   )
 }

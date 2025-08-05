@@ -1,5 +1,10 @@
 import { ArrowRightIcon } from "lucide-react";
 import { ReactNode } from "react";
+import Footer from "@/components/Hero/Footer";
+import Section2 from "@/components/Hero/Section2";
+import { CanvasCard } from "@/components/Hero/CanvasCard";
+import { CompareCard } from "@/components/Hero/CompareCard"; 
+import { MagicBean } from "@/components/Hero/MagicBean";
 
 import { cn } from "@/lib/utils";
 
@@ -11,6 +16,9 @@ import { Mockup, MockupFrame } from "../../ui/mockup";
 import { PointerHighlight } from "../../ui/pointer-highlight";
 import Screenshot from "../../ui/screenshot";
 import Section from "@/components/ui/Section";
+import { BentoCrad } from "@/components/Hero/BentoCrad";
+import Features from "@/components/Hero/Features";
+import { RollingText } from "@/components/Hero/RollingText";
 interface HeroButtonProps {
   href: string;
   text: string;
@@ -29,8 +37,8 @@ interface HeroProps {
 }
 
 export default function Hero({
-  title = "Give your big idea the design it deserves",
-  description = "Professionally designed blocks and templates built with React, Shadcn/ui and Tailwind that will help your product stand out.",
+  title = "What to Build?",
+  description = "Enter a concept to discover and analyze relevant open-source projects.",
   mockup = (
     <Screenshot
       srcLight="/images/search.png"
@@ -53,17 +61,7 @@ export default function Hero({
     </Badge>
   ),
   buttons = [
-    {
-      href: "https://www.launchuicomponents.com/",
-      text: "Get Started",
-      variant: "default",
-    },
-    {
-      href: "https://www.launchuicomponents.com/",
-      text: "Github",
-      variant: "outline",
-      icon: <Github className="mr-2 size-4" />,
-    },
+   
   ],
   className,
 }: HeroProps) {
@@ -78,7 +76,7 @@ export default function Hero({
         <div className="flex flex-col items-center gap-6 text-center sm:gap-12">
           {badge !== false && badge}
           <h1 className="animate-appear from-foreground to-foreground dark:to-muted-foreground relative z-10 inline-block bg-gradient-to-r bg-clip-text text-3xl leading-tight font-semibold text-balance text-white drop-shadow-2xl sm:text-5xl sm:leading-tight md:text-6xl md:leading-tight">
-            What to <span className="inline-block align-middle"><PointerHighlight rectangleClassName="border-2 border-blue-400" pointerClassName="text-blue-400" containerClassName="inline-block align-middle"><span className="font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] transform hover:scale-110 transition-all duration-300" style={{
+            What to <span className="inline-block align-middle"><PointerHighlight rectangleClassName="border-2 border-blue-400" pointerClassName="text-blue-400" containerClassName="inline-block align-middle"><span className="font-bold text-white-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] transform hover:scale-110 transition-all duration-300" style={{
               textShadow: '0 0 20px rgba(59, 130, 246, 0.8), 0 4px 8px rgba(0, 0, 0, 0.5)',
               transform: 'perspective(1000px) rotateX(-10deg) rotateY(5deg)',
               filter: 'drop-shadow(0 8px 16px rgba(59, 130, 246, 0.3))'
@@ -89,7 +87,7 @@ export default function Hero({
           </p>
           {/* Removed Search Projects button */}
           {mockup !== false && (
-            <div className="relative w-full pt-12">
+            <div className="relative w-full pt-12 pb-10">
               <a href="/search" className="block">
                 <MockupFrame
                   className="animate-appear opacity-0 delay-700"
@@ -111,6 +109,32 @@ export default function Hero({
           )}
         </div>
       </div>
+
+      <div>
+        <Features forceDarkMode={true} />
+      </div>
+      
+      {/* BentoCrad section with same Hero background */}
+      {/* <div className="px-4 py-16 sm:px-6 lg:px-8">
+        <div className="max-w-container mx-auto">
+          <BentoCrad />
+        </div>
+      
+      </div> */}
+      {/* <CanvasCard /> */}
+
+       <MagicBean />
+
+      <CompareCard />
+      
+      <Section2 />
+
+      <RollingText />
+
+     
+      
+       <Footer />
+
     </Section>
   );
 }
