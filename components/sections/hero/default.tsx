@@ -110,6 +110,8 @@ export default function Hero({
         </div>
       </div>
 
+      <MagicBean />
+
       <div>
         <Features forceDarkMode={true} />
       </div>
@@ -123,7 +125,7 @@ export default function Hero({
       </div> */}
       {/* <CanvasCard /> */}
 
-       <MagicBean />
+       
 
       <CompareCard />
       
