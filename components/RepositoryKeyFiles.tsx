@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -60,9 +62,11 @@ export default function RepositoryKeyFiles({ repoFullName }: { repoFullName: str
 // Use a global cache on window to persist across remounts/tab switches
 const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
   if (typeof window !== 'undefined') {
+    
     if (!(window as any).__keyFilesCache) {
-      (window as any).__keyFilesCache = {};
+     
     }
+   
     return (window as any).__keyFilesCache;
   }
   // SSR fallback (shouldn't happen for this component)
@@ -90,9 +94,11 @@ const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
           console.log('Repo structureData:', structureData);
         }
         // Get the file tree from the structure data
+        
         let files: any[] = [];
         if (structureData.fileTree && Array.isArray(structureData.fileTree)) {
           // Extract all files from the hierarchical file tree
+         
           const extractFiles = (nodes: any[], result: any[] = []) => {
             for (const node of nodes) {
               if (node.type === 'file' || node.type === 'blob') {

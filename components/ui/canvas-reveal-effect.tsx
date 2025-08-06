@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import { cn } from "@/lib/utils";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
@@ -259,6 +260,55 @@ const ShaderMaterial = ({
 
   // Shader material
   const material = useMemo(() => {
+ 
+    const getUniforms = () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const preparedUniforms: any = {};
+
+      for (const uniformName in uniforms) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const uniform: any = uniforms[uniformName];
+
+        switch (uniform.type) {
+          case "uniform1f":
+            preparedUniforms[uniformName] = { value: uniform.value, type: "1f" };
+            break;
+          case "uniform3f":
+            preparedUniforms[uniformName] = {
+              value: new THREE.Vector3().fromArray(uniform.value),
+              type: "3f",
+            };
+            break;
+          case "uniform1fv":
+            preparedUniforms[uniformName] = { value: uniform.value, type: "1fv" };
+            break;
+          case "uniform3fv":
+            preparedUniforms[uniformName] = {
+              value: uniform.value.map((v: number[]) =>
+                new THREE.Vector3().fromArray(v)
+              ),
+              type: "3fv",
+            };
+            break;
+          case "uniform2f":
+            preparedUniforms[uniformName] = {
+              value: new THREE.Vector2().fromArray(uniform.value),
+              type: "2f",
+            };
+            break;
+          default:
+            console.error(`Invalid uniform type for '${uniformName}'.`);
+            break;
+        }
+      }
+
+      preparedUniforms["u_time"] = { value: 0, type: "1f" };
+      preparedUniforms["u_resolution"] = {
+        value: new THREE.Vector2(size.width * 2, size.height * 2),
+      }; // Initialize u_resolution
+      return preparedUniforms;
+    };
+
     const materialObject = new THREE.ShaderMaterial({
       vertexShader: `
       precision mediump float;
@@ -282,7 +332,7 @@ const ShaderMaterial = ({
     });
 
     return materialObject;
-  }, [size.width, size.height, source]);
+  }, [source, uniforms, size.width, size.height]);
 
   return (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

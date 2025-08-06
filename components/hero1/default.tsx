@@ -1,21 +1,21 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { ArrowRightIcon } from "lucide-react";
 import { ReactNode } from "react";
-import Footer from "@/components/Hero/Footer";
-import Section2 from "@/components/Hero/Section2";
+import Footer from "../Hero/Footer";
+import Section2 from "../Hero/Section2";
 import { CanvasCard } from "@/components/Hero/CanvasCard";
-import { CompareCard } from "../../Hero/CompareCard";
-import { MagicBean } from "@/components/Hero/MagicBean";
+import CompareCard from "../CompareCard";
+import { MagicBean } from "../Hero/MagicBean";
 
 import { cn } from "@/lib/utils";
 
-import Github from "../../logos/github";
-import { Badge } from "../../ui/badge";
-import { Button, type ButtonProps } from "../../ui/button";
-import Glow from "../../ui/glow";
-import { Mockup, MockupFrame } from "../../ui/mockup";
-import { PointerHighlight } from "../../ui/pointer-highlight";
-import Screenshot from "../../ui/screenshot";
+import Github from "../logos/github";
+import { Badge } from "../ui/badge";
+import { Button, type ButtonProps } from "../ui/button";
+import Glow from "../ui/glow";
+import { Mockup, MockupFrame } from "../ui/mockup";
+import { PointerHighlight } from "../ui/pointer-highlight";
+import Screenshot from "../ui/screenshot";
 import Section from "@/components/ui/Section";
 import { BentoCrad } from "@/components/Hero/BentoCrad";
 import Features from "@/components/Hero/Features";

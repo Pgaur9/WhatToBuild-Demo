@@ -4,15 +4,15 @@ import React, { Suspense, useEffect, useState, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import '@/components/RepositoryIssuesScrollbar.css';
 import axios from 'axios';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+//import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { 
-  FileCode2, FolderTree, GitBranch, Package, Database, Server, 
-  Layout, Settings, Users, Lock, Globe, FileJson, FileText,
-  Layers, ArrowRight, ChevronRight, ChevronDown, ExternalLink, 
-  Info, AlertCircle, CheckCircle2, Zap, Workflow
+  FileCode2, FolderTree, GitBranch,  Database, Server, 
+  Layout, Settings,  Globe, FileJson, FileText,
+   ChevronRight, ChevronDown, ExternalLink, 
+  Info, AlertCircle,  Zap, Workflow
 } from 'lucide-react';
 import { FileDetailsDialog } from '@/components/FileDetailsDialog';
 import { RepositoryIssues } from '@/components/RepositoryIssues';
@@ -209,6 +209,7 @@ function AnalyzePageContent() {
   const [selectedFile, setSelectedFile] = useState<FileNode | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [fileLoading, setFileLoading] = useState(false);
   
   // Use a ref to persist cached analysis results across renders

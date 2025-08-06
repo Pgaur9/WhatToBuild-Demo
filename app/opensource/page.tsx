@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -453,7 +454,7 @@ export default function OpenSourcePage() {
       <main>
         {/* Filter Controls */}
         <div className="relative max-w-3xl mx-auto mb-12">
-          <div className="relative overflow-hidden rounded-2xl bg-black/30 backdrop-blur-2xl border border-white/20 shadow-2xl shadow-black/20 group transition-all duration-300 hover:border-white/30 hover:bg-black/40 focus-within:border-white/40 focus-within:bg-black/50 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className="relative overflow-hidden rounded-2xl bg-black/30 backdrop-blur-2xl border border-white/20 shadow-2xl shadow-black/20 group transition-all duration-300 hover:border-white/30 hover:bg-black/40 focus-within:border-white/40 focus-within:bg-black/50 animate-in fade-in slide-in-from-top-4">
             <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5 pointer-events-none" />
             
             <div className="p-6 space-y-4">

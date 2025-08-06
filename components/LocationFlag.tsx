@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Minimal city-to-country fallback for Indian cities
 const indianCities = [
   'kolkata', 'mumbai', 'delhi', 'bengaluru', 'bangalore', 'hyderabad', 'chennai', 'pune'

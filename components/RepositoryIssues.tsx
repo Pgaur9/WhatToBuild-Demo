@@ -1,13 +1,27 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import './RepositoryIssuesScrollbar.css';
 import axios from 'axios';
-import { GitHubIssue } from '@/lib/github';
+import { GitHubIssue as OriginalGitHubIssue } from '@/lib/github';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, MessageSquare, Clock, ExternalLink, User, Tag } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
+
+// Extend GitHubIssue to include assignees
+interface GitHubUser {
+  login: string;
+  id: number;
+  avatar_url: string;
+  html_url: string;
+}
+
+interface GitHubIssue extends OriginalGitHubIssue {
+  assignees?: GitHubUser[];
+}
 
 interface RepositoryIssuesProps {
   repoFullName: string;
@@ -28,9 +42,12 @@ export function RepositoryIssues({ repoFullName }: RepositoryIssuesProps) {
     }
   } => {
     if (typeof window !== 'undefined') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if (!(window as any).__issuesCache) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (window as any).__issuesCache = {};
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (window as any).__issuesCache;
     }
     // SSR fallback (shouldn't happen for this component)
@@ -237,7 +254,7 @@ export function RepositoryIssues({ repoFullName }: RepositoryIssuesProps) {
       {/* Issue Details Dialog */}
       {selectedIssue && (
         <Dialog open={isIssueDialogOpen} onOpenChange={setIsIssueDialogOpen}>
-          <DialogContent className="max-w-3xl w-full bg-black/60 backdrop-blur-xl border border-white/20 text-white/90 max-h-[90vh] shadow-2xl shadow-black/20 z-50 relative overflow-hidden fixed top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 p-0 flex flex-col">
+          <DialogContent className="max-w-3xl w-full bg-black/60 backdrop-blur-xl border border-white/20 text-white/90 max-h-[90vh] shadow-2xl shadow-black/20 z-50 overflow-hidden fixed top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2 p-0 flex flex-col">
             {/* Liquid glass effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/10 pointer-events-none"></div>
             <div className="absolute -inset-1 bg-gradient-to-r from-white/0 via-white/10 to-white/0 blur-xl opacity-50 -z-10"></div>
@@ -284,7 +301,7 @@ export function RepositoryIssues({ repoFullName }: RepositoryIssuesProps) {
                         <User className="w-4 h-4 text-green-400" />
                         <span className="text-white/80">Assigned to:</span>
                         <div className="flex items-center gap-1">
-                          {selectedIssue.assignees.map((assignee) => (
+                          {selectedIssue.assignees.map((assignee: GitHubUser) => (
                             <a 
                               key={assignee.id}
                               href={assignee.html_url}

@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
           // Return null for empty files so they can be filtered out
           if (content === null) return null;
           return { path: file.path, content };
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
           console.warn(`Could not fetch content for ${file.path}, skipping.`);
           return null; // Skip files that fail to fetch

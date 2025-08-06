@@ -14,7 +14,7 @@ export default function RepositoryTableRow({ repo, onViewDetails }: RepositoryTa
   const router = useRouter();
 
   return (
-    <tr className="hover:bg-black/40 transition-all duration-300 group border-b border-white/10 backdrop-blur-sm relative overflow-hidden animate-in fade-in slide-in-from-left-2 duration-500">
+    <tr className="hover:bg-black/40 transition-all duration-300 group border-b border-white/10 backdrop-blur-sm relative overflow-hidden animate-in fade-in slide-in-from-left-2">
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
       

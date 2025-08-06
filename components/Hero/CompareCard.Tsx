@@ -2,11 +2,13 @@
 'use client';
 import { GoodText } from "./GoodText";
 import React, { useState, useEffect } from 'react';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Github, Users, Star, Download, Trophy, Code, Flame, RotateCcw, Calendar } from 'lucide-react';
 import Image from 'next/image';
 import { LucideIcon } from 'lucide-react';
 import ContributionGraph from '@/components/ContributionGraph';
 import Glow from "@/components/ui/glow";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { GlowingEffect } from '@/components/ui/glowing-effect';
 
 interface GitHubUser {
@@ -130,6 +132,7 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
     year: 'numeric' 
   });
   
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const isWinner = winner === user.login;
   return (
     <div
@@ -249,7 +252,8 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
         <div className="mb-3 flex items-center">
           <h4 className="text-sm font-medium text-white/75 mr-2">Languages</h4>
           <div className="flex flex-row gap-1.5">
-            {Object.entries(stats.languageStats || {}).slice(0, 3).map(([lang, langStats]) => (
+            
+            {Object.entries(stats.languageStats || {}).slice(0, 3).map(([lang]) => (
               <span
                 key={lang}
                 className="language-badge px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all duration-300 cursor-default"
