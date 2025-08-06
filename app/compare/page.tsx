@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @next/next/no-img-element */
 'use client';
 
@@ -11,6 +12,7 @@ import { saveAs } from 'file-saver';
 import Image from 'next/image';
 import { LucideIcon } from 'lucide-react';
 import ContributionGraph from '@/components/ContributionGraph';
+import Glow from '@/components/ui/glow';
 import './page.css';
 
 interface GitHubUser {
@@ -295,15 +297,9 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
         files: [file],
       };
 
-      if (navigator.share && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-      } else {
-        // Fallback for browsers that do not support navigator.share
-        const text = `🔥 BRUTAL GitHub Battle: @${username1} vs @${username2}! The roast is SAVAGE! 💀 Who's the better dev? 👑 #GitHubBattle #DevRoast #CodingShowdown`;
-        const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-        window.open(url, '_blank');
-        alert('Sharing not supported on this browser. Opened Twitter in a new tab.');
-      }
+      const text = `When @${username1} opens VS Code, GitHub shivers. @${username2} tried to roast, but forgot to import 🔥. This isn’t a pull request, it’s a public execution. #GitHubBattle #Whattobuild .. Make your own - wtb.niladri.tech/compare`;
+      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
     } catch (error) {
       console.error('oops, something went wrong!', error);
       alert('Failed to generate image for sharing. Please try again.');
@@ -341,14 +337,15 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
   };
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden custom-scrollbar pt-28">
-      {/* Pearl Mist Background with Top Glow */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(226, 232, 240, 0.15), transparent 70%), #000000",
-        }}
-      />
+    <div className="min-h-screen w-full relative overflow-hidden custom-scrollbar">
+      {/* Background effects matching default.tsx */}
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-black/80 via-gray-900/60 to-black/80 pointer-events-none" />
+      <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent opacity-60 pointer-events-none" />
+      
+      {/* Glow effect */}
+      <div className="relative w-full">
+        <Glow variant="top" className="opacity-40" />
+      </div>
       {/* Rye font import for header and Rubik Doodle Shadow for input */}
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Rye&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Germania+One&display=swap');
@@ -390,56 +387,58 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
           transform: translateY(-2px) scale(1.02);
         }
         
-        /* Enhanced 3D button effects */
+        /* Enhanced 3D button effects - sophisticated dark theme */
         .premium-btn {
-          background: linear-gradient(145deg, rgba(30,30,35,0.95) 0%, rgba(15,15,20,0.98) 100%);
-          border: 2px solid rgba(255,255,255,0.15);
+          background: linear-gradient(145deg, rgba(8,8,12,0.95) 0%, rgba(3,3,8,0.98) 100%);
+          border: 1px solid rgba(255,255,255,0.12);
           box-shadow: 
             0 8px 32px rgba(0,0,0,0.6),
-            inset 0 2px 0 rgba(255,255,255,0.1),
-            inset 0 -2px 0 rgba(0,0,0,0.3);
+            inset 0 1px 0 rgba(255,255,255,0.08),
+            inset 0 -1px 0 rgba(0,0,0,0.3);
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
           transform-style: preserve-3d;
+          backdrop-filter: blur(20px) saturate(150%);
         }
         
         .premium-btn:hover {
-          transform: translateY(-3px) scale(1.05);
+          transform: translateY(-2px) scale(1.02);
           box-shadow: 
-            0 15px 50px rgba(0,0,0,0.8),
-            inset 0 3px 0 rgba(255,255,255,0.15),
-            inset 0 -3px 0 rgba(0,0,0,0.4),
-            0 0 25px rgba(255,255,255,0.2);
-          border-color: rgba(255,255,255,0.25);
+            0 15px 40px rgba(0,0,0,0.8),
+            inset 0 2px 0 rgba(255,255,255,0.12),
+            inset 0 -2px 0 rgba(0,0,0,0.4),
+            0 0 20px rgba(255,255,255,0.1);
+          border-color: rgba(255,255,255,0.18);
+          background: linear-gradient(145deg, rgba(12,12,18,0.95) 0%, rgba(6,6,12,0.98) 100%);
         }
         
         .premium-btn:active {
-          transform: translateY(-1px) scale(1.02);
+          transform: translateY(-1px) scale(1.01);
           box-shadow: 
-            0 8px 25px rgba(0,0,0,0.6),
-            inset 0 2px 0 rgba(0,0,0,0.2),
-            inset 0 -1px 0 rgba(255,255,255,0.1);
+            0 6px 20px rgba(0,0,0,0.6),
+            inset 0 1px 0 rgba(0,0,0,0.2),
+            inset 0 -1px 0 rgba(255,255,255,0.08);
         }
         
-        /* Premium roast section 3D effects */
+        /* Premium roast section - clean dark aesthetic */
         .roast-section {
           background: linear-gradient(145deg, rgba(8,8,12,0.98) 0%, rgba(3,3,8,0.96) 100%);
           border: 1px solid rgba(255,255,255,0.12);
           box-shadow: 
-            0 25px 80px rgba(0,0,0,0.9),
-            0 0 60px rgba(239,68,68,0.1),
-            inset 0 2px 0 rgba(255,255,255,0.08),
-            inset 0 -1px 0 rgba(239,68,68,0.05);
+            0 20px 60px rgba(0,0,0,0.9),
+            inset 0 1px 0 rgba(255,255,255,0.08),
+            inset 0 -1px 0 rgba(0,0,0,0.3);
           transition: all 0.4s ease;
           transform-style: preserve-3d;
+          backdrop-filter: blur(20px) saturate(150%);
         }
         
         .roast-section:hover {
-          transform: translateY(-2px);
+          transform: translateY(-1px);
           box-shadow: 
-            0 35px 100px rgba(0,0,0,0.95),
-            0 0 80px rgba(239,68,68,0.15),
-            inset 0 3px 0 rgba(255,255,255,0.12),
-            inset 0 -2px 0 rgba(239,68,68,0.08);
+            0 25px 80px rgba(0,0,0,0.95),
+            inset 0 2px 0 rgba(255,255,255,0.12),
+            inset 0 -2px 0 rgba(0,0,0,0.4);
+          border-color: rgba(255,255,255,0.16);
         }
         
         /* Premium battle verdict section */
@@ -605,16 +604,16 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
       {showConfetti && (
         <ConfettiOverlay />
       )}
-      <div className="container mx-auto px-4 pt-24 pb-8 relative z-10">
+      <div className="container mx-auto p-4 md:p-8 pt-24 md:pt-32 relative z-10">
         {!showResults ? (
           <div className="text-center mb-12">
             <div className="flex flex-col items-center justify-center" style={{ minHeight: '220px' }}>
-              <h1 className="text-6xl font-bold mb-4 rye-regular text-center" style={{ lineHeight: 1.1 }}>
-                <span className="bg-gradient-to-r from-white via-gray-300 to-gray-500 bg-clip-text text-transparent">
+              <h1 className="text-6xl font-bold mb-4 font-bungee text-center" style={{ lineHeight: 1.1 }}>
+                <span className="bg-gradient-to-b from-white via-gray-200 to-gray-400 bg-clip-text text-transparent drop-shadow-lg">
                   GitHub Battle Arena
                 </span>
               </h1>
-              <p className="text-xl text-white/80 mb-8 text-center">
+              <p className="text-xl text-white/70 mb-8 text-center">
                 Compare two GitHub warriors and watch the sparks fly! 🔥
               </p>
             </div>
@@ -883,39 +882,37 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
             <div className="flex flex-col items-center justify-center mb-6 gap-4">
               <div className="relative">
                 <h1 className="text-5xl font-bold mb-2 relative">
-                  <span className="bg-gradient-to-r from-white via-gray-300 to-gray-500 bg-clip-text rye-regular text-transparent relative z-10">
+                  <span className="bg-gradient-to-b from-white via-gray-200 to-gray-400 bg-clip-text rye-regular text-transparent relative z-10 drop-shadow-lg">
                     Battle Results
                   </span>
-                  {/* Glitch effect background */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-orange-500/20 blur-sm animate-pulse opacity-30" />
+                  {/* Subtle glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-white/5 blur-xl opacity-20" />
                 </h1>
               </div>
               
-              {/* Action Buttons - Premium 3D Design */}
+              {/* Action Buttons - Clean sophisticated design */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center print:hidden">
                 <Button
                   onClick={resetBattle}
-                  className="premium-btn text-white font-bold py-3 px-8 rounded-xl transition-all text-sm relative overflow-hidden"
+                  className="premium-btn text-white/90 font-medium py-3 px-8 rounded-xl transition-all text-sm relative overflow-hidden hover:text-white"
                 >
                   <span className="relative z-10 flex items-center">
                     <RotateCcw className="w-4 h-4 mr-2" />
                     New Battle
                   </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
                 </Button>
                 <Button
                   onClick={downloadAsImage}
-                  className="premium-btn text-white font-bold py-3 px-8 rounded-xl transition-all text-sm relative overflow-hidden"
+                  className="premium-btn text-white/90 font-medium py-3 px-8 rounded-xl transition-all text-sm relative overflow-hidden hover:text-white"
                 >
                   <span className="relative z-10 flex items-center">
                     <Download className="w-4 h-4 mr-2" />
                     Download Battle
                   </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
                 </Button>
                 <Button
                   onClick={shareToTwitter}
-                  className="premium-btn text-white font-bold py-3 px-8 rounded-xl transition-all text-sm relative overflow-hidden"
+                  className="premium-btn text-white/90 font-medium py-3 px-8 rounded-xl transition-all text-sm relative overflow-hidden hover:text-white"
                 >
                   <span className="relative z-10 flex items-center">
                     <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
@@ -923,12 +920,10 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                     </svg>
                     Share on X
                   </span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 opacity-0 hover:opacity-100 transition-opacity duration-300" />
                 </Button>
               </div>
             </div>
-            {/* Roast Section - Premium 3D Design */}
-            {/* Clean Roast Section */}
+            {/* Roast Section - Clean sophisticated design */}
             {roastText && (
               <div className="roast-section backdrop-blur-xl rounded-xl p-5 relative overflow-hidden"
                 style={{
@@ -943,7 +938,7 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                     left: 0,
                     right: 0,
                     height: '2px',
-                    background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
                     borderTopLeftRadius: 'inherit',
                     borderTopRightRadius: 'inherit',
                   }} />
@@ -954,7 +949,7 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                     left: 0,
                     right: 0,
                     height: '40px',
-                    background: 'linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%)',
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)',
                     borderTopLeftRadius: 'inherit',
                     borderTopRightRadius: 'inherit',
                     opacity: 0.7,
@@ -964,28 +959,30 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                 {/* Clean header with battle stats */}
                 <div className="flex items-center justify-between mb-4 relative z-10">
                   <div className="flex items-center gap-3">
-                    <Flame className="w-6 h-6 text-red-400" />
-                    <h2 className="text-xl font-bold text-white">The Brutal Roast 🔥</h2>
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-white/20 to-white/10 flex items-center justify-center">
+                      <span className="text-sm">🔥</span>
+                    </div>
+                    <h2 className="text-xl font-semibold text-white/95">The Brutal Roast</h2>
                   </div>
                   
                   {/* Clean battle stats */}
                   {battleStats && (
-                    <div className="flex items-center gap-3 backdrop-blur-sm border border-white/10 rounded-lg px-3 py-2 relative overflow-hidden"
+                    <div className="flex items-center gap-4 backdrop-blur-sm border border-white/8 rounded-lg px-4 py-2 relative overflow-hidden"
                       style={{
-                        background: 'linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.20) 100%)',
-                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10)',
+                        background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.15) 100%)',
+                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
                       }}>
-                      <div className="flex items-center gap-1.5 text-xs relative z-10">
-                        <span className="text-red-400 text-sm">⚔️</span>
-                        <span className="text-white/80 font-medium">{battleStats.totalCommitsCompared.toLocaleString()}</span>
+                      <div className="flex items-center gap-2 text-sm relative z-10">
+                        <span className="text-white/70 font-medium">Commits:</span>
+                        <span className="text-white/90 font-semibold">{battleStats.totalCommitsCompared.toLocaleString()}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs relative z-10">
-                        <span className="text-yellow-400 text-sm">⭐</span>
-                        <span className="text-white/80 font-medium">{battleStats.totalStarsClashed.toLocaleString()}</span>
+                      <div className="flex items-center gap-2 text-sm relative z-10">
+                        <span className="text-white/70 font-medium">Stars:</span>
+                        <span className="text-white/90 font-semibold">{battleStats.totalStarsClashed.toLocaleString()}</span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs relative z-10">
-                        <span className="text-blue-400 text-sm">📦</span>
-                        <span className="text-white/80 font-medium">{battleStats.totalReposJudged}</span>
+                      <div className="flex items-center gap-2 text-sm relative z-10">
+                        <span className="text-white/70 font-medium">Repos:</span>
+                        <span className="text-white/90 font-semibold">{battleStats.totalReposJudged}</span>
                       </div>
                     </div>
                   )}
