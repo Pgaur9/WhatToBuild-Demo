@@ -26,6 +26,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import LiquidLoader from '@/components/LiquidLoader';
 
 export default function OpenSourcePage() {
+  // Timeout message state
+  const [showTimeoutMessage, setShowTimeoutMessage] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   // Filter state
   const [filter, setFilter] = useState<'good first issue' | 'bounty issue' | 'major issue'>('good first issue');
   const [language, setLanguage] = useState<string>('');
@@ -310,10 +313,21 @@ export default function OpenSourcePage() {
     setIsLoading(true);
     setError(null);
 
+    // Timeout logic: show message after 3s, hide only when loading ends
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setShowTimeoutMessage(false);
+    timeoutRef.current = setTimeout(() => {
+      setShowTimeoutMessage(true);
+    }, 3000);
+
     await fetchTrendingRepos(filter, language, 1);
 
     setIsLoading(false);
-    
+    setShowTimeoutMessage(false);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     // Scroll to results after search completes
     setTimeout(() => {
       resultsRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -536,6 +550,11 @@ export default function OpenSourcePage() {
         {isLoading && (
           <div className="my-12 animate-in fade-in duration-300">
             <LiquidLoader text="Finding repositories with real issues" size="lg" />
+            {showTimeoutMessage && (
+              <div className="mt-6 text-center text-indigo-300 text-base font-medium animate-pulse bg-black/40 border border-indigo-500/20 rounded-xl px-6 py-3 max-w-lg mx-auto shadow-lg backdrop-blur-xl">
+                Please wait, It may take some moment
+              </div>
+            )}
           </div>
         )}
 

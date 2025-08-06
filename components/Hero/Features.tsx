@@ -64,7 +64,7 @@ const Features = ({ forceDarkMode = true }) => {
       title: "Find Best Open Source Repos to Contribute",
       description: "Discover good first issues, bounty issues, and major contributions across different programming languages",
       icon: <FaSearch />,
-      videoSrc: "https://res.cloudinary.com/duy8dp4tq/video/upload/v1751725107/nactlyoprqxqpqko9fej.mp4",
+      videoSrc: "https://res.cloudinary.com/duy8dp4tq/video/upload/v1754499776/hgxphhdygc4rdfkptsrx.mp4",
       posterSrc: "https://www.solidbackgrounds.com/images/1280x720/1280x720-black-solid-color-background.jpg"
     },
     {
