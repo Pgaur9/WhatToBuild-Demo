@@ -111,15 +111,24 @@ const Features = ({ forceDarkMode = true }) => {
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-20">
           {/* Feature List */}
-          <div className="space-y-4">
+          <div className="flex flex-col gap-4">
             {premiumFeatures.map((feature, index) => (
               <div
                 key={feature.id}
-                className={`group relative cursor-pointer transition-all duration-300 ${
+                className={`group relative cursor-pointer transition-all duration-300 rounded-2xl md:rounded-3xl overflow-hidden ${
                   activeFeature === feature.id 
-                    ? 'scale-[1.02]' 
-                    : 'hover:scale-[1.02]'
+                    ? 'scale-105 z-20 border-blue-400/30 -translate-y-1 shadow-[0_0_16px_2px_rgba(80,180,255,0.18)] bg-black/60' 
+                    : 'hover:scale-105 hover:border-white/20'
                 }`}
+                style={
+                  activeFeature === feature.id
+                    ? {
+                        borderColor: 'rgba(80,180,255,0.30)',
+                        background: 'rgba(10,20,40,0.85)',
+                        transform: 'scale(1.05) translateY(-4px)'
+                      }
+                    : undefined
+                }
                 onClick={() => handleFeatureClick(feature.id)}
               >
                 <div className="relative rounded-2xl border border-white/10 p-2 transition-all duration-300 hover:border-white/20 md:rounded-3xl md:p-3">
@@ -178,6 +187,7 @@ const Features = ({ forceDarkMode = true }) => {
               <div className="relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-sm border border-white/5 dark:shadow-[0px_0px_27px_0px_#2D2D2D]">
               <div className="relative aspect-video w-full">
                 <video 
+                  key={activeFeatureData?.videoSrc}
                   ref={videoRef}
                   className="w-full h-full object-cover"
                   poster={activeFeatureData?.posterSrc}
