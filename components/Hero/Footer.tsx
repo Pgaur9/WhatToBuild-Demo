@@ -131,9 +131,9 @@ const Footer = () => {
                 {/* Enhanced Profile Info */}
                 <div className="flex-grow text-center lg:text-right order-1 lg:order-2 space-y-3">
                   <h3 className="relative font-sans text-2xl lg:text-3xl font-semibold text-white leading-tight transition-all duration-300 group-hover:text-white/95">
-                    <span className="relative z-10">Created by Niladri Hazra</span>
+                    <span className="relative z-10">Created by Niladri</span>
                     <div className="absolute inset-0 blur-lg opacity-0 group-hover:opacity-30 transition-opacity duration-500">
-                      <span className="text-blue-300">Created by Niladri Hazra</span>
+                      <span className="text-blue-300">Created by Niladri </span>
                     </div>
                   </h3>
                   <p className="font-sans text-lg text-white/75 transition-colors duration-300 group-hover:text-white/85">
