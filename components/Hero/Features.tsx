@@ -39,7 +39,7 @@ const Features = ({ forceDarkMode = true }) => {
       title: "Your Random Idea to GitHub Repo",
       description: "Transform your creative ideas into structured GitHub repositories with AI-powered project scaffolding",
       icon: <FaRocket />,
-      videoSrc: "https://res.cloudinary.com/duy8dp4tq/video/upload/v1754475468/fizyiz5e3tfouuanzspy.mp4",
+      videoSrc: "https://res.cloudinary.com/duy8dp4tq/video/upload/v1754477364/qvsrnneoe154uunnsy1i.mp4",
       posterSrc: "https://www.solidbackgrounds.com/images/1280x720/1280x720-black-solid-color-background.jpg"
     },
     {
