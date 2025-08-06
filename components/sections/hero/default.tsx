@@ -1,23 +1,23 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ArrowRightIcon } from "lucide-react";
 import { ReactNode } from "react";
 import Footer from "@/components/Hero/Footer";
 import Section2 from "@/components/Hero/Section2";
-import { CanvasCard } from "@/components/Hero/CanvasCard";
-import CompareCard from "@/components/CompareCard";
+
+import {CompareCard} from "@/components/Hero/CompareCard";
 import { MagicBean } from "@/components/Hero/MagicBean";
 
 import { cn } from "@/lib/utils";
 
-import Github from "../../logos/github";
+
 import { Badge } from "../../ui/badge";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Button, type ButtonProps } from "../../ui/button";
 import Glow from "../../ui/glow";
 import { Mockup, MockupFrame } from "../../ui/mockup";
 import { PointerHighlight } from "../../ui/pointer-highlight";
 import Screenshot from "../../ui/screenshot";
 import Section from "@/components/ui/Section";
-import { BentoCrad } from "@/components/Hero/BentoCrad";
+
 import Features from "@/components/Hero/Features";
 import { RollingText } from "@/components/Hero/RollingText";
 interface HeroButtonProps {
@@ -38,6 +38,7 @@ interface HeroProps {
 }
 
 export default function Hero({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   title = "What to Build?",
   description = "Enter a concept to discover and analyze relevant open-source projects.",
   mockup = (
@@ -61,6 +62,7 @@ export default function Hero({
       </a>
     </Badge>
   ),
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   buttons = [
    
   ],
