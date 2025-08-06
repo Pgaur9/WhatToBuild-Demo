@@ -4,7 +4,7 @@ import { ReactNode } from "react";
 import Footer from "@/components/Hero/Footer";
 import Section2 from "@/components/Hero/Section2";
 import { CanvasCard } from "@/components/Hero/CanvasCard";
-import { CompareCard } from "../../Hero/CompareCard";
+import CompareCard from "@/components/CompareCard";
 import { MagicBean } from "@/components/Hero/MagicBean";
 
 import { cn } from "@/lib/utils";
