@@ -46,6 +46,20 @@ function getFileIcon(extension: string | undefined) {
 }
 
 export function FileDetailsDialog({ isOpen, onClose, file, repoFullName }: FileDetailsDialogProps) {
+  // Add effect to toggle body class when dialog is open
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('dialog-open');
+    } else {
+      document.body.classList.remove('dialog-open');
+    }
+    
+    // Clean up on unmount
+    return () => {
+      document.body.classList.remove('dialog-open');
+    };
+  }, [isOpen]);
+
   if (!file) return null;
   
   const fileName = file.name;

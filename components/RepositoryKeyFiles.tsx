@@ -64,7 +64,7 @@ const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
   if (typeof window !== 'undefined') {
     
     if (!(window as any).__keyFilesCache) {
-     
+      (window as any).__keyFilesCache = {};
     }
    
     return (window as any).__keyFilesCache;
@@ -74,6 +74,10 @@ const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
 };
 
   useEffect(() => {
+    // Declare controller and timeoutId in the outer scope so they are accessible in cleanup
+    let controller: AbortController;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
     const fetchKeyFiles = async () => {
       if (!repoFullName) return;
       const cache = getKeyFilesCache();
@@ -82,6 +86,11 @@ const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
         setLoading(false);
         return;
       }
+      
+      // Use AbortController to handle timeouts and cancellations
+      controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
       setLoading(true);
       setError(null);
       try {
@@ -220,19 +229,31 @@ const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
           return b.size - a.size;
         });
         
-        // Take top 20 files
-        const topFiles = sortedFiles.slice(0, 20);
+        // Take top 15 files instead of 20 to improve performance
+        const topFiles = sortedFiles.slice(0, 15);
         setKeyFiles(topFiles);
         getKeyFilesCache()[repoFullName] = topFiles;
 
         // Do NOT prefetch Gemini analysis for all files. Only fetch on click in the dialog.
       } catch (err) {
-        setError('Failed to fetch key files. Please try again.');
+        if (typeof err === 'object' && err !== null && 'name' in err && (err as { name?: string }).name === 'AbortError') {
+          setError('Request timed out. The repository might be too large or the server is busy.');
+        } else {
+          console.error('Error fetching key files:', err);
+          setError('Failed to fetch key files. Please try again.');
+        }
       } finally {
         setLoading(false);
+        clearTimeout(timeoutId);
       }
     };
     fetchKeyFiles();
+    
+    // Clean up the abort controller on unmount
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (controller) controller.abort();
+    };
   }, [repoFullName]);
 
   // Helper: 1-2 line summary for file type with more detailed descriptions
@@ -306,8 +327,15 @@ const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
 
   // Function to get detailed analysis of file content using Gemini
   async function getDetailedFileAnalysis(repoFullName: string, filePath: string): Promise<string> {
+    // Use AbortController to handle timeouts
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    
     try {
-      const response = await fetch(`/api/analyze-file-content?repo=${encodeURIComponent(repoFullName)}&path=${encodeURIComponent(filePath)}`);
+      const response = await fetch(
+        `/api/analyze-file-content?repo=${encodeURIComponent(repoFullName)}&path=${encodeURIComponent(filePath)}`,
+        { signal: controller.signal }
+      );
       
       if (!response.ok) {
         console.error('API response not OK:', response.status);
@@ -318,7 +346,12 @@ const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
       return data.analysis || 'No detailed analysis available.';
     } catch (err) {
       console.error('Error fetching file analysis:', err);
+      if (typeof err === 'object' && err !== null && 'name' in err && (err as { name?: string }).name === 'AbortError') {
+        return 'Analysis request timed out. The file might be too large or complex.';
+      }
       return 'Unable to generate detailed analysis for this file.';
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
@@ -329,6 +362,11 @@ const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
 
   const fetchFileContent = async (filePath: string) => {
     setFileContentLoading(true);
+    
+    // Use AbortController to handle timeouts
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // 20 second timeout
+    
     try {
       // Check if we already have cached content for this file
       const cacheKey = `${repoFullName}:${filePath}`;
@@ -339,7 +377,10 @@ const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
 
       console.log('Fetching file content for:', filePath);
       // Use the correct parameter format for our API
-      const response = await fetch(`/api/get-file-content?repo=${encodeURIComponent(repoFullName)}&path=${encodeURIComponent(filePath)}`);
+      const response = await fetch(
+        `/api/get-file-content?repo=${encodeURIComponent(repoFullName)}&path=${encodeURIComponent(filePath)}`,
+        { signal: controller.signal }
+      );
       
       if (!response.ok) {
         console.error('API response not OK:', response.status);
@@ -359,8 +400,12 @@ const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
       return data.content;
     } catch (err) {
       console.error('Error fetching file content:', err);
+      if (typeof err === 'object' && err !== null && 'name' in err && (err as { name?: string }).name === 'AbortError') {
+        console.warn('File content request timed out for:', filePath);
+      }
       return null;
     } finally {
+      clearTimeout(timeoutId);
       setFileContentLoading(false);
     }
   };
@@ -513,23 +558,37 @@ const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
     return languageMap[extension.toLowerCase()] || 'text';
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Identifying key files...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 h-full">
-        <AlertCircle className="h-8 w-8 text-destructive mb-4" />
-        <p className="text-muted-foreground">{error}</p>
-      </div>
-    );
-  }
+  // Add useEffect to toggle body class when dialog is open
+    useEffect(() => {
+      if (isDialogOpen) {
+        document.body.classList.add('dialog-open');
+      } else {
+        document.body.classList.remove('dialog-open');
+      }
+      
+      // Clean up on unmount
+      return () => {
+        document.body.classList.remove('dialog-open');
+      };
+    }, [isDialogOpen]);
+  
+    if (loading) {
+      return (
+        <div className="flex flex-col items-center justify-center p-8 h-full">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground">Identifying key files...</p>
+        </div>
+      );
+    }
+  
+    if (error) {
+      return (
+        <div className="flex flex-col items-center justify-center p-8 h-full">
+          <AlertCircle className="h-8 w-8 text-destructive mb-4" />
+          <p className="text-muted-foreground">{error}</p>
+        </div>
+      );
+    }
 
   return (
     <div className="space-y-4">
@@ -598,7 +657,7 @@ const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
             {/* File analysis section */}
             {selectedFile?.detailedAnalysis && (
               <div className="mt-2 p-3 bg-black/30 rounded-md border border-white/10 text-sm">
-                <h4 className="text-white/90 font-medium mb-1">AI Analysis:</h4>
+                <h4 className="text-white/90 font-medium mb-1">Analysis:</h4>
                 <p className="text-white/80">{selectedFile.detailedAnalysis}</p>
               </div>
             )}
