@@ -48,7 +48,7 @@ const Features = ({ forceDarkMode = true }) => {
       title: "Analyze GitHub Repository",
       description: "Deep dive into repository structure, analyze code quality, dependencies, and get comprehensive insights",
       icon: <FaCode />,
-      videoSrc: "https://res.cloudinary.com/duy8dp4tq/video/upload/v1751725107/nactlyoprqxqpqko9fej.mp4",
+      videoSrc: "https://res.cloudinary.com/duy8dp4tq/video/upload/v1754496816/fczk6cbu8q4ji9aeleig.mp4",
       posterSrc: "https://www.solidbackgrounds.com/images/1280x720/1280x720-black-solid-color-background.jpg"
     },
     {
@@ -56,7 +56,7 @@ const Features = ({ forceDarkMode = true }) => {
       title: "Visualize GitHub Repository",
       description: "Generate interactive flow diagrams and visual representations of repository architecture",
       icon: <FaEye />,
-      videoSrc: "https://res.cloudinary.com/duy8dp4tq/video/upload/v1751725107/nactlyoprqxqpqko9fej.mp4",
+      videoSrc: "https://res.cloudinary.com/duy8dp4tq/video/upload/v1754494779/gm338fv7egm7afk6ap0t.mp4",
       posterSrc: "https://www.solidbackgrounds.com/images/1280x720/1280x720-black-solid-color-background.jpg"
     },
     {
