@@ -66,7 +66,7 @@ function VisualizePageContent() {
       <div className="w-full">
         {isLoading && (
           <div className="border-2 border-dashed border-gray-700 bg-gray-900/20 rounded-lg min-h-[500px] flex items-center justify-center p-8">
-            <p className="text-gray-400 text-xl animate-pulse">AI is analyzing the repository and generating a diagram...</p>
+            <p className="text-gray-400 text-xl animate-pulse">Analyzing the repository and generating a diagram...</p>
           </div>
         )}
         {error && <p className="text-red-500 text-center p-8 bg-red-900/20 rounded-lg">{error}</p>}

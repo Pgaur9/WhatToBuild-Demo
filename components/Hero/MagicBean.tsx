@@ -1,12 +1,13 @@
 "use client";
 
 import React, { forwardRef, useRef } from "react";
-import Image from "next/image";
+
 
 
 import { cn } from "@/lib/utils";
 import { AnimatedBeam } from "@/components/magicui/animated-beam";
 import { Github, Dock, Gitlab, Slack, Chrome, TerminalSquare, Feather } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 
 const Circle = forwardRef<
   HTMLDivElement,
@@ -16,7 +17,7 @@ const Circle = forwardRef<
     <div
       ref={ref}
       className={cn(
-        "z-10 flex size-14 items-center justify-center rounded-full border border-white/20 bg-gradient-to-br from-black/70 to-black/50 p-3 backdrop-blur-xl shadow-[0_0_30px_-5px_rgba(120,120,255,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_0px_rgba(120,120,255,0.4)]",
+        "z-10 flex size-14 items-center justify-center rounded-full border border-white/20 bg-gradient-to-br from-black/70 to-black/50 p-3 backdrop-blur-xl shadow-[0_0_30px_-5px_rgba(120,120,255,0.3)] transition-all duration-300 hover:shadow-[0_0_30px_0px_rgba(120,120,255,0.4)] group",
         className,
       )}
     >
@@ -46,33 +47,33 @@ export function MagicBean() {
     >
       <div className="flex size-full max-h-[600px] max-w-5xl flex-col items-stretch justify-between gap-24">
         <div className="flex flex-row items-center justify-between">
-          <Circle ref={div1Ref}>
-            <Gitlab className="w-10 h-10 text-white/80" />
+          <Circle ref={div1Ref} className="shadow-[0_0_30px_-5px_rgba(120,120,255,0.3),0_0_15px_rgba(255,255,255,0.2)]">
+            <Gitlab className="w-10 h-10 text-white/80 transition-all duration-300 group-hover:text-white" style={{filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.4))'}} />
           </Circle>
-          <Circle ref={div5Ref}>
-            <Dock className="w-10 h-10 text-white/80" />
+          <Circle ref={div5Ref} className="shadow-[0_0_30px_-5px_rgba(120,120,255,0.3),0_0_15px_rgba(255,255,255,0.2)]">
+            <Dock className="w-10 h-10 text-white/80 transition-all duration-300 group-hover:text-white" style={{filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.4))'}} />
           </Circle>
-          <Circle ref={div6Ref}>
-            <Slack className="w-10 h-10 text-white/80" />
+          <Circle ref={div6Ref} className="shadow-[0_0_30px_-5px_rgba(120,120,255,0.3),0_0_15px_rgba(255,255,255,0.2)]">
+            <Slack className="w-10 h-10 text-white/80 transition-all duration-300 group-hover:text-white" style={{filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.4))'}} />
           </Circle>
         </div>
         <div className="flex flex-row items-center justify-between">
-          <Circle ref={div2Ref}>
-            <Chrome className="w-10 h-10 text-white/80" />
+          <Circle ref={div2Ref} className="shadow-[0_0_30px_-5px_rgba(120,120,255,0.3),0_0_15px_rgba(255,255,255,0.2)]">
+            <Chrome className="w-10 h-10 text-white/80 transition-all duration-300 group-hover:text-white" style={{filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.4))'}} />
           </Circle>
-          <Circle ref={div4Ref} className="size-24 bg-gradient-to-br from-black/70 to-black/50 border-white/20 shadow-[0_0_40px_0px_rgba(120,120,255,0.5)] flex items-center justify-center">
-            <Github className="w-16 h-16 text-white/80" />
+          <Circle ref={div4Ref} className="size-24 bg-gradient-to-br from-black/70 to-black/50 border-white/20 shadow-[0_0_40px_0px_rgba(120,120,255,0.5),0_0_20px_rgba(255,255,255,0.3)] flex items-center justify-center">
+            <Github className="w-16 h-16 text-white/80 transition-all duration-300 group-hover:text-white" style={{filter: 'drop-shadow(0 0 12px rgba(255,255,255,0.6))'}} />
           </Circle>
-          <Circle ref={div3Ref}>
-            <TerminalSquare className="w-10 h-10 text-white/80" />
+          <Circle ref={div3Ref} className="shadow-[0_0_30px_-5px_rgba(120,120,255,0.3),0_0_15px_rgba(255,255,255,0.2)]">
+            <TerminalSquare className="w-10 h-10 text-white/80 transition-all duration-300 group-hover:text-white" style={{filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.4))'}} />
           </Circle>
         </div>
         <div className="flex flex-row items-center justify-between mx-auto w-3/4">
-          <Circle ref={div7Ref}>
-            <Feather className="w-10 h-10 text-white/80" />
+          <Circle ref={div7Ref} className="shadow-[0_0_30px_-5px_rgba(120,120,255,0.3),0_0_15px_rgba(255,255,255,0.2)]">
+            <Feather className="w-10 h-10 text-white/80 transition-all duration-300 group-hover:text-white" style={{filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.4))'}} />
           </Circle>
-          <Circle ref={div8Ref}>
-            <TerminalSquare className="w-10 h-10 text-white/80" />
+          <Circle ref={div8Ref} className="shadow-[0_0_30px_-5px_rgba(120,120,255,0.3),0_0_15px_rgba(255,255,255,0.2)]">
+            <BookOpen className="w-10 h-10 text-white/80 transition-all duration-300 group-hover:text-white" style={{filter: 'drop-shadow(0 0 8px rgba(255,255,255,0.4))'}} />
           </Circle>
         </div>
       </div>
