@@ -20,6 +20,7 @@ import Section from "@/components/ui/Section";
 
 import Features from "@/components/Hero/Features";
 import { RollingText } from "@/components/Hero/RollingText";
+import Readme from "@/components/Hero/Readme";
 interface HeroButtonProps {
   href: string;
   text: string;
@@ -131,10 +132,14 @@ export default function Hero({
        
 
       <CompareCard />
+
+      <Readme />
       
       <Section2 />
 
-      <RollingText />
+     
+
+      {/* <RollingText /> */}
 
      
       

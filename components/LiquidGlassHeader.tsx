@@ -12,6 +12,7 @@ const navItems = [
   { href: '/opensource', icon: Code, label: 'Open Source' },
   // { href: '/analyze', icon: BarChart3, label: 'Analyze' },
   { href: '/compare', icon: Zap, label: 'Compare' },
+  { href: '/readme', icon: Eye, label: 'Readme' },
   // { href: '/visualize', icon: Eye, label: 'Visualize' },
 ];
 

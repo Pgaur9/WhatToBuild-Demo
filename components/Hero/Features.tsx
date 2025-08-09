@@ -2,9 +2,10 @@
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   FaPlay, FaChevronRight, FaRocket, FaCode,
-  FaEye, FaSearch, FaUsers
+  FaEye, FaSearch, FaUsers, FaFileAlt
 } from 'react-icons/fa';
 import { GlowingEffect } from "@/components/ui/glowing-effect";
 import Glow from "@/components/ui/glow";
@@ -49,6 +50,15 @@ const Features = ({ forceDarkMode = true }) => {
       description: "Deep dive into repository structure, analyze code quality, dependencies, and get comprehensive insights",
       icon: <FaCode />,
       videoSrc: "https://res.cloudinary.com/duy8dp4tq/video/upload/v1754496816/fczk6cbu8q4ji9aeleig.mp4",
+      posterSrc: "https://www.solidbackgrounds.com/images/1280x720/1280x720-black-solid-color-background.jpg"
+    },
+    {
+      id: 'generate-readme',
+      title: "Generate a Great README",
+      description: "Paste a repo URL, analyze the codebase, and draft a polished README with live edit and preview.",
+      icon: <FaFileAlt />,
+      // Placeholder: using a neutral poster; update video when available
+      videoSrc: "",
       posterSrc: "https://www.solidbackgrounds.com/images/1280x720/1280x720-black-solid-color-background.jpg"
     },
     {
@@ -186,26 +196,32 @@ const Features = ({ forceDarkMode = true }) => {
               />
               <div className="relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-sm border border-white/5 dark:shadow-[0px_0px_27px_0px_#2D2D2D]">
               <div className="relative aspect-video w-full">
-                <video 
-                  key={activeFeatureData?.videoSrc}
-                  ref={videoRef}
-                  className="w-full h-full object-cover"
-                  poster={activeFeatureData?.posterSrc}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="auto"
-                  onLoadedData={() => setVideoLoaded(true)}
-                >
-                  <source src={activeFeatureData?.videoSrc} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-                
+                {activeFeatureData?.videoSrc ? (
+                  <video 
+                    key={activeFeatureData?.videoSrc}
+                    ref={videoRef}
+                    className="w-full h-full object-cover"
+                    poster={activeFeatureData?.posterSrc}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="auto"
+                    onLoadedData={() => setVideoLoaded(true)}
+                  >
+                    <source src={activeFeatureData?.videoSrc} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-[url('https://www.solidbackgrounds.com/images/1280x720/1280x720-black-solid-color-background.jpg')] bg-cover">
+                    <div className="flex items-center gap-3 text-white/80">
+                      <FaFileAlt className="w-6 h-6" />
+                      <span className="text-sm">Preview coming soon</span>
+                    </div>
+                  </div>
+                )}
                 {/* Video overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                
-                
               </div>
 
                 <div className="p-6 bg-black/40 backdrop-blur-sm">
@@ -218,6 +234,13 @@ const Features = ({ forceDarkMode = true }) => {
                     <h3 className="-tracking-4 pt-0.5 font-sans text-2xl/[1.875rem] font-semibold text-balance text-white">{activeFeatureData?.title}</h3>
                   </div>
                   <p className="font-sans text-base/[1.375rem] text-white/70 leading-relaxed">{activeFeatureData?.description}</p>
+                  {activeFeatureData?.id === 'generate-readme' && (
+                    <div className="mt-5">
+                      <Link href="/readme" className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/20 bg-white/5 text-white hover:bg-white/10 transition-all">
+                        <FaPlay className="w-4 h-4" /> Try README Generator
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

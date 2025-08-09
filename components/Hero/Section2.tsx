@@ -113,44 +113,7 @@ const Section2 = () => {
   ];
 
   return (
-    <section className="relative min-h-[60vh] bg-black overflow-hidden py-10 px-4 sm:px-6 lg:px-8">
-      {/* Background Effects */}
-      <div className="absolute inset-0">
-        {/* Subtle gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/3 via-transparent to-cyan-900/3"></div>
-        
-        {/* Center glow */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-radial from-blue-600/8 via-blue-600/3 to-transparent rounded-full blur-3xl"></div>
-        
-        {/* Mouse follower glow */}
-        <div 
-          className="absolute w-80 h-80 bg-gradient-radial from-cyan-500/5 via-blue-500/2 to-transparent rounded-full blur-3xl transition-all duration-1000 ease-out pointer-events-none"
-          style={{
-            left: mousePosition.x - 160,
-            top: mousePosition.y - 160,
-          }}
-        ></div>
-      </div>
-
-      {/* Floating Elements */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {floatingElements.map((element, index) => (
-          <div
-            key={index}
-            className="absolute text-white/15 animate-float"
-            style={{
-              left: element.x,
-              top: element.y,
-              animationDelay: element.delay,
-              animationDuration: element.duration,
-            }}
-          >
-            <div className="text-3xl transform transition-transform duration-300">
-              {element.icon}
-            </div>
-          </div>
-        ))}
-      </div>
+    <section className="relative overflow-hidden pt-8 pb-10 md:pt-10 md:pb-12 px-4 sm:px-6 lg:px-8">
 
       <div className="max-w-7xl mx-auto relative z-10">
         
@@ -160,12 +123,12 @@ const Section2 = () => {
             radius={500}
             color="#1e40af"
           >
-            <div className="relative z-10 text-center py-8">
+            <div className="relative z-10 text-center py-6 md:py-7">
              
               <h3 className="text-3xl font-bold text-white mb-4">
                 Ready to Build Something Amazing?
               </h3>
-              <p className="text-white/70 mb-8 text-lg">
+              <p className="text-white/70 mb-6 md:mb-7 text-lg">
                 Start exploring repositories, analyzing code, and discovering your next great project.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -187,32 +150,7 @@ const Section2 = () => {
         </div>
       </div>
 
-      <style jsx>{`
-        .bg-gradient-radial {
-          background: radial-gradient(circle, var(--tw-gradient-stops));
-        }
-        
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          25% {
-            transform: translateY(-15px) rotate(3deg);
-          }
-          50% {
-            transform: translateY(-8px) rotate(-2deg);
-          }
-          75% {
-            transform: translateY(-20px) rotate(1deg);
-          }
-        }
-        
-        .animate-float {
-          animation: float 8s ease-in-out infinite;
-        }
-      `}</style>
-      
-    
+      {/* Background removed intentionally for a clean, transparent section */}
     </section>
   );
 };

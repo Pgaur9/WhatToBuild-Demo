@@ -2,7 +2,7 @@
 "use client";
 
 import React from 'react';
-import { FaGithub, FaLinkedin, FaTwitter, FaCoffee } from 'react-icons/fa';
+import { FaGithub, FaTwitter, FaCoffee } from 'react-icons/fa';
 
 const Footer = () => {
   const socialLinks = [
@@ -11,12 +11,6 @@ const Footer = () => {
       url: 'https://github.com/NiladriHazra',
       icon: <FaGithub className="h-5 w-5" />,
       color: 'text-white hover:text-gray-300'
-    },
-    {
-      name: 'LinkedIn',
-      url: 'https://www.linkedin.com/in/niladri-hazra-b573282a7/',
-      icon: <FaLinkedin className="h-5 w-5" />,
-      color: 'text-blue-400 hover:text-blue-300'
     },
     {
       name: 'Twitter',
@@ -33,31 +27,10 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden bg-black">
-      {/* Enhanced Background Animations */}
-      <div className="absolute inset-0 overflow-hidden">
-        {/* Animated grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px] animate-pulse opacity-30"></div>
-        
-        {/* Floating particles with staggered animations */}
-        <div className="absolute top-8 left-1/4 w-2 h-2 bg-blue-400/40 rounded-full animate-float"></div>
-        <div className="absolute top-16 right-1/3 w-1 h-1 bg-cyan-400/50 rounded-full animate-float-delayed"></div>
-        <div className="absolute bottom-20 left-1/3 w-1.5 h-1.5 bg-yellow-400/40 rounded-full animate-float-slow"></div>
-        <div className="absolute bottom-12 right-1/4 w-2 h-2 bg-blue-400/30 rounded-full animate-float-reverse"></div>
-        <div className="absolute top-1/2 left-1/6 w-1 h-1 bg-white/30 rounded-full animate-twinkle"></div>
-        <div className="absolute top-1/3 right-1/6 w-1.5 h-1.5 bg-cyan-300/20 rounded-full animate-twinkle-delayed"></div>
-        
-        {/* Enhanced gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/5 via-transparent to-cyan-900/5"></div>
-        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-blue-950/10 to-transparent"></div>
-      </div>
-
-      {/* Multiple layered glow effects */}
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-radial from-blue-600/8 via-blue-600/3 to-transparent rounded-full blur-3xl opacity-70 animate-pulse-slow"></div>
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-radial from-cyan-500/6 via-cyan-500/2 to-transparent rounded-full blur-2xl opacity-50"></div>
-      
+    <footer className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden bg-transparent">
       <div className="max-w-6xl mx-auto relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24 items-center">
+        <div className="rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md p-8 sm:p-10 shadow-[0_0_60px_-20px_rgba(99,102,241,0.25)]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24 items-center">
           {/* Text Section with improved typography */}
           <div className="relative flex flex-col justify-center h-full space-y-8">
             <div className="space-y-8">
@@ -144,17 +117,18 @@ const Footer = () => {
               </div>
             </div>
           </div>
+          </div>
         </div>
-        
+
         {/* Enhanced Copyright with separator */}
-        <div className="mt-16">
+        <div className="mt-10">
           {/* Elegant separator */}
           <div className="relative mb-8">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-white/10"></div>
             </div>
             <div className="relative flex justify-center">
-              <div className="bg-black px-4">
+              <div className="bg-transparent px-4">
                 <div className="w-2 h-2 bg-white/20 rounded-full animate-pulse"></div>
               </div>
             </div>
@@ -167,88 +141,6 @@ const Footer = () => {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .bg-gradient-radial {
-          background: radial-gradient(circle, var(--tw-gradient-stops));
-        }
-        
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) translateX(0px); }
-          25% { transform: translateY(-10px) translateX(5px); }
-          50% { transform: translateY(-5px) translateX(-5px); }
-          75% { transform: translateY(-15px) translateX(3px); }
-        }
-        
-        @keyframes float-delayed {
-          0%, 100% { transform: translateY(0px) translateX(0px); }
-          25% { transform: translateY(-8px) translateX(-3px); }
-          50% { transform: translateY(-12px) translateX(4px); }
-          75% { transform: translateY(-6px) translateX(-2px); }
-        }
-        
-        @keyframes float-slow {
-          0%, 100% { transform: translateY(0px) translateX(0px); }
-          50% { transform: translateY(-20px) translateX(8px); }
-        }
-        
-        @keyframes float-reverse {
-          0%, 100% { transform: translateY(0px) translateX(0px); }
-          50% { transform: translateY(15px) translateX(-6px); }
-        }
-        
-        @keyframes twinkle {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.5); }
-        }
-        
-        @keyframes twinkle-delayed {
-          0%, 100% { opacity: 0.2; transform: scale(1); }
-          50% { opacity: 0.8; transform: scale(1.2); }
-        }
-        
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 0.7; transform: scale(1); }
-          50% { opacity: 0.4; transform: scale(1.1); }
-        }
-        
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-        
-        .animate-float-delayed {
-          animation: float-delayed 8s ease-in-out infinite 2s;
-        }
-        
-        .animate-float-slow {
-          animation: float-slow 10s ease-in-out infinite 1s;
-        }
-        
-        .animate-float-reverse {
-          animation: float-reverse 7s ease-in-out infinite 3s;
-        }
-        
-        .animate-twinkle {
-          animation: twinkle 4s ease-in-out infinite;
-        }
-        
-        .animate-twinkle-delayed {
-          animation: twinkle-delayed 5s ease-in-out infinite 1.5s;
-        }
-        
-        .animate-pulse-slow {
-          animation: pulse-slow 8s ease-in-out infinite;
-        }
-        
-        .animate-spin-slow {
-          animation: spin-slow 8s linear infinite;
-        }
-      `}</style>
     </footer>
   );
 };

@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import GlassShineAnimation from './animation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Github, Users, Star, Download, Trophy, Code, Flame, RotateCcw } from 'lucide-react';
+import { Github, Users, Star, Download, Trophy, Code, Flame, RotateCcw, Shuffle } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { saveAs } from 'file-saver';
 import Image from 'next/image';
@@ -91,6 +91,34 @@ export default function ComparePage() {
   const [showSuggestions2, setShowSuggestions2] = useState(false);
   const [searchTimeout1, setSearchTimeout1] = useState<NodeJS.Timeout | null>(null);
   const [searchTimeout2, setSearchTimeout2] = useState<NodeJS.Timeout | null>(null);
+  const [recentDev1, setRecentDev1] = useState<string[]>([]);
+  const [recentDev2, setRecentDev2] = useState<string[]>([]);
+
+  // Curated list used for quick chips and shuffle
+  const popularUsers = React.useMemo(
+    () => [
+      'torvalds',
+      'gaearon',
+      'yyx990803',
+      'sindresorhus',
+      'midudev',
+      'kentcdodds',
+      'thepracticaldev',
+      'evanyou',
+      'sebastianramirez',
+      'jonasschmedtmann',
+      'migueldurand',
+      'jakearchibald',
+      'dhh',
+      'pomber',
+      'shadcn',
+      't3dotgg',
+      'leerob',
+      'rauchg',
+      'addyosmani',
+    ],
+    []
+  );
 
   // Search GitHub users function
   const searchGitHubUsers = async (query: string): Promise<GitHubSuggestion[]> => {
@@ -118,13 +146,7 @@ export default function ComparePage() {
   const handleUsernameChange = async (value: string, isFirstInput: boolean) => {
     if (isFirstInput) {
       setUsername1(value);
-      
-      // Clear previous timeout
-      if (searchTimeout1) {
-        clearTimeout(searchTimeout1);
-      }
-      
-      // Set new timeout for search
+      if (searchTimeout1) clearTimeout(searchTimeout1);
       const timeout = setTimeout(async () => {
         if (value.trim().length >= 2) {
           const results = await searchGitHubUsers(value);
@@ -135,17 +157,10 @@ export default function ComparePage() {
           setShowSuggestions1(false);
         }
       }, 300);
-      
       setSearchTimeout1(timeout);
     } else {
       setUsername2(value);
-      
-      // Clear previous timeout
-      if (searchTimeout2) {
-        clearTimeout(searchTimeout2);
-      }
-      
-      // Set new timeout for search
+      if (searchTimeout2) clearTimeout(searchTimeout2);
       const timeout = setTimeout(async () => {
         if (value.trim().length >= 2) {
           const results = await searchGitHubUsers(value);
@@ -167,11 +182,53 @@ export default function ComparePage() {
       setUsername1(username);
       setShowSuggestions1(false);
       setSuggestions1([]);
+      // Record confirmed selection for Dev I
+      setRecentDev1((prev) => {
+        const next = [username, ...prev.filter((u) => u !== username)];
+        return next.slice(0, 8);
+      });
     } else {
       setUsername2(username);
       setShowSuggestions2(false);
       setSuggestions2([]);
+      // Record confirmed selection for Dev II
+      setRecentDev2((prev) => {
+        const next = [username, ...prev.filter((u) => u !== username)];
+        return next.slice(0, 8);
+      });
     }
+  };
+
+  // Swap usernames for convenience
+  const swapUsernames = () => {
+    setUsername1((prev1) => {
+      setUsername2((prev2) => prev1);
+      return username2;
+    });
+  };
+
+  // Allow pressing Enter to start the battle when both usernames are provided
+  React.useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !showResults && !isLoading && username1.trim() && username2.trim()) {
+        e.preventDefault();
+        handleCompare();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showResults, isLoading, username1, username2]);
+
+  // Shuffle random well-known usernames into both inputs
+  const randomizeUsernames = () => {
+    if (popularUsers.length < 2) return;
+    const pick = () => popularUsers[Math.floor(Math.random() * popularUsers.length)];
+    let a = pick();
+    let b = pick();
+    let guard = 0;
+    while (b === a && guard < 10) { b = pick(); guard++; }
+    setUsername1(a);
+    setUsername2(b);
   };
 
   // Trigger confetti when results are shown
@@ -189,6 +246,20 @@ export default function ComparePage() {
       setError('Please enter both usernames');
       return;
     }
+
+    // Record confirmed usernames as recents (full words only)
+    setRecentDev1((prev) => {
+      const u = username1.trim();
+      if (!u) return prev;
+      const next = [u, ...prev.filter((x) => x !== u)];
+      return next.slice(0, 8);
+    });
+    setRecentDev2((prev) => {
+      const u = username2.trim();
+      if (!u) return prev;
+      const next = [u, ...prev.filter((x) => x !== u)];
+      return next.slice(0, 8);
+    });
 
     setIsLoading(true);
     setError('');
@@ -270,7 +341,7 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
   };
 
   const downloadAsImage = async () => {
-    const element = document.getElementById('comparison-card');
+    const element = document.getElementById('battle-cards');
     if (!element) return;
 
     try {
@@ -373,6 +444,12 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                 Compare two GitHub warriors and watch the sparks fly! 🔥
               </p>
             </div>
+        {/* Subtle divider under header */}
+        <div style={{
+          height: '1px',
+          background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)',
+          margin: '8px 0 10px 0'
+        }} />
             {/* Input Section */}
             <div className="bg-black/30 backdrop-blur-xl border border-white/20 rounded-2xl p-14 max-w-4xl mx-auto shadow-2xl" style={{ minHeight: '340px' }}>
               {/* Enhanced glassmorphic effect: inner shadow, increased blur, faint white border with glow, and animated glass shine */}
@@ -405,9 +482,26 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                       onChange={(e) => handleUsernameChange(e.target.value, true)}
                       onFocus={() => username1.length >= 2 && setShowSuggestions1(true)}
                       onBlur={() => setTimeout(() => setShowSuggestions1(false), 200)}
+                      aria-label="First GitHub username"
                       className="bg-black/40 backdrop-blur-xl border border-white/20 text-white placeholder:text-white/60 focus:border-white/40 text-2xl py-8 px-10 rounded-2xl shadow-xl transition-all"
                     />
-                    
+                    {/* Recent typed profiles for Dev I (only items the user searched/typed) */}
+                    {recentDev1.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {recentDev1.map((u) => (
+                          <button
+                            type="button"
+                            key={`dev1-${u}`}
+                            onClick={() => handleSuggestionSelect(u, true)}
+                            className="px-3 py-1 text-sm text-white/80 bg-white/10 hover:bg-white/15 border border-white/15 rounded-full transition-all backdrop-blur-sm"
+                            title="Recent"
+                          >
+                            {u}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     {/* Suggestions Dropdown for Dev I */}
                     {showSuggestions1 && suggestions1.length > 0 && (
                       <div className="absolute top-full left-0 right-0 mt-2 rounded-2xl shadow-2xl z-50 max-h-80 overflow-y-auto suggestions-scrollbar"
@@ -485,17 +579,31 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                     )}
                   </div>
                 </div>
-                <div className="flex items-end justify-center">
+                <div className="flex flex-col items-center justify-center">
                   <div
-      className={`${permanentMarker.className} text-white/70 font-bold text-[7rem]
-        transition-all ${username1 && username2 ? 'animate-pulse-vs' : ''}`}
-      style={{
-        display: 'inline-block',
-        padding: '0 2rem',
-      }}
-    >
-      VS
-    </div>
+                    className={`${permanentMarker.className} text-white/85 font-bold text-[7rem] transition-all ${username1 && username2 ? 'animate-pulse-vs' : ''}`}
+                    style={{
+                      display: 'inline-block',
+                      padding: '0 2rem',
+                      textShadow: '0 0 3px rgba(96,165,250,0.9), 0 0 14px rgba(59,130,246,0.65), 0 0 30px rgba(37,99,235,0.5), 0 0 48px rgba(29,78,216,0.35)'
+                    }}
+                  >
+                    VS
+                  </div>
+                  {/* Shuffle button below VS */}
+                  <button
+                    type="button"
+                    onClick={randomizeUsernames}
+                    aria-label="Shuffle random usernames"
+                    className="mt-3 group relative w-14 h-14 rounded-full border border-white/20 bg-black/30 backdrop-blur-xl shadow-xl hover:border-white/40 transition-all"
+                    title="Shuffle random devs"
+                  >
+                    <Shuffle className="w-6 h-6 text-white/85 mx-auto my-auto absolute inset-0 m-auto group-hover:rotate-180 transition-transform duration-300" />
+                    <span className="absolute inset-0 rounded-full pointer-events-none" style={{
+                      background: 'linear-gradient(120deg, rgba(255,255,255,0.18) 10%, rgba(255,255,255,0.06) 70%)',
+                      mixBlendMode: 'screen'
+                    }} />
+                  </button>
                 </div>
                 <div className="flex-1 relative">
                   <label className="flex text-white/80 text-lg font-bold mb-4 items-center gap-3">
@@ -511,6 +619,22 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                       onBlur={() => setTimeout(() => setShowSuggestions2(false), 200)}
                       className="bg-black/40 backdrop-blur-xl border border-white/20 text-white placeholder:text-white/60 focus:border-white/40 text-2xl py-8 px-10 rounded-2xl shadow-xl transition-all"
                     />
+                    {/* Recent typed profiles for Dev II (only items the user searched/typed) */}
+                    {recentDev2.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {recentDev2.map((u) => (
+                          <button
+                            type="button"
+                            key={`dev2-${u}`}
+                            onClick={() => handleSuggestionSelect(u, false)}
+                            className="px-3 py-1 text-sm text-white/80 bg-white/10 hover:bg-white/15 border border-white/15 rounded-full transition-all backdrop-blur-sm"
+                            title="Recent"
+                          >
+                            {u}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     
                     {/* Suggestions Dropdown for Dev II */}
                     {showSuggestions2 && suggestions2.length > 0 && (
@@ -593,7 +717,7 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
               <Button
                 onClick={handleCompare}
                 disabled={isLoading}
-                className="mx-auto flex items-center justify-center bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white font-bold text-2xl py-6 px-12 rounded-full border border-white/30 shadow-[0_2px_24px_0_rgba(255,255,255,0.18),0_1px_8px_0_rgba(255,255,255,0.10)] hover:border-white/40 transition-all mt-16 relative overflow-visible max-w-xs min-w-[120px]"
+                className="mx-auto flex items-center justify-center bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-700 hover:to-gray-800 text-white font-bold text-2xl py-7 px-14 rounded-full border border-white/30 shadow-[0_2px_24px_0_rgba(255,255,255,0.18),0_1px_8px_0_rgba(255,255,255,0.10)] hover:border-white/40 transition-all mt-16 relative overflow-visible max-w-sm min-w-[140px]"
               >
                 {/* Enhanced glass shine and 3D liquid glass effect */}
                 <span className="absolute inset-0 rounded-full pointer-events-none z-0" style={{
@@ -609,12 +733,14 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                     Preparing...
                   </div>
                 ) : (
-                  <span className="flex items-center justify-center gap-2 rye-regular text-4xl font-bold">
+                  <span className="flex items-center justify-center gap-2 rye-regular text-5xl font-bold">
                     
                     Battle
                   </span>
                 )}
               </Button>
+              {/* Helper hint */}
+              <div className="text-center text-white/60 text-xs mt-3">Press Enter to start the battle</div>
               {error && (
                 <div className="mt-6 px-6 py-4 bg-gradient-to-r from-red-500/30 via-black/40 to-orange-500/20 backdrop-blur-xl border border-red-500/30 rounded-2xl shadow-lg text-red-200 text-base font-semibold flex items-center gap-3 animate-fade-in relative overflow-hidden">
                   <span className="absolute inset-0 pointer-events-none rounded-2xl z-0" style={{
@@ -680,12 +806,14 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
             </div>
             {/* Roast Section - Clean sophisticated design */}
             {roastText && (
-              <div className="roast-section backdrop-blur-xl rounded-xl p-5 relative overflow-hidden"
+              <div className="roast-section backdrop-blur-2xl rounded-2xl p-6 relative overflow-hidden border"
                 style={{
-                  boxShadow: '0 15px 40px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06)',
+                  background: 'linear-gradient(145deg, rgba(255,255,255,0.035) 0%, rgba(0,0,0,0.22) 100%)',
+                  borderColor: 'rgba(255,255,255,0.10)',
+                  boxShadow: '0 24px 60px rgba(0,0,0,0.90), 0 10px 30px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.08)',
                 }}>
                 {/* Clean glass overlays */}
-                <div className="absolute inset-0 pointer-events-none rounded-xl">
+                <div className="absolute inset-0 pointer-events-none rounded-2xl">
                   {/* Simple top highlight */}
                   <div style={{
                     position: 'absolute',
@@ -693,7 +821,7 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                     left: 0,
                     right: 0,
                     height: '2px',
-                    background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%)',
                     borderTopLeftRadius: 'inherit',
                     borderTopRightRadius: 'inherit',
                   }} />
@@ -703,11 +831,33 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                     top: 0,
                     left: 0,
                     right: 0,
-                    height: '40px',
-                    background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)',
+                    height: '64px',
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 55%, transparent 100%)',
                     borderTopLeftRadius: 'inherit',
                     borderTopRightRadius: 'inherit',
+                    opacity: 0.6,
+                  }} />
+                  {/* Bottom vignette */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '56px',
+                    background: 'linear-gradient(0deg, rgba(0,0,0,0.35) 0%, transparent 100%)',
+                    borderBottomLeftRadius: 'inherit',
+                    borderBottomRightRadius: 'inherit',
                     opacity: 0.7,
+                  }} />
+                  {/* Soft corner bloom */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '-40px',
+                    right: '-40px',
+                    width: '160px',
+                    height: '160px',
+                    background: 'radial-gradient(circle at center, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 60%, transparent 70%)',
+                    filter: 'blur(12px)',
                   }} />
                 </div>
                 
@@ -722,22 +872,23 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                   
                   {/* Clean battle stats */}
                   {battleStats && (
-                    <div className="flex items-center gap-4 backdrop-blur-sm border border-white/8 rounded-lg px-4 py-2 relative overflow-hidden"
+                    <div className="flex items-center gap-4 backdrop-blur-md border rounded-xl px-4 py-2 relative overflow-hidden"
                       style={{
-                        background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.15) 100%)',
-                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+                        background: 'linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.20) 100%)',
+                        borderColor: 'rgba(255,255,255,0.10)',
+                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.10), 0 4px 12px rgba(0,0,0,0.30)',
                       }}>
                       <div className="flex items-center gap-2 text-sm relative z-10">
                         <span className="text-white/70 font-medium">Commits:</span>
-                        <span className="text-white/90 font-semibold">{battleStats.totalCommitsCompared.toLocaleString()}</span>
+                        <span className="text-white/95 font-semibold">{battleStats.totalCommitsCompared.toLocaleString()}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm relative z-10">
                         <span className="text-white/70 font-medium">Stars:</span>
-                        <span className="text-white/90 font-semibold">{battleStats.totalStarsClashed.toLocaleString()}</span>
+                        <span className="text-white/95 font-semibold">{battleStats.totalStarsClashed.toLocaleString()}</span>
                       </div>
                       <div className="flex items-center gap-2 text-sm relative z-10">
                         <span className="text-white/70 font-medium">Repos:</span>
-                        <span className="text-white/90 font-semibold">{battleStats.totalReposJudged}</span>
+                        <span className="text-white/95 font-semibold">{battleStats.totalReposJudged}</span>
                       </div>
                     </div>
                   )}
@@ -751,12 +902,12 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                     
                     if (isKeyPlayerBlock) {
                       return (
-                        <div key={i} className="mb-4 p-4 rounded-lg relative overflow-hidden"
+                        <div key={i} className="mb-4 p-4 rounded-xl relative overflow-hidden border"
                           style={{
-                            background: 'linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.25) 100%)',
-                            backdropFilter: 'blur(20px)',
-                            boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.15), 0 8px 25px rgba(0,0,0,0.4)',
-                            border: '1px solid rgba(255,255,255,0.12)',
+                            background: 'linear-gradient(145deg, rgba(255,255,255,0.10) 0%, rgba(0,0,0,0.25) 100%)',
+                            backdropFilter: 'blur(22px)',
+                            boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.18), 0 10px 28px rgba(0,0,0,0.45)',
+                            borderColor: 'rgba(255,255,255,0.14)',
                           }}>
                           {/* Liquid glass 3D effect */}
                           <div className="absolute inset-0 rounded-lg pointer-events-none">
@@ -776,7 +927,7 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                               left: 0,
                               right: 0,
                               height: '30px',
-                              background: 'linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 100%)',
+                              background: 'linear-gradient(180deg, rgba(255,255,255,0.16) 0%, transparent 100%)',
                               borderTopLeftRadius: 'inherit',
                               borderTopRightRadius: 'inherit',
                               opacity: 0.8,
@@ -795,7 +946,12 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                       );
                     } else {
                       return (
-                        <div key={i} className="mb-3 p-2">
+                        <div key={i} className="mb-3 p-3 rounded-lg border"
+                          style={{
+                            background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.16) 100%)',
+                            borderColor: 'rgba(255,255,255,0.08)',
+                            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)',
+                          }}>
                           <span dangerouslySetInnerHTML={{
                             __html: block
                               .replace(/\*\*([^*]+)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
@@ -812,7 +968,7 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
             )}
             {/* User Comparison Cards */}
             {user1Data && user2Data && user1Stats && user2Stats && winner && (
-              <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full">
+              <div id="battle-cards" className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full">
                 <div className="w-full lg:w-1/2 flex flex-col">
                   <UserComparisonCard 
                     user={user1Data} 
@@ -835,11 +991,11 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
             
             {/* Clean Battle Verdict Section */}
             {user1Data && user2Data && user1Stats && user2Stats && winner && (
-              <div className="backdrop-blur-xl rounded-2xl p-6 relative overflow-hidden"
+              <div className="backdrop-blur-2xl rounded-2xl p-6 relative overflow-hidden border"
                 style={{
-                  background: 'linear-gradient(145deg, rgba(15,15,18,0.99) 0%, rgba(8,8,10,0.97) 60%, rgba(3,3,5,0.95) 100%)',
-                  boxShadow: '0 25px 60px rgba(0,0,0,0.9), inset 0 2px 0 rgba(255,255,255,0.10)',
-                  border: '1px solid rgba(255,255,255,0.12)',
+                  background: 'linear-gradient(145deg, rgba(255,255,255,0.035) 0%, rgba(0,0,0,0.22) 100%)',
+                  boxShadow: '0 24px 60px rgba(0,0,0,0.90), 0 10px 30px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.08)',
+                  borderColor: 'rgba(255,255,255,0.10)'
                 }}>
                 {/* Clean glass overlay */}
                 <div className="absolute inset-0 pointer-events-none rounded-2xl">
@@ -850,7 +1006,7 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                     left: 0,
                     right: 0,
                     height: '2px',
-                    background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+                    background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.28) 50%, transparent 100%)',
                     borderTopLeftRadius: 'inherit',
                     borderTopRightRadius: 'inherit',
                   }} />
@@ -860,11 +1016,33 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                     top: 0,
                     left: 0,
                     right: 0,
-                    height: '60px',
-                    background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%)',
+                    height: '64px',
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 55%, transparent 100%)',
                     borderTopLeftRadius: 'inherit',
                     borderTopRightRadius: 'inherit',
+                    opacity: 0.6,
+                  }} />
+                  {/* Bottom vignette */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '56px',
+                    background: 'linear-gradient(0deg, rgba(0,0,0,0.35) 0%, transparent 100%)',
+                    borderBottomLeftRadius: 'inherit',
+                    borderBottomRightRadius: 'inherit',
                     opacity: 0.7,
+                  }} />
+                  {/* Soft corner bloom */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '-40px',
+                    right: '-40px',
+                    width: '160px',
+                    height: '160px',
+                    background: 'radial-gradient(circle at center, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 60%, transparent 70%)',
+                    filter: 'blur(12px)',
                   }} />
                 </div>
                 
@@ -939,7 +1117,7 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                           background: 'linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(0,0,0,0.15) 100%)',
                           backdropFilter: 'blur(15px)',
                           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15), 0 8px 20px rgba(0,0,0,0.4)',
-                          transform: 'translateY(-4px) scale(1.02)',
+                          transform: 'translateY(-2px)',
                         }}>
                         {/* Golden touch from top */}
                         <div className="absolute inset-0 rounded-xl pointer-events-none">
@@ -1215,7 +1393,7 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
           : '0 16px 48px 0 rgba(0,0,0,0.99), 0 0 60px 16px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.06)',
         border: isWinner ? 'none' : '1px solid rgba(255,255,255,0.12)',
         backdropFilter: 'blur(40px) saturate(200%)',
-        transform: isWinner ? 'translateY(-2px) scale(1.008)' : 'none',
+        transform: isWinner ? 'translateY(-2px)' : 'none',
       }}>
       {/* Enhanced liquid glass overlays */}
       <div className="absolute inset-0 pointer-events-none rounded-2xl z-0">
@@ -1260,6 +1438,28 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
           opacity: 0.6,
           pointerEvents: 'none',
         }} />
+        {/* Bottom vignette for depth */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '56px',
+          background: 'linear-gradient(0deg, rgba(0,0,0,0.35) 0%, transparent 100%)',
+          borderBottomLeftRadius: 'inherit',
+          borderBottomRightRadius: 'inherit',
+          opacity: 0.7,
+        }} />
+        {/* Soft corner bloom */}
+        <div style={{
+          position: 'absolute',
+          top: '-36px',
+          right: '-36px',
+          width: '140px',
+          height: '140px',
+          background: 'radial-gradient(circle at center, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.02) 60%, transparent 70%)',
+          filter: 'blur(12px)',
+        }} />
         {/* Glass reflection - more pronounced */}
         <div style={{
           position: 'absolute',
@@ -1292,15 +1492,19 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
         {/* Header - Compact design */}
         <div className="flex items-center gap-3 mb-3">
           <div className="relative group">
-            <Image
+            <img
               src={user.avatar_url}
               alt={user.name || user.login}
               width={48}
               height={48}
+              crossOrigin="anonymous"
+              referrerPolicy="no-referrer"
               className={`w-12 h-12 rounded-xl transition-all duration-300 ${avatarGlow}`}
               style={{ 
                 touchAction: 'manipulation',
-                // Removed grayscale filter to show original color
+              }}
+              onError={(e) => {
+                (e.currentTarget as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiMzNzQxNTEiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSI+CjxwYXRoIGQ9Ik0yMCAyMXYtMmE0IDQgMCAwIDAtNC00SDhhNCA0IDAgMCAwLTQgNHYyIiBzdHJva2U9IiM5Q0E5QjQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CjxjaXJjbGUgY3g9IjEyIiBjeT0iNyIgcj0iNCIgc3Ryb2tlPSIjOUNBOUI0IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4KPC9zdmc+';
               }}
             />
             {/* Glass overlay on avatar */}
@@ -1380,6 +1584,18 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
             >
               <div className="text-base font-bold text-white/95 leading-tight">{stat.value.toLocaleString()}</div>
               <div className="text-white/60 text-xs">{stat.label}</div>
+              {/* Top light streak */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '1px',
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%)',
+                borderTopLeftRadius: 'inherit',
+                borderTopRightRadius: 'inherit',
+                pointerEvents: 'none'
+              }} />
             </div>
           ))}
         </div>
@@ -1500,6 +1716,11 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
                   transform: isWinner ? 'translateY(-0.5px)' : 'translateY(-0.25px)',
                 }}
               >
+                {/* Glass overlay for repo card */}
+                <div className="pointer-events-none absolute inset-0 rounded-lg" style={{
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06)'
+                }} />
                 <div className="flex flex-col h-full">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1 min-w-0">
