@@ -19,7 +19,7 @@ import Screenshot from "../../ui/screenshot";
 import Section from "@/components/ui/Section";
 
 import Features from "@/components/Hero/Features";
-import { RollingText } from "@/components/Hero/RollingText";
+// import { RollingText } from "@/components/Hero/RollingText";
 import Readme from "@/components/Hero/Readme";
 interface HeroButtonProps {
   href: string;
