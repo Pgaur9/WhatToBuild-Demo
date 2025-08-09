@@ -43,8 +43,8 @@ export default function Hero({
   description = "Enter a concept to discover and analyze relevant open-source projects.",
   mockup = (
     <Screenshot
-      srcLight="/images/search.png"
-      srcDark="/images/search.png"
+      srcLight="/GithubImages/search.png"
+      srcDark="/GithubImages/search.png"
       alt="Search UI app screenshot"
       width={1248}
       height={765}

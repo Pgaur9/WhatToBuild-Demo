@@ -14,6 +14,8 @@ import { LucideIcon } from 'lucide-react';
 import ContributionGraph from '@/components/ContributionGraph';
 import Glow from '@/components/ui/glow';
 import './page.css';
+import { Permanent_Marker } from 'next/font/google';
+
 
 interface GitHubUser {
   login: string;
@@ -55,6 +57,12 @@ interface GitHubSuggestion {
   type: string;
   score: number;
 }
+
+const permanentMarker = Permanent_Marker({
+  weight: '400', // Permanent Marker only has weight 400
+  subsets: ['latin'],
+});
+
 
 export default function ComparePage() {
 
@@ -346,260 +354,8 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
       <div className="relative w-full">
         <Glow variant="top" className="opacity-40" />
       </div>
-      {/* Rye font import for header and Rubik Doodle Shadow for input */}
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Rye&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Germania+One&display=swap');
-        .rye-regular { font-family: "Rye", serif; font-weight: 400; font-style: normal; }
-        .germania-one-regular { font-family: "Germania One", system-ui; font-weight: 400; font-style: normal; }
-        
-        /* Enhanced 3D glassmorphism and premium interactions */
-        .glass-card {
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-          transform-style: preserve-3d;
-        }
-        .glass-card:hover {
-          transform: translateY(-8px) scale(1.02) rotateX(2deg);
-          box-shadow: 
-            0 35px 80px rgba(0,0,0,0.6), 
-            0 0 40px rgba(255,255,255,0.15),
-            inset 0 2px 0 rgba(255,255,255,0.2);
-        }
-        
-        .repo-card:hover {
-          transform: translateY(-4px) scale(1.03) rotateX(1deg);
-          box-shadow: 
-            0 20px 50px rgba(0,0,0,0.4), 
-            0 0 20px rgba(255,255,255,0.1),
-            inset 0 1px 0 rgba(255,255,255,0.15);
-        }
-        
-        .language-badge:hover {
-          transform: scale(1.1) translateZ(10px);
-          box-shadow: 0 0 20px currentColor, 0 8px 20px rgba(0,0,0,0.3);
-        }
-        
-        .stat-card:hover {
-          background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.06) 100%);
-          box-shadow: 
-            inset 0 2px 0 rgba(255,255,255,0.2), 
-            0 8px 25px rgba(0,0,0,0.4),
-            0 0 15px rgba(255,255,255,0.1);
-          transform: translateY(-2px) scale(1.02);
-        }
-        
-        /* Enhanced 3D button effects - sophisticated dark theme */
-        .premium-btn {
-          background: linear-gradient(145deg, rgba(8,8,12,0.95) 0%, rgba(3,3,8,0.98) 100%);
-          border: 1px solid rgba(255,255,255,0.12);
-          box-shadow: 
-            0 8px 32px rgba(0,0,0,0.6),
-            inset 0 1px 0 rgba(255,255,255,0.08),
-            inset 0 -1px 0 rgba(0,0,0,0.3);
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          transform-style: preserve-3d;
-          backdrop-filter: blur(20px) saturate(150%);
-        }
-        
-        .premium-btn:hover {
-          transform: translateY(-2px) scale(1.02);
-          box-shadow: 
-            0 15px 40px rgba(0,0,0,0.8),
-            inset 0 2px 0 rgba(255,255,255,0.12),
-            inset 0 -2px 0 rgba(0,0,0,0.4),
-            0 0 20px rgba(255,255,255,0.1);
-          border-color: rgba(255,255,255,0.18);
-          background: linear-gradient(145deg, rgba(12,12,18,0.95) 0%, rgba(6,6,12,0.98) 100%);
-        }
-        
-        .premium-btn:active {
-          transform: translateY(-1px) scale(1.01);
-          box-shadow: 
-            0 6px 20px rgba(0,0,0,0.6),
-            inset 0 1px 0 rgba(0,0,0,0.2),
-            inset 0 -1px 0 rgba(255,255,255,0.08);
-        }
-        
-        /* Premium roast section - clean dark aesthetic */
-        .roast-section {
-          background: linear-gradient(145deg, rgba(8,8,12,0.98) 0%, rgba(3,3,8,0.96) 100%);
-          border: 1px solid rgba(255,255,255,0.12);
-          box-shadow: 
-            0 20px 60px rgba(0,0,0,0.9),
-            inset 0 1px 0 rgba(255,255,255,0.08),
-            inset 0 -1px 0 rgba(0,0,0,0.3);
-          transition: all 0.4s ease;
-          transform-style: preserve-3d;
-          backdrop-filter: blur(20px) saturate(150%);
-        }
-        
-        .roast-section:hover {
-          transform: translateY(-1px);
-          box-shadow: 
-            0 25px 80px rgba(0,0,0,0.95),
-            inset 0 2px 0 rgba(255,255,255,0.12),
-            inset 0 -2px 0 rgba(0,0,0,0.4);
-          border-color: rgba(255,255,255,0.16);
-        }
-        
-        /* Premium battle verdict section */
-        .battle-verdict {
-          background: linear-gradient(145deg, rgba(8,8,12,0.98) 0%, rgba(3,3,8,0.96) 100%);
-          border: 1px solid rgba(255,255,255,0.12);
-          box-shadow: 
-            0 30px 100px rgba(0,0,0,0.9),
-            0 0 60px rgba(147,51,234,0.1),
-            inset 0 2px 0 rgba(255,255,255,0.08),
-            inset 0 -1px 0 rgba(147,51,234,0.05);
-          transition: all 0.4s ease;
-          transform-style: preserve-3d;
-        }
-        
-        .battle-verdict:hover {
-          transform: translateY(-3px);
-          box-shadow: 
-            0 40px 120px rgba(0,0,0,0.95),
-            0 0 80px rgba(147,51,234,0.15),
-            inset 0 3px 0 rgba(255,255,255,0.12),
-            inset 0 -2px 0 rgba(147,51,234,0.08);
-        }
-        
-        /* Enhanced winner crown animation */
-        .winner-crown {
-          animation: crown-float 3s ease-in-out infinite;
-          filter: drop-shadow(0 0 15px rgba(255,215,0,0.6));
-        }
-        
-        @keyframes crown-float {
-          0%, 100% { 
-            transform: translateY(0px) scale(1) rotate(0deg);
-            filter: drop-shadow(0 0 15px rgba(255,215,0,0.6));
-          }
-          50% { 
-            transform: translateY(-5px) scale(1.05) rotate(2deg);
-            filter: drop-shadow(0 5px 25px rgba(255,215,0,0.8));
-          }
-        }
-        
-        /* Ultra premium winner card */
-        .winner-premium {
-          background: linear-gradient(145deg, rgba(25,25,30,0.98) 0%, rgba(15,15,22,0.96) 100%);
-          border: 2px solid rgba(255,215,0,0.4);
-          box-shadow: 
-            0 40px 120px rgba(0,0,0,0.9),
-            0 0 80px rgba(255,215,0,0.3),
-            inset 0 3px 0 rgba(255,215,0,0.2),
-            inset 0 -2px 0 rgba(255,215,0,0.1);
-          animation: winner-glow 4s ease-in-out infinite;
-        }
-        
-        @keyframes winner-glow {
-          0%, 100% {
-            box-shadow: 
-              0 40px 120px rgba(0,0,0,0.9),
-              0 0 80px rgba(255,215,0,0.3),
-              inset 0 3px 0 rgba(255,215,0,0.2),
-              inset 0 -2px 0 rgba(255,215,0,0.1);
-          }
-          50% {
-            box-shadow: 
-              0 50px 150px rgba(0,0,0,0.95),
-              0 0 120px rgba(255,215,0,0.5),
-              inset 0 4px 0 rgba(255,215,0,0.3),
-              inset 0 -3px 0 rgba(255,215,0,0.15);
-          }
-        }
-        
-        /* Enhanced avatar glow effects */
-        .avatar-active { 
-          border: 3px solid #10b981; 
-          box-shadow: 0 0 30px rgba(16, 185, 129, 0.5), 0 8px 25px rgba(0,0,0,0.3);
-          transition: all 0.3s ease;
-        }
-        .avatar-active:hover {
-          box-shadow: 0 0 40px rgba(16, 185, 129, 0.7), 0 12px 35px rgba(0,0,0,0.4);
-          transform: scale(1.05);
-        }
-        
-        .avatar-rising { 
-          border: 3px solid #f59e0b; 
-          box-shadow: 0 0 30px rgba(245, 158, 11, 0.5), 0 8px 25px rgba(0,0,0,0.3);
-          transition: all 0.3s ease;
-        }
-        .avatar-rising:hover {
-          box-shadow: 0 0 40px rgba(245, 158, 11, 0.7), 0 12px 35px rgba(0,0,0,0.4);
-          transform: scale(1.05);
-        }
-        
-        .avatar-niche { 
-          border: 3px solid #3b82f6; 
-          box-shadow: 0 0 30px rgba(59, 130, 246, 0.5), 0 8px 25px rgba(0,0,0,0.3);
-          transition: all 0.3s ease;
-        }
-        .avatar-niche:hover {
-          box-shadow: 0 0 40px rgba(59, 130, 246, 0.7), 0 12px 35px rgba(0,0,0,0.4);
-          transform: scale(1.05);
-        }
-        
-        /* Premium loading animation */
-        .premium-loading {
-          background: linear-gradient(90deg, 
-            rgba(255,255,255,0.1) 0%, 
-            rgba(255,255,255,0.3) 50%, 
-            rgba(255,255,255,0.1) 100%);
-          background-size: 200% 100%;
-          animation: shimmer 2s infinite;
-        }
-        
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        
-        /* Ultra-smooth scrolling */
-        .custom-scrollbar {
-          scroll-behavior: smooth;
-        }
-        
-        /* Custom scrollbar for suggestions - Hidden */
-        .suggestions-scrollbar {
-          scrollbar-width: none; /* Firefox */
-          -ms-overflow-style: none; /* IE and Edge */
-        }
-        
-        .suggestions-scrollbar::-webkit-scrollbar {
-          display: none; /* Chrome, Safari, Opera */
-        }
-        
-        /* Enhanced winner frost animation - more elegant */
-        .winner-frost {
-          animation: winner-elegant-lift 4s ease-in-out infinite;
-          position: relative;
-          transform-style: preserve-3d;
-        }
-        
-        .winner-frost:hover {
-          transform: translateY(-6px) scale(1.03) rotateX(2deg);
-        }
-        
-        @keyframes winner-elegant-lift {
-          0%, 100% { 
-            transform: translateY(-3px) scale(1.01) rotateX(1deg);
-            box-shadow: 
-              0 30px 80px 0 rgba(0,0,0,0.99),
-              0 0 100px 25px rgba(0,0,0,0.5),
-              inset 0 2px 0 rgba(255,255,255,0.15),
-              0 0 0 2px rgba(255,255,255,0.2);
-          }
-          50% { 
-            transform: translateY(-5px) scale(1.015) rotateX(1.5deg);
-            box-shadow: 
-              0 40px 100px 0 rgba(0,0,0,0.99),
-              0 0 130px 30px rgba(0,0,0,0.55),
-              inset 0 3px 0 rgba(255,255,255,0.18),
-              0 0 0 2px rgba(255,255,255,0.25);
-          }
-        }
-      `}</style>
+
+      
       {/* Confetti Canvas Overlay */}
       {showConfetti && (
         <ConfettiOverlay />
@@ -640,7 +396,7 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                 <div className="flex-1 relative">
                   <label className="flex text-white/80 text-lg font-bold mb-4 items-center gap-3">
                     <Github className="w-5 h-5 text-white/80" />
-                    <span className="font-bold text-xl rye-regular">Dev I</span>
+                    <span className="font-bold text-xl germania-one-regular">Dev I</span>
                   </label>
                   <div className="relative">
                     <Input
@@ -731,21 +487,20 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
                 </div>
                 <div className="flex items-end justify-center">
                   <div
-                    className={`text-white/70 font-bold text-[7rem] germania-one-regular transition-all ${username1 && username2 ? 'animate-pulse-vs' : ''}`}
-                    style={{
-                      display: 'inline-block',
-                      padding: '0 2rem',
-                      letterSpacing: '0.08em',
-                      textShadow: '0 2px 16px rgba(255,255,255,0.18)',
-                    }}
-                  >
-                    VS
-                  </div>
+      className={`${permanentMarker.className} text-white/70 font-bold text-[7rem]
+        transition-all ${username1 && username2 ? 'animate-pulse-vs' : ''}`}
+      style={{
+        display: 'inline-block',
+        padding: '0 2rem',
+      }}
+    >
+      VS
+    </div>
                 </div>
                 <div className="flex-1 relative">
                   <label className="flex text-white/80 text-lg font-bold mb-4 items-center gap-3">
                     <Github className="w-5 h-5 text-white/80" />
-                    <span className="font-bold text-xl rye-regular">Dev II</span>
+                    <span className="font-bold text-xl germania-one-regular">Dev II</span>
                   </label>
                   <div className="relative">
                     <Input
@@ -882,7 +637,7 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
             <div className="flex flex-col items-center justify-center mb-6 gap-4">
               <div className="relative">
                 <h1 className="text-5xl font-bold mb-2 relative">
-                  <span className="bg-gradient-to-b from-white via-gray-200 to-gray-400 bg-clip-text rye-regular text-transparent relative z-10 drop-shadow-lg">
+                  <span className="bg-gradient-to-b from-white via-gray-200 to-gray-400 bg-clip-text germania-one-regular text-transparent relative z-10 drop-shadow-lg">
                     Battle Results
                   </span>
                   {/* Subtle glow effect */}

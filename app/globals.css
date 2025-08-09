@@ -1,5 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Bungee&family=Rye&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Rubik+Doodle+Shadow&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
+
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -240,6 +243,8 @@ body.dialog-open header {
   animation: appear-zoom 0.8s ease-out forwards;
   opacity: 0;
 }
+
+
 
 @keyframes appear {
   from {

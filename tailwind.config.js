@@ -10,6 +10,7 @@ module.exports = {
         bungee: ['Bungee', 'sans-serif'],
         rye: ['Rye'],
         rubikDoodle: ['"Rubik Doodle Shadow"', 'system-ui'],
+        permanentMarker: ['"Permanent Marker"', 'cursive'],
       },
     },
   },
