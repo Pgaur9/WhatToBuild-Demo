@@ -14,6 +14,13 @@ function parseRepo(input: string): { owner: string; repo: string } | null {
   return null;
 }
 
+// Minimal GitHub repo metadata used in this module
+interface GitHubRepoMeta {
+  description?: string | null;
+  stargazers_count?: number;
+  language?: string | null;
+}
+
 // GitHub API helpers
 async function githubRequest<T>(path: string, token?: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
@@ -108,7 +115,7 @@ async function getFileContent(owner: string, repo: string, path: string, token?:
   return '';
 }
 
-function buildPrompt(repoFullName: string, repoMeta: any, files: Array<{ path: string; content: string }>) {
+function buildPrompt(repoFullName: string, repoMeta: GitHubRepoMeta, files: Array<{ path: string; content: string }>) {
   const metaSnippet = `Repository: ${repoFullName}\nDescription: ${repoMeta?.description ?? ''}\nStars: ${repoMeta?.stargazers_count ?? 'N/A'}\nLanguage: ${repoMeta?.language ?? 'N/A'}`;
   const fileSummaries = files.map(f => `---\nPath: ${f.path}\n\n${f.content.substring(0, 4000)}`).join('\n\n');
 
@@ -128,7 +135,7 @@ export async function POST(req: NextRequest) {
     const { owner, repo: repoName } = parsed;
 
     // Basic repo metadata (also validates private access if token provided)
-    const repoMeta = await githubRequest<any>(`/repos/${owner}/${repoName}`, githubToken);
+    const repoMeta = await githubRequest<GitHubRepoMeta>(`/repos/${owner}/${repoName}`, githubToken);
 
     // Collect candidate files and fetch contents
     const candidates = await getCandidateFiles(owner, repoName, githubToken);
@@ -137,7 +144,7 @@ export async function POST(req: NextRequest) {
       try {
         const content = await getFileContent(owner, repoName, f.path, githubToken);
         if (content) files.push({ path: f.path, content });
-      } catch (e) {
+      } catch {
         // Skip unreadable files
       }
     }
@@ -184,7 +191,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ markdown: text });
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Unexpected error' }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unexpected error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

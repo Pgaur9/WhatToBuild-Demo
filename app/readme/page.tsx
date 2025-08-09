@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +15,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { default as ReactMarkdown } from "react-markdown";
 import {
   Github,
-  FileText,
   Eye,
   Pencil,
   KeyRound,
@@ -23,7 +22,6 @@ import {
   Download,
   RefreshCw,
   Loader2,
-  Info,
 } from "lucide-react";
 
 export default function ReadmePage() {
@@ -67,8 +65,9 @@ export default function ReadmePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed to generate README");
       setMarkdown(data.markdown || "");
-    } catch (e: any) {
-      setError(e?.message || "Something went wrong");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Something went wrong";
+      setError(message);
     } finally {
       setIsGenerating(false);
     }

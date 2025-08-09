@@ -207,23 +207,13 @@ export default function ComparePage() {
     });
   };
 
-  // Allow pressing Enter to start the battle when both usernames are provided
-  React.useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !showResults && !isLoading && username1.trim() && username2.trim()) {
-        e.preventDefault();
-        handleCompare();
-      }
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [showResults, isLoading, username1, username2]);
+  // (moved below) Allow pressing Enter to start the battle when both usernames are provided
 
   // Shuffle random well-known usernames into both inputs
   const randomizeUsernames = () => {
     if (popularUsers.length < 2) return;
     const pick = () => popularUsers[Math.floor(Math.random() * popularUsers.length)];
-    let a = pick();
+    const a = pick();
     let b = pick();
     let guard = 0;
     while (b === a && guard < 10) { b = pick(); guard++; }
@@ -241,7 +231,7 @@ export default function ComparePage() {
     }
   }, [showResults, roastText]);
 
-  const handleCompare = async () => {
+  const handleCompare = React.useCallback(async () => {
     if (!username1.trim() || !username2.trim()) {
       setError('Please enter both usernames');
       return;
@@ -338,7 +328,19 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [username1, username2]);
+
+  // Allow pressing Enter to start the battle when both usernames are provided
+  React.useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !showResults && !isLoading && username1.trim() && username2.trim()) {
+        e.preventDefault();
+        handleCompare();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showResults, isLoading, username1, username2, handleCompare]);
 
   const downloadAsImage = async () => {
     const element = document.getElementById('battle-cards');
