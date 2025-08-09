@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 
 import { cn } from "@/lib/utils";
 import LiquidGlassHeader from "@/components/LiquidGlassHeader";
@@ -9,7 +10,7 @@ import LiquidGlassHeader from "@/components/LiquidGlassHeader";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "What To Build - AI Project Generator",
+  title: "What To Build",
   description: "Get AI-powered project ideas, find similar repositories, and get a visual plan to build it.",
 };
 
@@ -27,6 +28,7 @@ export default function RootLayout({
             {children}
           </main>
         </div>
+        <Analytics />
       </body>
     </html>
   );
