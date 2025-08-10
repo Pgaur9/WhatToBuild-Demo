@@ -1,10 +1,34 @@
-import { ArrowRightIcon } from "lucide-react";
-import { ReactNode } from "react";
-import Footer from "@/components/Hero/Footer";
-import Section2 from "@/components/Hero/Section2";
+"use client";
 
-import {CompareCard} from "@/components/Hero/ComapringThEDevCard";
-import { MagicBean } from "@/components/Hero/MagicBean";
+import { ArrowRightIcon } from "lucide-react";
+import { ReactNode, useEffect, useState } from "react";
+import dynamic from "next/dynamic";
+
+// Defer heavy, below-the-fold components to client after first paint
+const MagicBean = dynamic(() => import("@/components/Hero/MagicBean").then(m => ({ default: m.MagicBean })), {
+  ssr: false,
+  loading: () => null,
+});
+const FeaturesLazy = dynamic(() => import("@/components/Hero/Features"), {
+  ssr: false,
+  loading: () => null,
+});
+const CompareCardLazy = dynamic(() => import("@/components/Hero/ComapringThEDevCard").then(m => ({ default: m.CompareCard })), {
+  ssr: false,
+  loading: () => null,
+});
+const ReadmeLazy = dynamic(() => import("@/components/Hero/Readme"), {
+  ssr: false,
+  loading: () => null,
+});
+const Section2Lazy = dynamic(() => import("@/components/Hero/Section2"), {
+  ssr: false,
+  loading: () => null,
+});
+const FooterLazy = dynamic(() => import("@/components/Hero/Footer"), {
+  ssr: false,
+  loading: () => null,
+});
 
 import { cn } from "@/lib/utils";
 
@@ -18,8 +42,7 @@ import { PointerHighlight } from "../../ui/pointer-highlight";
 import Screenshot from "../../ui/screenshot";
 import Section from "@/components/ui/Section";
 
-import Features from "@/components/Hero/Features";
-import Readme from "@/components/Hero/Readme";
+// Features & Readme are lazy-loaded above
 interface HeroButtonProps {
   href: string;
   text: string;
@@ -68,6 +91,26 @@ export default function Hero({
   ],
   className,
 }: HeroProps) {
+  // Mount gate to defer heavy components until after first paint/idle
+  const [deferHeavy, setDeferHeavy] = useState(false);
+  useEffect(() => {
+    // Prefer idle; fallback to timeout for broader support
+    const ric = (window as any).requestIdleCallback as
+      | ((cb: () => void) => number)
+      | undefined;
+    if (ric) {
+      const id = ric(() => setDeferHeavy(true));
+      return () => {
+        const cic = (window as any).cancelIdleCallback as
+          | ((handle: number) => void)
+          | undefined;
+        if (cic) cic(id as unknown as number);
+      };
+    }
+    const t = setTimeout(() => setDeferHeavy(true), 100);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <Section
       className={cn(
@@ -113,10 +156,10 @@ export default function Hero({
         </div>
       </div>
 
-      <MagicBean />
+      {deferHeavy && <MagicBean />}
 
       <div>
-        <Features forceDarkMode={true} />
+        {deferHeavy && <FeaturesLazy forceDarkMode={true} />}
       </div>
       
       {/* BentoCrad section with same Hero background */}
@@ -130,11 +173,11 @@ export default function Hero({
 
        
 
-      <CompareCard />
+      {deferHeavy && <CompareCardLazy />}
 
-      <Readme />
+      {deferHeavy && <ReadmeLazy />}
       
-      <Section2 />
+      {deferHeavy && <Section2Lazy />}
 
      
 
@@ -142,7 +185,7 @@ export default function Hero({
 
      
       
-       <Footer />
+       {deferHeavy && <FooterLazy />}
 
     </Section>
   );

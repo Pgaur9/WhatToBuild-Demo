@@ -7,6 +7,7 @@ const nextConfig = {
       'seeklogo.com',
       'seeklogo.com',
       'www.docker.com',
+      'github.com'
       
     ],
     

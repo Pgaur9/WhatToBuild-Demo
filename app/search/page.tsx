@@ -207,10 +207,12 @@ export default function SearchPage() {
         let repoQuery = query.trim();
         
         // Extract repo name from GitHub URL if provided
-        const githubUrlMatch = repoQuery.match(/github\.com\/([^/]+\/[^/]+)/);
+        const githubUrlMatch = repoQuery.match(/github\.com\/(?:repo:)?([^\s#?]+\/[^\s/#?]+)/i);
         if (githubUrlMatch) {
           repoQuery = githubUrlMatch[1];
         }
+        // Strip trailing .git if present
+        repoQuery = repoQuery.replace(/\.git$/i, '');
         
         // If it looks like a repo name (owner/repo), search for exact match
         if (repoQuery.includes('/')) {
@@ -218,7 +220,8 @@ export default function SearchPage() {
             params: { 
               query: `repo:${repoQuery}`, 
               page: 1,
-              per_page: 1
+              per_page: 1,
+              mode: 'find',
             },
           });
           
@@ -235,7 +238,8 @@ export default function SearchPage() {
             params: { 
               query: repoQuery, 
               page: 1,
-              per_page: itemsPerPage
+              per_page: itemsPerPage,
+              mode: 'find',
             },
           });
           
