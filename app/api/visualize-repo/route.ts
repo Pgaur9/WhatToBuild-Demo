@@ -18,13 +18,14 @@ export async function GET(request: NextRequest) {
     let readmeContent: string | undefined;
     try {
       readmeContent = await github.getReadme(repoFullName);
-    } catch (_) {
+    } catch {
       readmeContent = undefined;
     }
 
     // Fetch full file tree and a root listing for package.json
     const fileTree = await github.getFullFileTree(repoFullName);
-    const filePaths: string[] = fileTree.map((n: any) => n.path);
+    type FileEntry = { path: string };
+    const filePaths: string[] = (fileTree as FileEntry[]).map((n) => n.path);
 
     // Try to read package.json for deps/scripts
     const [owner, repo] = repoFullName.split('/');
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
         dependencies = { ...(parsed.dependencies || {}), ...(parsed.devDependencies || {}) };
         scripts = parsed.scripts || null;
       }
-    } catch (_) {
+    } catch {
       // ignore
     }
 

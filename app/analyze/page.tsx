@@ -517,7 +517,7 @@ function AnalyzePageContent() {
                       <li>
                         <div className="absolute -start-1.5 mt-1.5 h-3 w-3 rounded-full bg-indigo-400 shadow" />
                         <h4 className="text-white font-semibold">Fetch File Content (on demand)</h4>
-                        <p className="text-white/70 text-sm">On "View File Content", calls <code className="text-white/80">/api/get-file-content</code> and opens a dialog with the source.</p>
+                        <p className="text-white/70 text-sm">On &quot;View File Content&quot;, calls <code className="text-white/80">/api/get-file-content</code> and opens a dialog with the source.</p>
                       </li>
                       <li>
                         <div className="absolute -start-1.5 mt-1.5 h-3 w-3 rounded-full bg-indigo-400 shadow" />

@@ -44,6 +44,11 @@ interface ParsedEdge {
   label?: string;
 }
 
+type NodeData = {
+  label: string;
+  layer?: number;
+};
+
 const FlowDiagramInner = ({
   chart,
   title,
@@ -181,12 +186,12 @@ const FlowDiagramInner = ({
     baseEdges.forEach((e) => indeg.set(e.target, (indeg.get(e.target) || 0) + 1));
 
     // Prefer explicit layers (from subgraphs) if present
-    const anyLayer = baseNodes.some((n) => (n as any).data && (n as any).data.label && (n as any).layer !== undefined);
+    const anyLayer = baseNodes.some((n) => (n.data as NodeData | undefined)?.layer !== undefined);
     if (anyLayer) {
       // Collect by layer index found on our parsed nodes (attached later below when creating baseNodes)
       const byLayer = new Map<number, string[]>();
       baseNodes.forEach((n) => {
-        const lyr = (n as any).layer as number | undefined;
+        const lyr = (n.data as NodeData | undefined)?.layer;
         const id = n.id;
         const key = typeof lyr === 'number' ? lyr : 0;
         if (!byLayer.has(key)) byLayer.set(key, []);
@@ -266,13 +271,11 @@ const FlowDiagramInner = ({
   };
 
   const createFlowElements = (parsedNodes: ParsedNode[], parsedEdges: ParsedEdge[]) => {
-    const baseNodes: RFNode[] = parsedNodes.map((node) => ({
+    const baseNodes: RFNode<NodeData>[] = parsedNodes.map((node) => ({
       id: node.id,
       type: 'default',
       position: { x: 0, y: 0 },
-      data: { label: node.label },
-      // carry layer info for layout
-      ...(node.layer !== undefined ? { layer: node.layer } : {}),
+      data: { label: node.label, ...(node.layer !== undefined ? { layer: node.layer } : {}) },
       style: {
         background: 'rgba(0, 0, 0, 0.6)',
         backdropFilter: 'blur(20px) saturate(200%)',
@@ -342,7 +345,7 @@ const FlowDiagramInner = ({
     } catch (error) {
       console.error('Error parsing diagram:', error);
     }
-  }, [editableChart, setNodes, setEdges, density, direction, animateEdges]);
+  }, [editableChart, setNodes, setEdges, density, direction, animateEdges, createFlowElements, parseMermaidToFlow]);
 
   useEffect(() => {
     setEditableChart(chart);

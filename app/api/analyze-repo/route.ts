@@ -74,7 +74,8 @@ export async function GET(request: NextRequest) {
     const fileTree = await github.getFullFileTree(repoFullName);
 
     // 2. Build candidate lists with prioritization and ensure per-category representation
-    const allSource = fileTree.filter((f: any) => isSourceFile(f.path));
+    type FileEntry = { path: string };
+    const allSource: FileEntry[] = (fileTree as FileEntry[]).filter((f) => isSourceFile(f.path));
 
     // Buckets by category
     const buckets: Record<Category, string[]> = {
@@ -87,7 +88,7 @@ export async function GET(request: NextRequest) {
     // Start with important root files if present
     const selectedSet = new Set<string>();
     for (const name of IMPORTANT_ROOT_FILES) {
-      const found = allSource.find((f: any) => f.path === name);
+      const found = allSource.find((f) => f.path === name);
       if (found) selectedSet.add(found.path);
     }
 
@@ -102,8 +103,8 @@ export async function GET(request: NextRequest) {
 
     // Prefer files inside priority directories next
     const priorityCandidates = allSource
-      .filter((f: any) => PRIORITY_DIRS.some((d) => f.path.startsWith(d)))
-      .map((f: any) => f.path);
+      .filter((f) => PRIORITY_DIRS.some((d) => f.path.startsWith(d)))
+      .map((f) => f.path);
     for (const p of priorityCandidates) {
       if (selectedSet.size >= MAX_FILES_TO_ANALYZE) break;
       selectedSet.add(p);
@@ -129,8 +130,7 @@ export async function GET(request: NextRequest) {
           // Return null for empty files so they can be filtered out
           if (content === null) return null;
           return { path: file.path, content };
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (error) {
+        } catch {
           console.warn(`Could not fetch content for ${file.path}, skipping.`);
           return null; // Skip files that fail to fetch
         }
