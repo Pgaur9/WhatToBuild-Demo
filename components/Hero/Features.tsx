@@ -119,10 +119,26 @@ const Features = ({ forceDarkMode = true }) => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-20">
-          {/* Feature List */}
-          <div className="flex flex-col gap-4">
-            {premiumFeatures.map((feature, index) => (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-16 lg:mb-20">
+          {/* Feature List - Mobile (icons only, 3 rows x 2 cols) */}
+          <div className="order-2 lg:order-1 grid grid-cols-2 gap-3 sm:gap-4 lg:hidden">
+            {premiumFeatures.map((feature) => (
+              <button
+                key={feature.id}
+                onClick={() => handleFeatureClick(feature.id)}
+                aria-label={feature.title}
+                className={`group relative aspect-square rounded-2xl border border-white/10 bg-black/40 backdrop-blur-sm flex items-center justify-center transition-all duration-300 ${
+                  activeFeature === feature.id ? 'ring-1 ring-blue-400/40 shadow-[0_0_16px_2px_rgba(80,180,255,0.18)]' : 'hover:border-white/20'
+                }`}
+              >
+                <div className="text-white text-2xl">{feature.icon}</div>
+              </button>
+            ))}
+          </div>
+
+          {/* Feature List - Desktop (full cards) */}
+          <div className="hidden lg:flex lg:flex-col lg:gap-4">
+            {premiumFeatures.map((feature) => (
               <div
                 key={feature.id}
                 className={`group relative cursor-pointer transition-all duration-300 rounded-2xl md:rounded-3xl overflow-hidden ${
@@ -178,7 +194,7 @@ const Features = ({ forceDarkMode = true }) => {
           </div>
 
           {/* Video Section */}
-          <div className="col-span-2">
+          <div className="order-1 lg:order-2 col-span-1 lg:col-span-2">
             <div 
               className="relative rounded-2xl border border-white/10 p-2 transition-all duration-300 hover:border-white/20 md:rounded-3xl md:p-3 group"
               style={{

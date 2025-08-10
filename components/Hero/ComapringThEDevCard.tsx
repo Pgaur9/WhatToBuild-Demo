@@ -136,7 +136,7 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
   const isWinner = winner === user.login;
   return (
     <div
-      className={`glass-card backdrop-blur-3xl backdrop-saturate-200 border rounded-2xl p-6 relative overflow-hidden group transition-all duration-500 w-full`}
+      className={`glass-card backdrop-blur-3xl backdrop-saturate-200 border rounded-2xl p-6 relative overflow-hidden group transition-all duration-500 w-full break-words`}
       style={{ 
         minWidth: 0, 
         touchAction: 'manipulation', 
@@ -149,6 +149,7 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
       <div className="relative z-10">
         {/* Header */}
         <div className="flex items-center gap-3 mb-3">
+
           <div className="relative group">
             <Image
               src={user.avatar_url}
@@ -163,13 +164,14 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
           <div className="flex-1 min-w-0">
             <h3 className="text-base font-bold text-white/95 truncate">{user.name || user.login}</h3>
             <p className="text-white/50 text-xs mb-1">@{user.login}</p>
-            <div className="flex items-center gap-2 text-white/60 text-xs">
+            <div className="flex items-center gap-2 text-white/60 text-xs flex-wrap">
               <BadgeIcon className="w-3 h-3" />
               <span>{badge.text}</span>
               <span>•</span>
               <span>Joined {joinDate}</span>
             </div>
           </div>
+
           <a
             href={`https://github.com/${user.login}`}
             target="_blank"
@@ -188,7 +190,7 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 6px rgba(0,0,0,0.3)',
             transform: 'translateY(-0.5px)',
           }}>
-          <p className="text-xs font-bold italic text-center bg-gradient-to-r from-orange-400 via-red-400 to-yellow-400 bg-clip-text text-transparent group-hover:from-yellow-300 group-hover:via-orange-400 group-hover:to-red-500 transition-all duration-500"
+          <p className="text-xs font-bold italic text-center bg-gradient-to-r from-orange-400 via-red-400 to-yellow-400 bg-clip-text text-transparent group-hover:from-yellow-300 group-hover:via-orange-400 group-hover:to-red-500 transition-all duration-500 line-clamp-1"
             style={{
               textShadow: '0 0 20px rgba(251, 146, 60, 0.5)',
               filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
@@ -251,7 +253,7 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
         {/* Languages */}
         <div className="mb-3 flex items-center">
           <h4 className="text-sm font-medium text-white/75 mr-2">Languages</h4>
-          <div className="flex flex-row gap-1.5">
+          <div className="flex flex-row flex-wrap gap-1.5">
             
             {Object.entries(stats.languageStats || {}).slice(0, 3).map(([lang]) => (
               <span
@@ -274,7 +276,7 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
         {/* Top Repos */}
         <div>
           <h4 className="text-sm font-medium text-white/75 mb-2">Top Repos</h4>
-          <div className="flex flex-row gap-2.5">
+          <div className="flex flex-row flex-wrap gap-2.5">
             {stats.topRepos.slice(0, 2).map((repo, index) => (
               <a
                 key={index}

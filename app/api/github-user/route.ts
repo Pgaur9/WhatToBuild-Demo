@@ -94,9 +94,12 @@ export async function GET(request: NextRequest) {
       contributionData = [];
     }
 
-    // Fetch detailed repo data with commit counts
+    // Sort all repos by stars descending and take top 2 for detailed cards
+    const reposByStars = [...repos].sort((a, b) => b.stargazers_count - a.stargazers_count);
+
+    // Fetch detailed repo data with commit counts for the top starred repos
     const reposWithCommits = await Promise.all(
-      repos.slice(0, 5).map(async (repo: Repo) => {
+      reposByStars.slice(0, 2).map(async (repo: Repo) => {
         try {
           // Fetch commit count for each repo
           const commitsResponse = await fetch(

@@ -15,7 +15,8 @@ import ContributionGraph from '@/components/ContributionGraph';
 import Glow from '@/components/ui/glow';
 import './page.css';
 import { Permanent_Marker } from 'next/font/google';
-
+import { Confetti, type ConfettiRef } from '@/components/magicui/confetti';
+import { createPortal } from 'react-dom';
 
 interface GitHubUser {
   login: string;
@@ -85,6 +86,7 @@ export default function ComparePage() {
     totalContributions: number;
   } | null>(null);
   const [winner, setWinner] = useState<string | null>(null);
+  const confettiRef = React.useRef<ConfettiRef>(null);
   const [suggestions1, setSuggestions1] = useState<GitHubSuggestion[]>([]);
   const [suggestions2, setSuggestions2] = useState<GitHubSuggestion[]>([]);
   const [showSuggestions1, setShowSuggestions1] = useState(false);
@@ -226,10 +228,34 @@ export default function ComparePage() {
     if (showResults && roastText) {
       setShowConfetti(true);
       // Hide confetti after 3 seconds
-      const timer = setTimeout(() => setShowConfetti(false), 3000);
+      const timer = setTimeout(() => setShowConfetti(false), 6000);
       return () => clearTimeout(timer);
     }
   }, [showResults, roastText]);
+
+  // Fire MagicUI confetti bursts when visible
+  React.useEffect(() => {
+    if (!showConfetti) return;
+    const fire = (opts: Parameters<NonNullable<ConfettiRef>['fire']>[0]) => {
+      confettiRef.current?.fire?.(opts || {} as any);
+    };
+    // Light sequence: 3 bursts (left, right, center) + small finale
+    const bursts = [
+      { x: 0.2, y: 0.3 },
+      { x: 0.8, y: 0.3 },
+      { x: 0.5, y: 0.25 },
+    ];
+    const timers: NodeJS.Timeout[] = [];
+    bursts.forEach((o, i) => {
+      const delay = i * 180;
+      timers.push(setTimeout(() => {
+        fire({ particleCount: 55, spread: 70, startVelocity: 48, scalar: 0.95, origin: o });
+      }, delay));
+    });
+    // Small finale
+    timers.push(setTimeout(() => fire({ particleCount: 90, spread: 110, startVelocity: 58, scalar: 1.0, origin: { x: 0.5, y: 0.3 } }), 650));
+    return () => { timers.forEach(clearTimeout); };
+  }, [showConfetti]);
 
   const handleCompare = React.useCallback(async () => {
     if (!username1.trim() || !username2.trim()) {
@@ -429,9 +455,15 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
       </div>
 
       
-      {/* Confetti Canvas Overlay */}
-      {showConfetti && (
-        <ConfettiOverlay />
+      {/* MagicUI Confetti Overlay */}
+      {showConfetti && createPortal(
+        <Confetti
+          ref={confettiRef}
+          manualstart
+          className="fixed inset-0 z-[9999] pointer-events-none w-screen h-screen"
+          globalOptions={{ resize: true, useWorker: true }}
+        />,
+        document.body
       )}
       <div className="container mx-auto p-4 md:p-8 pt-24 md:pt-32 relative z-10">
         {!showResults ? (
@@ -1186,7 +1218,7 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
   );
 }
 
-// Simple confetti overlay component
+// Enhanced confetti overlay component
 function ConfettiOverlay() {
   const [opacity, setOpacity] = React.useState(1);
   const opacityRef = React.useRef(1);
@@ -1194,59 +1226,120 @@ function ConfettiOverlay() {
     const canvas = document.getElementById('confetti-canvas') as HTMLCanvasElement | null;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const W = window.innerWidth;
-    const H = window.innerHeight;
-    canvas.width = W;
-    canvas.height = H;
-    const confettiColors = ['#f1e05a', '#2b7489', '#ffac45', '#f34b7d', '#00ADD8', '#dea584', '#4F5D95', '#701516', '#ffac45', '#fff', '#e53e3e', '#38bdf8', '#fbbf24'];
-    const particles = Array.from({ length: 80 }).map(() => ({
+    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    const resize = () => {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      canvas.width = Math.floor(W * dpr);
+      canvas.height = Math.floor(H * dpr);
+      if (ctx) ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    const confettiColors = ['#f1e05a', '#2b7489', '#ffac45', '#f34b7d', '#00ADD8', '#dea584', '#4F5D95', '#701516', '#ffffff', '#e53e3e', '#38bdf8', '#fbbf24'];
+    const emojis = ['🎉','✨','⭐','🔥','💥'];
+
+    type Shape = 'rect' | 'circle' | 'triangle' | 'emoji';
+    interface Particle { x:number; y:number; vx:number; vy:number; size:number; color:string; shape:Shape; rot:number; av:number; life:number; emoji?:string; }
+
+    const randomShape = (): Shape => {
+      const r = Math.random();
+      if (r < 0.6) return 'rect';
+      if (r < 0.8) return 'circle';
+      if (r < 0.95) return 'triangle';
+      return 'emoji';
+    };
+
+    const particles: Particle[] = Array.from({ length: 160 }).map(() => ({
       x: Math.random() * W,
       y: Math.random() * -H,
-      r: 6 + Math.random() * 8,
-      d: Math.random() * 80,
+      vx: -1 + Math.random() * 2,
+      vy: 2 + Math.random() * 3.5,
+      size: 6 + Math.random() * 10,
       color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
-      tilt: Math.random() * 10,
-      tiltAngle: Math.random() * Math.PI * 2,
-      tiltAngleInc: 0.05 + Math.random() * 0.07
+      shape: randomShape(),
+      rot: Math.random() * Math.PI * 2,
+      av: (Math.random() - 0.5) * 0.2,
+      life: 1,
+      emoji: Math.random() < 0.1 ? emojis[Math.floor(Math.random() * emojis.length)] : undefined,
     }));
+
     let frame = 0;
     let fadeStarted = false;
+    let raf = 0;
     function draw() {
       if (!ctx) return;
       ctx.clearRect(0, 0, W, H);
       ctx.save();
-      ctx.globalAlpha = opacityRef.current;
+      ctx.globalAlpha = Math.max(0, opacityRef.current);
+      const wind = Math.sin(frame / 60) * 0.6; // gentle oscillating wind
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
-        ctx.beginPath();
-        ctx.ellipse(p.x, p.y, p.r, p.r * 0.6, p.tiltAngle, 0, 2 * Math.PI);
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = 0.85 * opacityRef.current;
-        ctx.fill();
-        ctx.globalAlpha = opacityRef.current;
-        // Animate
-        p.y += 3 + Math.sin(frame / 10 + p.d) * 1.5;
-        p.x += Math.sin(frame / 20 + p.d) * 2;
-        p.tiltAngle += p.tiltAngleInc;
+        // Update
+        p.vx += wind * 0.02;
+        p.vy += 0.02; // gravity
+        p.x += p.vx + Math.sin(frame / 20 + i) * 0.2;
+        p.y += p.vy;
+        p.rot += p.av;
+
+        // Wrap to top when falling below
         if (p.y > H + 20) {
-          p.y = Math.random() * -40;
+          p.y = Math.random() * -60;
           p.x = Math.random() * W;
+          p.vx = -1 + Math.random() * 2;
+          p.vy = 2 + Math.random() * 3.5;
+          p.rot = Math.random() * Math.PI * 2;
         }
+
+        // Draw
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        if (p.shape === 'emoji' && p.emoji) {
+          ctx.font = `${p.size * 1.6}px sans-serif`;
+          ctx.fillText(p.emoji, 0, 0);
+        } else {
+          ctx.fillStyle = p.color;
+          switch (p.shape) {
+            case 'rect':
+              ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+              break;
+            case 'circle':
+              ctx.beginPath();
+              ctx.arc(0, 0, p.size * 0.4, 0, Math.PI * 2);
+              ctx.fill();
+              break;
+            case 'triangle':
+              ctx.beginPath();
+              ctx.moveTo(0, -p.size * 0.5);
+              ctx.lineTo(p.size * 0.5, p.size * 0.5);
+              ctx.lineTo(-p.size * 0.5, p.size * 0.5);
+              ctx.closePath();
+              ctx.fill();
+              break;
+          }
+        }
+        ctx.restore();
       }
       ctx.restore();
       frame++;
-      if (frame < 90) {
-        requestAnimationFrame(draw);
+      if (frame < 360) { // ~6 seconds at 60fps
+        raf = requestAnimationFrame(draw);
       } else if (!fadeStarted) {
         fadeStarted = true;
-        // Fade out over 0.5s
+        // Smooth fade out over ~1s
         let fadeFrame = 0;
         function fade() {
           fadeFrame++;
-          opacityRef.current = 1 - fadeFrame / 30;
+          opacityRef.current = 1 - fadeFrame / 60;
           setOpacity(opacityRef.current);
-          if (fadeFrame < 30) {
-            requestAnimationFrame(fade);
+          if (fadeFrame < 60) {
+            raf = requestAnimationFrame(fade);
           } else {
             opacityRef.current = 0;
             setOpacity(0);
@@ -1255,10 +1348,12 @@ function ConfettiOverlay() {
         fade();
       }
     }
-    draw();
+    raf = requestAnimationFrame(draw);
     // Clean up
     return () => {
+      window.removeEventListener('resize', resize);
       if (ctx) ctx.clearRect(0, 0, W, H);
+      if (raf) cancelAnimationFrame(raf);
     };
   }, []);
   return (
@@ -1271,7 +1366,7 @@ function ConfettiOverlay() {
       pointerEvents: 'none',
       zIndex: 50,
       opacity,
-      transition: 'opacity 0.5s',
+      transition: 'opacity 0.6s',
     }} />
   );
 }
@@ -1700,7 +1795,10 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
         <div>
           <h4 className="text-sm font-medium text-white/75 mb-2">Top Repos</h4>
           <div className="flex flex-row gap-2.5">
-            {stats.topRepos.slice(0, 2).map((repo, index) => (
+            {[...stats.topRepos]
+              .sort((a, b) => b.stars - a.stars)
+              .slice(0, 2)
+              .map((repo, index) => (
               <a
                 key={index}
                 href={repo.url}
