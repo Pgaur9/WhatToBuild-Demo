@@ -94,21 +94,21 @@ export default function Hero({
   // Mount gate to defer heavy components until after first paint/idle
   const [deferHeavy, setDeferHeavy] = useState(false);
   useEffect(() => {
-    // Prefer idle; fallback to timeout for broader support
-    const ric = (window as any).requestIdleCallback as
-      | ((cb: () => void) => number)
-      | undefined;
-    if (ric) {
-      const id = ric(() => setDeferHeavy(true));
+    // Prefer idle; fallback to timeout for broader support (typed shims)
+    type RIC = (cb: () => void) => number;
+    type CIC = (id: number) => void;
+    const w = window as unknown as {
+      requestIdleCallback?: RIC;
+      cancelIdleCallback?: CIC;
+    };
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(() => setDeferHeavy(true));
       return () => {
-        const cic = (window as any).cancelIdleCallback as
-          | ((handle: number) => void)
-          | undefined;
-        if (cic) cic(id as unknown as number);
+        if (w.cancelIdleCallback) w.cancelIdleCallback(id);
       };
     }
-    const t = setTimeout(() => setDeferHeavy(true), 100);
-    return () => clearTimeout(t);
+    const t = window.setTimeout(() => setDeferHeavy(true), 100);
+    return () => window.clearTimeout(t);
   }, []);
 
   return (

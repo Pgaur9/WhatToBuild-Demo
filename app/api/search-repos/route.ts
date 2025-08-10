@@ -54,7 +54,7 @@ export async function GET(request: Request) {
       try {
         const resp = await axios.get(`${GITHUB_API}/repos/${ownerRepo}`, { headers });
         return NextResponse.json({ items: [resp.data], has_more: false, total_count: 1 });
-      } catch (e) {
+      } catch {
         // If exact repo not found, fall back to search below
       }
     }
