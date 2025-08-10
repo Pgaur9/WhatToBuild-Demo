@@ -40,6 +40,17 @@ WhatToBuild is an  platform that helps developers discover, analyze, and underst
 
 ![Developer Comparison](public/GithubImages/compare.png)
 
+### 📝 **Generate a Great README**
+- **Instant Draft**: Analyze your GitHub repository to generate a high‑quality README in seconds
+- **Flexible Input**: Use `owner/repo` or a full GitHub URL
+- **Personalization**: Add optional notes to steer tone, structure, and highlights
+- **Live Preview**: Edit Markdown with a GitHub‑flavored live preview side‑by‑side
+- **AI Refine**: Improve sections, wording, and structure via Google Gemini
+- **One‑Click Actions**: Copy, download, or create a PR to update `README.md` in your repo
+- **Private Repos**: Use a personal access token in-session for secure access
+
+![Generate a Great README](public/GithubImages/readme.png)
+
 ### 🎨 **Interactive Visualizations**
 - **Architecture Diagrams**: Generate visual representations of project structure
 - **Dependency Graphs**: Interactive visualization of project dependencies
