@@ -236,8 +236,9 @@ export default function ComparePage() {
   // Fire MagicUI confetti bursts when visible
   React.useEffect(() => {
     if (!showConfetti) return;
-    const fire = (opts: Parameters<NonNullable<ConfettiRef>['fire']>[0]) => {
-      confettiRef.current?.fire?.(opts || {} as any);
+    type ConfettiFireOptions = Parameters<NonNullable<ConfettiRef>['fire']>[0];
+    const fire = (opts: ConfettiFireOptions = {} as ConfettiFireOptions) => {
+      confettiRef.current?.fire?.(opts);
     };
     // Light sequence: 3 bursts (left, right, center) + small finale
     const bursts = [

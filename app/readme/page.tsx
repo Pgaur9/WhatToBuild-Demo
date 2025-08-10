@@ -459,6 +459,9 @@ export default function ReadmePage() {
       <ol {...props} className="list-decimal pl-6 my-4 marker:text-white/60 space-y-1 [&>li>a]:leading-7 [&>li>a]:underline-offset-4" />
     ),
     a: (props: React.ComponentProps<'a'>) => <a {...props} className="text-indigo-300 hover:text-indigo-200 underline" />,
+    // We intentionally allow raw <img> tags inside rendered README markdown, since these may come
+    // from external sources and Next/Image optimization isn't always applicable here.
+    // eslint-disable-next-line @next/next/no-img-element
     img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
       <img {...props} alt={props.alt ?? ''} className="inline-block align-middle mr-2 mb-2 rounded" />
     ),

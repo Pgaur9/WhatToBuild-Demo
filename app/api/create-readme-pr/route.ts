@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     try {
       const content = await gh<{ sha: string }>(`/repos/${owner}/${repo}/contents/README.md?ref=${encodeURIComponent(branch)}`, token);
       existingSha = content.sha;
-    } catch (e: unknown) {
+    } catch {
       // 404 means not found -> create new file
       existingSha = undefined;
     }
