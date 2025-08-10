@@ -9,7 +9,7 @@ import RepositoryTable from '@/components/RepositoryTable';
 import { Button } from '@/components/ui/button';
 import { 
   Search, Code, ChevronLeft, ChevronRight, X,
-  Calendar, AlertCircle, Zap, Tag, ExternalLink 
+  Calendar, AlertCircle, Tag, ExternalLink 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import '@/components/ui/hide-scrollbar.css';
@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import LiquidLoader from '@/components/LiquidLoader';
 
@@ -48,6 +48,10 @@ export default function OpenSourcePage() {
   // Cache for repository issues by repo name and filter
   const [issuesCache, setIssuesCache] = useState<Record<string, GitHubIssue[]>>({});
   const [explanationCache, setExplanationCache] = useState<Record<string, string>>({});
+  // Background counts cache to avoid blocking pagination
+  const [issueCounts, setIssueCounts] = useState<Record<string, number>>({});
+  // Track which repos have already had counts computed (even if zero)
+  const [computedIssueCounts, setComputedIssueCounts] = useState<Record<string, boolean>>({});
   
   // Explanation state
   const [showExplanation, setShowExplanation] = useState(false);
@@ -60,6 +64,8 @@ export default function OpenSourcePage() {
   const [itemsPerPage] = useState(10); // Fixed at 10 items per page
   const [totalPages, setTotalPages] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  // Track which pages are already loaded to avoid re-fetching
+  const [pagesLoaded, setPagesLoaded] = useState<Record<number, boolean>>({ 1: false });
   
   // Issues pagination
   const [issuesPage, setIssuesPage] = useState(1);
@@ -70,6 +76,8 @@ export default function OpenSourcePage() {
   
   // Refs
   const resultsRef = useRef<HTMLDivElement>(null);
+  const didMountRef = useRef(false);
+  const lastFetchKey = useRef<string>('');
 
   const sortedRepositories = useMemo(() => {
     const sorted = [...repositories];
@@ -81,117 +89,110 @@ export default function OpenSourcePage() {
     return sorted;
   }, [repositories, sortOrder]);
 
+  // Auto-trigger search when user selects the Bounty filter
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+    if (filter === 'bounty issue') {
+      // Trigger immediate search for bounty filter
+      void handleSearch();
+    }
+  }, [filter]);
+
+  // Fetch issue counts in background with limited concurrency
+  const backgroundLoadIssueCounts = async (repos: GitHubRepo[], selectedFilter: string) => {
+    const concurrency = 3;
+    let idx = 0;
+    const runNext = async (): Promise<void> => {
+      const i = idx++;
+      if (i >= repos.length) return;
+      const repo = repos[i] as GitHubRepo;
+      const repoName = repo.full_name;
+      try {
+        if (computedIssueCounts[repoName]) {
+          // already computed, skip
+        } else {
+          let count = 0;
+          if (selectedFilter === 'major issue') {
+            // major issue counts are derived client-side when viewing; skip counting here
+            count = 0;
+          } else if (selectedFilter === 'bounty issue') {
+            const resp = await axios.get(`/api/get-labeled-issues`, {
+              params: { repo: repoName, state: 'open', page: 1, perPage: 50, bountySignals: true },
+            });
+            count = (resp.data?.issues || []).length;
+          } else {
+            const resp = await axios.get(`/api/get-labeled-issues`, {
+              params: {
+                repo: repoName,
+                labels: 'good first issue,good-first-issue,Good first issue,help wanted,help-wanted,beginner,beginner-friendly,easy,E-easy,newcomer,first-timers-only,up-for-grabs,low-hanging-fruit',
+                state: 'open', page: 1, perPage: 50,
+              },
+            });
+            count = (resp.data?.issues || []).length;
+          }
+          setIssueCounts(prev => ({ ...prev, [repoName]: count }));
+          setComputedIssueCounts(prev => ({ ...prev, [repoName]: true }));
+          // Update repositories list progressively; hide repos with zero issues
+          setRepositories(prev => {
+            const updated = prev.map(r => r.full_name === repoName ? { ...r, issue_count: count, has_target_issues: count > 0 } : r);
+            return count === 0 ? updated.filter(r => r.full_name !== repoName) : updated;
+          });
+        }
+      } catch {
+        // ignore count errors in background
+      } finally {
+        await runNext();
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(concurrency, repos.length) }, () => runNext()));
+  };
+
   const fetchTrendingRepos = async (selectedFilter: string, selectedLanguage: string, pageNumber: number) => {
     try {
       setError(null);
+      const key = `${selectedFilter}|${selectedLanguage}|${pageNumber}`;
+      if (lastFetchKey.current === key) {
+        // prevent duplicate fetches for the same page/query
+        return;
+      }
+      lastFetchKey.current = key;
       
-      // First, ask Gemini for trending repositories with the specified filter
-      console.log('Asking Gemini for trending repositories with', selectedFilter);
-      
-      const geminiResponse = await axios.post('/api/get-trending-repos-with-issues', {
-        filter: selectedFilter,
-        language: selectedLanguage,
-        page: pageNumber
+      // Fetch trending repositories with strict language and filter qualifiers
+      const searchResponse = await axios.get('/api/search-trending-repos', {
+        params: {
+          filter: selectedFilter,
+          language: selectedLanguage,
+          page: pageNumber,
+          per_page: 10,
+        }
       });
       
-      const repoNames = geminiResponse.data.repositories;
+      const items = (searchResponse.data.items || []) as GitHubRepo[];
       
-      if (!repoNames || repoNames.length === 0) {
+      if (!items || items.length === 0) {
         if (pageNumber === 1) {
           setError('No repositories found matching your criteria. Try different filters.');
         }
         return;
       }
+      // Use items directly to avoid per-repo blocking calls; seed with cached counts
+      const seeded = items.map((r: GitHubRepo) => ({
+        ...r,
+        issue_count: issueCounts[r.full_name] ?? 0,
+        has_target_issues: (issueCounts[r.full_name] ?? 0) > 0,
+      }));
       
-          // Fetch actual repository data and issues for each repo
-          const repoDataPromises = repoNames.map(async (repoName: string) => {
-            try {
-              // Get repository data
-              const repoResponse = await axios.get(`/api/github-repo/${encodeURIComponent(repoName)}`);
-              
-              let issuesResponse;
-              let issueCount = 0;
-              
-              // Handle different filter types
-              if (selectedFilter === 'major issue') {
-                // For major issues, get all issues and filter client-side
-                const allIssuesResponse = await axios.get(`/api/get-labeled-issues`, {
-                  params: {
-                    repo: repoName,
-                    labels: '',
-                    state: 'open',
-                    page: 1,
-                    perPage: 100
-                  }
-                });
-                
-                const allIssues = allIssuesResponse.data.issues || [];
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const majorIssues = allIssues.filter((issue: any) => {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  const labels = issue.labels.map((label: any) => label.name.toLowerCase());
-                  const hasGoodFirst = labels.some((label: string) => 
-                    label.includes('good first') || 
-                    label.includes('good-first') || 
-                    label.includes('beginner') || 
-                    label.includes('easy') || 
-                    label.includes('help wanted') ||
-                    label.includes('newcomer') ||
-                    label.includes('first-timers')
-                  );
-                  const hasBounty = labels.some((label: string) => 
-                    label.includes('bounty') || 
-                    label.includes('hacktoberfest') || 
-                    label.includes('monetary') || 
-                    label.includes('reward') || 
-                    label.includes('prize')
-                  );
-                  return !hasGoodFirst && !hasBounty;
-                });
-                
-                issueCount = majorIssues.length;
-              } else {
-                // For good first and bounty issues, use label filtering
-                issuesResponse = await axios.get(`/api/get-labeled-issues`, {
-                  params: {
-                    repo: repoName,
-                    labels: selectedFilter === 'good first issue' 
-                      ? 'good first issue,good-first-issue,Good first issue,help wanted,help-wanted,beginner,beginner-friendly,easy,E-easy,newcomer,first-timers-only,up-for-grabs,low-hanging-fruit'
-                      : 'bounty,hacktoberfest,monetary,reward,prize,hackathon,bounty-hunter,bug-bounty',
-                    state: 'open',
-                    page: 1,
-                    perPage: 100
-                  }
-                });
-                
-                const issues = issuesResponse.data.issues || [];
-                issueCount = issues.length;
-              }
-              
-              const repo = repoResponse.data;
-              
-              console.log(`Repository ${repoName}: found ${issueCount} ${selectedFilter}s`);
-              
-              // Include all repositories but mark those with issues
-              return {
-                ...repo,
-                issue_count: issueCount,
-                has_target_issues: issueCount > 0
-              };
-            } catch (error) {
-              console.warn(`Failed to fetch data for ${repoName}:`, error);
-              return null;
-            }
-          });      const repoData = await Promise.all(repoDataPromises);
-      // Filter out null results but keep repos even with 0 issues for debugging
-      const validRepos = repoData.filter(repo => repo !== null);
+      const validRepos = seeded;
       
-      console.log(`Found ${validRepos.length} valid repositories`);
-      console.log('Repositories with issues:', validRepos.filter(repo => repo.has_target_issues).length);
+      // Honor API has_more when available; otherwise, approximate by page size
+      const apiHasMore = Boolean(searchResponse.data.has_more);
+      setHasMore(apiHasMore || validRepos.length === 10);
       
-      setHasMore(validRepos.length === 10); // Assume more if we got 10 results
-      
-      // Update repositories based on page number
+      // Update repositories based on page number (fast path, no blocking issue fetch)
       if (pageNumber === 1) {
         setRepositories(validRepos);
       } else {
@@ -207,9 +208,18 @@ export default function OpenSourcePage() {
       if (validRepos.length === 0 && pageNumber === 1) {
         setError('No repositories found with actual issues matching your criteria. Try different filters.');
       }
+
+      // Background-load counts to avoid pagination lag
+      void backgroundLoadIssueCounts(items as GitHubRepo[], selectedFilter);
     } catch (err) {
       console.error('Error fetching trending repositories:', err);
-      setError('Failed to fetch trending repositories. Please try again later.');
+      // Surface server-provided message when available
+      let apiMsg: string | undefined;
+      if (axios.isAxiosError(err)) {
+        const data = err.response?.data as { error?: string; message?: string } | undefined;
+        apiMsg = data?.error ?? data?.message;
+      }
+      setError(apiMsg ?? 'Failed to fetch trending repositories. Please try again later.');
     }
   };
 
@@ -243,8 +253,7 @@ export default function OpenSourcePage() {
         // Then filter out good first and bounty issues
         const allIssues = allIssuesResponse.data.issues || [];
         const majorIssues = allIssues.filter((issue: GitHubIssue) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const labels = issue.labels.map((label: any) => label.name.toLowerCase());
+          const labels = issue.labels.map((label) => label.name.toLowerCase());
           const hasGoodFirst = labels.some(label => 
             label.includes('good first') || 
             label.includes('good-first') || 
@@ -273,29 +282,44 @@ export default function OpenSourcePage() {
         }
         
       } else {
-        // Convert filter to label format - use comprehensive label variations
-        const labels = selectedFilter === 'good first issue' 
-          ? 'good first issue,good-first-issue,Good first issue,help wanted,help-wanted,beginner,beginner-friendly,easy,E-easy,newcomer,first-timers-only,up-for-grabs,low-hanging-fruit'
-          : selectedFilter === 'bounty issue'
-          ? 'bounty,hacktoberfest,monetary,reward,prize,hackathon,bounty-hunter,bug-bounty'
-          : 'bug,critical,urgent,high priority,blocker,regression,security';
-        
-        const response = await axios.get(`/api/get-labeled-issues`, {
-          params: {
-            repo: repoFullName,
-            labels: labels,
-            state: 'open',
-            page: pageNumber,
-            perPage: 100
+        if (selectedFilter === 'bounty issue') {
+          const response = await axios.get(`/api/get-labeled-issues`, {
+            params: {
+              repo: repoFullName,
+              state: 'open',
+              page: pageNumber,
+              perPage: 100,
+              bountySignals: true,
+            }
+          });
+          
+          if (response.data.issues && response.data.issues.length > 0) {
+            setIssues(response.data.issues);
+            setIssuesCache(prev => ({ ...prev, [cacheKey]: response.data.issues }));
+          } else {
+            setIssuesError(`No ${selectedFilter}s found in this repository.`);
+            setIssues([]);
           }
-        });
-        
-        if (response.data.issues && response.data.issues.length > 0) {
-          setIssues(response.data.issues);
-          setIssuesCache(prev => ({ ...prev, [cacheKey]: response.data.issues }));
         } else {
-          setIssuesError(`No ${selectedFilter}s found in this repository.`);
-          setIssues([]);
+          // Convert filter to label format - use comprehensive label variations
+          const labels = 'good first issue,good-first-issue,Good first issue,help wanted,help-wanted,beginner,beginner-friendly,easy,E-easy,newcomer,first-timers-only,up-for-grabs,low-hanging-fruit';
+          const response = await axios.get(`/api/get-labeled-issues`, {
+            params: {
+              repo: repoFullName,
+              labels: labels,
+              state: 'open',
+              page: pageNumber,
+              perPage: 100
+            }
+          });
+          
+          if (response.data.issues && response.data.issues.length > 0) {
+            setIssues(response.data.issues);
+            setIssuesCache(prev => ({ ...prev, [cacheKey]: response.data.issues }));
+          } else {
+            setIssuesError(`No ${selectedFilter}s found in this repository.`);
+            setIssues([]);
+          }
         }
       }
     } catch (err) {
@@ -312,6 +336,11 @@ export default function OpenSourcePage() {
     setRepositories([]);
     setIsLoading(true);
     setError(null);
+    // Reset caches for a fresh query
+    setIssueCounts({});
+    setComputedIssueCounts({});
+    // Reset loaded pages cache
+    setPagesLoaded({ 1: false });
 
     // Timeout logic: show message after 3s, hide only when loading ends
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -321,6 +350,7 @@ export default function OpenSourcePage() {
     }, 3000);
 
     await fetchTrendingRepos(filter, language, 1);
+    setPagesLoaded(prev => ({ ...prev, 1: true }));
 
     setIsLoading(false);
     setShowTimeoutMessage(false);
@@ -335,19 +365,19 @@ export default function OpenSourcePage() {
   };
 
   const handlePageChange = async (newPage: number) => {
-    if (newPage < 1 || newPage > totalPages || newPage === page || isLoading) return;
-    
-    setIsLoading(true);
+    if (newPage < 1 || newPage > totalPages || newPage === page || isLoadingMore) return;
     setPage(newPage);
-    
-    await fetchTrendingRepos(filter, language, newPage);
-    
-    setIsLoading(false);
-    
+    // If this page is not loaded yet and has more, fetch it; otherwise reuse cached items
+    if (!pagesLoaded[newPage]) {
+      setIsLoadingMore(true);
+      await fetchTrendingRepos(filter, language, newPage);
+      setIsLoadingMore(false);
+      setPagesLoaded(prev => ({ ...prev, [newPage]: true }));
+    }
     // Scroll to results
     setTimeout(() => {
       resultsRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+    }, 50);
   };
   
   const handleLoadMore = async () => {
@@ -485,15 +515,6 @@ export default function OpenSourcePage() {
                     >
                       <Code className="w-4 h-4 inline-block mr-1" />
                       Good First Issue
-                    </button>
-                    <button
-                      onClick={() => setFilter('bounty issue')}
-                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${filter === 'bounty issue' 
-                        ? 'bg-white/10 text-white shadow-lg border border-white/20' 
-                        : 'text-white/60 hover:text-white/80'}`}
-                    >
-                      <Zap className="w-4 h-4 inline-block mr-1" />
-                      Bounty Issue
                     </button>
                     <button
                       onClick={() => setFilter('major issue')}
@@ -682,6 +703,11 @@ export default function OpenSourcePage() {
           className="bg-black/60 backdrop-blur-xl border border-white/20 text-white/90 w-full sm:w-[95vw] sm:max-w-6xl h-[98vh] sm:h-[95vh] shadow-2xl shadow-black/20 p-0 sm:p-0 rounded-none sm:rounded-2xl overflow-hidden"
           style={{ zIndex: 'var(--z-dialog, 10000)' }}
         >
+            {/* Accessible title for screen readers */}
+            <DialogTitle className="sr-only">
+              {selectedRepo ? `Issues for ${selectedRepo.full_name}` : 'Repository Issues'}
+            </DialogTitle>
+
             {/* Liquid glass effect */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-white/10 pointer-events-none"></div>
             <div className="absolute -inset-1 bg-gradient-to-r from-white/0 via-white/10 to-white/0 blur-xl opacity-50 -z-10"></div>

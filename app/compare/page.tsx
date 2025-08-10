@@ -3,20 +3,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import GlassShineAnimation from './animation';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Github, Users, Star, Download, Trophy, Code, Flame, RotateCcw, Shuffle } from 'lucide-react';
-import { toPng } from 'html-to-image';
-import { saveAs } from 'file-saver';
+// Defer heavy libs until needed in actions
 import Image from 'next/image';
 import { LucideIcon } from 'lucide-react';
-import ContributionGraph from '@/components/ContributionGraph';
+// Heavy visuals: dynamically import to reduce first paint cost
+const ContributionGraph = dynamic(() => import('@/components/ContributionGraph'), { ssr: false });
 import Glow from '@/components/ui/glow';
 import './page.css';
 import { Permanent_Marker } from 'next/font/google';
 import { Confetti, type ConfettiRef } from '@/components/magicui/confetti';
 import { createPortal } from 'react-dom';
+const GlassShineAnimation = dynamic(() => import('./animation'), { ssr: false, loading: () => null });
 
 interface GitHubUser {
   login: string;
@@ -95,6 +96,9 @@ export default function ComparePage() {
   const [searchTimeout2, setSearchTimeout2] = useState<NodeJS.Timeout | null>(null);
   const [recentDev1, setRecentDev1] = useState<string[]>([]);
   const [recentDev2, setRecentDev2] = useState<string[]>([]);
+  // Mount gate to ensure client is ready before rendering heavy visuals
+  const [mounted, setMounted] = useState(false);
+  React.useEffect(() => { setMounted(true); }, []);
 
   // Curated list used for quick chips and shuffle
   const popularUsers = React.useMemo(
@@ -374,6 +378,8 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
     if (!element) return;
 
     try {
+      const { toPng } = await import('html-to-image');
+      const { saveAs } = await import('file-saver');
       const dataUrl = await toPng(element, { 
         cacheBust: true, 
         quality: 0.95,
@@ -391,6 +397,7 @@ The battle data has been analyzed! Check out the brutal comparison above! 💀`)
     if (!element) return;
 
     try {
+      const { toPng } = await import('html-to-image');
       const blob = await toPng(element, { 
         cacheBust: true, 
         quality: 0.95,
