@@ -96,9 +96,9 @@ WhatToBuild is an  platform that helps developers discover, analyze, and underst
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 18+      
 - npm, yarn, pnpm, or bun
-- GitHub API access (for full functionality)
+- GitHub API access (for full functionality).
 
 ### Installation
 
