@@ -135,11 +135,14 @@ export default function OpenSourcePage() {
           }
           setIssueCounts(prev => ({ ...prev, [repoName]: count }));
           setComputedIssueCounts(prev => ({ ...prev, [repoName]: true }));
-          // Update repositories list progressively; hide repos with zero issues
-          setRepositories(prev => {
-            const updated = prev.map(r => r.full_name === repoName ? { ...r, issue_count: count, has_target_issues: count > 0 } : r);
-            return count === 0 ? updated.filter(r => r.full_name !== repoName) : updated;
-          });
+          // Update repositories list progressively; do NOT remove repos with zero issues
+          setRepositories(prev =>
+            prev.map(r =>
+              r.full_name === repoName
+                ? { ...r, issue_count: count, has_target_issues: count > 0 }
+                : r
+            )
+          );
         }
       } catch {
         // ignore count errors in background
