@@ -36,11 +36,18 @@ export default function RepositoryTable({
     <div className="w-full overflow-x-auto">
       <div className="bg-black/30 backdrop-blur-xl border border-white/20 rounded-xl overflow-hidden shadow-lg relative group animate-in fade-in zoom-in-95 duration-500">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-        <Table className="w-full">
+        <Table className="w-full table-fixed">
+          <colgroup>
+            <col className="w-[220px] sm:w-[340px] md:w-[480px]" />
+            <col className="w-[120px] hidden sm:table-column" />
+            <col className="w-[90px] hidden sm:table-column" />
+            <col className="w-[120px] hidden md:table-column" />
+            <col className="w-[120px]" />
+          </colgroup>
           <TableHeader>
             <TableRow className="bg-black/50 border-b border-white/10 hover:bg-black/50">
               {/* CHANGE 2: Remove fixed widths, use min-width instead */}
-              <TableHead className="text-left py-4 pl-6 pr-2 text-sm font-semibold text-white/90 uppercase tracking-wider min-w-[180px]">
+              <TableHead className="text-left py-4 pl-6 pr-2 text-sm font-semibold text-white/90 uppercase tracking-wider w-[220px] sm:w-[340px] md:w-[480px]">
                 Repository
               </TableHead>
               <TableHead className="text-left py-4 px-2 text-sm font-semibold text-white/90 uppercase tracking-wider hidden sm:table-cell min-w-[100px]">
@@ -52,7 +59,7 @@ export default function RepositoryTable({
               <TableHead className="text-left py-4 px-2 text-sm font-semibold text-white/90 uppercase tracking-wider hidden md:table-cell min-w-[100px]">
                 Relevance
               </TableHead>
-              <TableHead className="text-right py-4 pl-2 pr-15 text-sm font-semibold text-white/90 uppercase tracking-wider min-w-[30px]">
+              <TableHead className="text-right py-4 pl-2 pr-4 text-sm font-semibold text-white/90 uppercase tracking-wider min-w-[90px] whitespace-nowrap">
                 Actions
               </TableHead>
             </TableRow>
@@ -61,22 +68,31 @@ export default function RepositoryTable({
             {repositories.map((repo, index) => (
               <TableRow key={repo.id || index} className="hover:bg-white/5 transition-all duration-300 group border-b border-white/10 backdrop-blur-sm relative overflow-hidden animate-in fade-in slide-in-from-left-2">
                 {/* Remove absolute overlay div for correct table layout */}
-                <TableCell className="py-4 pl-4 pr-2">
-                  <div className="flex flex-col">
+                <TableCell className="py-4 pl-4 pr-2 min-w-0 w-[240px] sm:w-[360px] md:w-[480px]">
+                  <div className="flex flex-col min-w-0 w-full">
                     <h3 
-                      className="text-lg font-semibold text-white group-hover:text-white/90 transition-colors cursor-pointer hover:underline truncate"
+                      className="text-lg font-semibold text-white group-hover:text-white/90 transition-colors cursor-pointer hover:underline truncate w-full"
                       onClick={() => onViewDetails && onViewDetails(repo)}
+                      title={repo.full_name || repo.name}
                     >
                       {repo.full_name || repo.name}
                     </h3>
-                    <p className="text-white/70 text-sm mt-1 line-clamp-2 break-words">
-                      {repo.description ? 
-                        (repo.description.length > 80 ? `${repo.description.substring(0, 80)}...` : repo.description) 
-                        : 'No description available'
-                      }
+                    <p
+                      className="hidden md:block text-white/70 text-sm mt-1 w-full"
+                      title={repo.description || 'No description available'}
+                      style={{
+                        display: '-webkit-box',
+                        WebkitLineClamp: 1,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        wordBreak: 'break-word',
+                        overflowWrap: 'anywhere',
+                      }}
+                    >
+                      {repo.description || 'No description available'}
                     </p>
                     {repo.topics && repo.topics.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
+                      <div className="hidden md:flex flex-wrap gap-1 mt-2 w-full overflow-hidden">
                         {repo.topics.slice(0, 2).map((topic) => (
                           <span key={topic} className="bg-white/10 backdrop-blur-xl border border-white/20 text-white/80 px-2 py-0.5 rounded-full text-xs shadow-sm hover:bg-white/15 hover:border-white/30 transition-all duration-300">
                             {topic}
@@ -124,19 +140,19 @@ export default function RepositoryTable({
                     <span className="text-white/50 text-sm">-</span>
                   )}
                 </TableCell>
-                <TableCell className="py-4 px-2 text-right">
-                  <div className="flex gap-1.5 justify-end items-center flex-nowrap">
+                <TableCell className="py-4 px-2 text-right whitespace-nowrap">
+                  <div className="flex gap-1 justify-end items-center flex-nowrap">
                     {onViewDetails && (
                       <button
                         onClick={() => onViewDetails(repo)}
-                        className="bg-indigo-500/20 backdrop-blur-xl border border-indigo-500/30 text-white/90 hover:bg-indigo-500/30 hover:border-indigo-500/50 hover:text-white px-2 py-1.5 rounded-lg transition-all duration-300 text-xs font-medium flex items-center space-x-1 shadow-sm flex-shrink-0"
+                        className="bg-indigo-500/20 backdrop-blur-xl border border-indigo-500/30 text-white/90 hover:bg-indigo-500/30 hover:border-indigo-500/50 hover:text-white px-1.5 py-1 rounded-md transition-all duration-300 text-[11px] font-medium flex items-center space-x-1 shadow-sm flex-shrink-0"
                         title={showIssueCount && repo.issue_count ? `${actionButtonText} (${repo.issue_count})` : actionButtonText}
                       >
-                        <Search className="w-3.5 h-3.5 text-white/70" />
-                        <span className="hidden sm:inline">
+                        <Search className="w-3 h-3 text-white/70" />
+                        <span className="hidden md:inline">
                           {actionButtonText}
                           {showIssueCount && repo.issue_count && (
-                            <span className="ml-1 bg-indigo-600/50 px-1.5 py-0.5 rounded text-xs">
+                            <span className="ml-1 bg-indigo-600/50 px-0.5 py-0.5 rounded text-[9px] leading-none">
                               {repo.issue_count}
                             </span>
                           )}
@@ -145,29 +161,29 @@ export default function RepositoryTable({
                     )}
                     <button
                       onClick={() => router.push(`/visualize?repo=${encodeURIComponent(repo.full_name)}`)}
-                      className="bg-white/10 backdrop-blur-xl border border-white/20 text-white/80 hover:bg-white/15 hover:border-white/30 hover:text-white px-2 py-1.5 rounded-lg transition-all duration-300 text-xs font-medium flex items-center space-x-1 shadow-sm flex-shrink-0"
+                      className="bg-white/10 backdrop-blur-xl border border-white/20 text-white/80 hover:bg-white/15 hover:border-white/30 hover:text-white px-1.5 py-1 rounded-md transition-all duration-300 text-[11px] font-medium flex items-center space-x-1 shadow-sm flex-shrink-0"
                       title="Generate Architecture Diagram"
                     >
-                      <BarChart3 className="w-3.5 h-3.5 text-white/70" />
-                      <span className="hidden sm:inline">Visualize</span>
+                      <BarChart3 className="w-3 h-3 text-white/70" />
+                      <span className="hidden md:inline">Visualize</span>
                     </button>
                     <button
                       onClick={() => router.push(`/analyze?repo=${encodeURIComponent(repo.full_name)}`)}
-                      className="bg-white/10 backdrop-blur-xl border border-white/20 text-white/80 hover:bg-white/15 hover:border-white/30 hover:text-white px-2 py-1.5 rounded-lg transition-all duration-300 text-xs font-medium flex items-center space-x-1 shadow-sm flex-shrink-0"
+                      className="bg-white/10 backdrop-blur-xl border border-white/20 text-white/80 hover:bg-white/15 hover:border-white/30 hover:text-white px-1.5 py-1 rounded-md transition-all duration-300 text-[11px] font-medium flex items-center space-x-1 shadow-sm flex-shrink-0"
                       title="Analyze Repository Structure"
                     >
-                      <Search className="w-3.5 h-3.5 text-white/70" />
-                      <span className="hidden sm:inline">Analyze</span>
+                      <Search className="w-3 h-3 text-white/70" />
+                      <span className="hidden md:inline">Analyze</span>
                     </button>
                     <a
                       href={`https://github.com/${repo.full_name}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-white/10 backdrop-blur-xl border border-white/20 text-white/80 hover:bg-white/15 hover:border-white/30 hover:text-white px-2 py-1.5 rounded-lg transition-all duration-300 text-xs font-medium flex items-center space-x-1 shadow-sm flex-shrink-0"
+                      className="bg-white/10 backdrop-blur-xl border border-white/20 text-white/80 hover:bg-white/15 hover:border-white/30 hover:text-white px-1.5 py-1 rounded-md transition-all duration-300 text-[11px] font-medium flex items-center space-x-1 shadow-sm flex-shrink-0"
                       title="View on GitHub"
                     >
-                      <ExternalLink className="w-3.5 h-3.5 text-white/70" />
-                      <span className="hidden sm:inline">GitHub</span>
+                      <ExternalLink className="w-3 h-3 text-white/70" />
+                      <span className="hidden md:inline">GitHub</span>
                     </a>
                   </div>
                 </TableCell>

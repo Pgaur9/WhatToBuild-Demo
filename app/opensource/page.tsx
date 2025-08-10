@@ -90,7 +90,6 @@ export default function OpenSourcePage() {
   }, [repositories, sortOrder]);
 
   // Auto-trigger search when user selects the Bounty filter
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!didMountRef.current) {
       didMountRef.current = true;
@@ -148,6 +147,17 @@ export default function OpenSourcePage() {
         await runNext();
       }
     };
+
+  // Helper: detect and filter out issues with CJK (Chinese/Japanese/Korean) characters
+  const isCJKText = (text?: string) => {
+    if (!text) return false;
+    // Unified CJK, Hiragana, Katakana, Hangul ranges
+    const cjkRegex = /[\u3400-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]/;
+    return cjkRegex.test(text);
+  };
+
+  const filterOutCJKIssues = (list: GitHubIssue[]) =>
+    list.filter((issue) => !isCJKText(`${issue.title || ''} ${issue.body || ''}`));
     await Promise.all(Array.from({ length: Math.min(concurrency, repos.length) }, () => runNext()));
   };
 
@@ -209,8 +219,8 @@ export default function OpenSourcePage() {
         setError('No repositories found with actual issues matching your criteria. Try different filters.');
       }
 
-      // Background-load counts to avoid pagination lag
-      void backgroundLoadIssueCounts(items as GitHubRepo[], selectedFilter);
+      // Load issue counts for all repos before finishing, so UI shows loading until complete
+      await backgroundLoadIssueCounts(items as GitHubRepo[], selectedFilter);
     } catch (err) {
       console.error('Error fetching trending repositories:', err);
       // Surface server-provided message when available
@@ -273,9 +283,10 @@ export default function OpenSourcePage() {
           return !hasGoodFirst && !hasBounty;
         });
         
-        if (majorIssues.length > 0) {
-          setIssues(majorIssues);
-          setIssuesCache(prev => ({ ...prev, [cacheKey]: majorIssues }));
+        const filteredMajor = filterOutCJKIssues(majorIssues);
+        if (filteredMajor.length > 0) {
+          setIssues(filteredMajor);
+          setIssuesCache(prev => ({ ...prev, [cacheKey]: filteredMajor }));
         } else {
           setIssuesError(`No major issues found in this repository.`);
           setIssues([]);
@@ -293,9 +304,10 @@ export default function OpenSourcePage() {
             }
           });
           
-          if (response.data.issues && response.data.issues.length > 0) {
-            setIssues(response.data.issues);
-            setIssuesCache(prev => ({ ...prev, [cacheKey]: response.data.issues }));
+          const filtered = filterOutCJKIssues(response.data.issues || []);
+          if (filtered.length > 0) {
+            setIssues(filtered);
+            setIssuesCache(prev => ({ ...prev, [cacheKey]: filtered }));
           } else {
             setIssuesError(`No ${selectedFilter}s found in this repository.`);
             setIssues([]);
@@ -313,9 +325,10 @@ export default function OpenSourcePage() {
             }
           });
           
-          if (response.data.issues && response.data.issues.length > 0) {
-            setIssues(response.data.issues);
-            setIssuesCache(prev => ({ ...prev, [cacheKey]: response.data.issues }));
+          const filtered = filterOutCJKIssues(response.data.issues || []);
+          if (filtered.length > 0) {
+            setIssues(filtered);
+            setIssuesCache(prev => ({ ...prev, [cacheKey]: filtered }));
           } else {
             setIssuesError(`No ${selectedFilter}s found in this repository.`);
             setIssues([]);
