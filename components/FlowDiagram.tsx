@@ -3,8 +3,8 @@
 
 import React, { useCallback, useEffect, useState, useRef } from 'react';
 import ReactFlow, {
-  Node,
-  Edge,
+  Node as RFNode,
+  Edge as RFEdge,
   addEdge,
   Connection,
   useNodesState,
@@ -19,10 +19,10 @@ import ReactFlow, {
   Panel,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Edit, Eye, Copy, Check, Download, Maximize2, Code, FileText, Minimize2, X } from 'lucide-react';
+import { Edit, Eye, Copy, Check, Download, Maximize2, Code, FileText, Minimize2, X, Zap } from 'lucide-react';
 
 interface FlowDiagramProps {
   chart: string;
@@ -35,6 +35,7 @@ interface FlowDiagramProps {
 interface ParsedNode {
   id: string;
   label: string;
+  layer?: number; // derived from mermaid subgraphs to improve readability
 }
 
 interface ParsedEdge {
@@ -58,43 +59,79 @@ const FlowDiagramInner = ({
   const [downloading, setDownloading] = useState(false);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [density, setDensity] = useState<'compact' | 'cozy' | 'spacious'>('cozy');
+  const [direction, setDirection] = useState<'TB' | 'LR'>('TB');
+  const [animateEdges, setAnimateEdges] = useState(true);
+  const [showDensityMenu, setShowDensityMenu] = useState(false);
+  const [showFlowMenu, setShowFlowMenu] = useState(false);
   const { getNodes, getEdges, getViewport } = useReactFlow();
   const downloadRef = useRef<HTMLDivElement>(null);
+  const densityRef = useRef<HTMLDivElement>(null);
+  const flowRef = useRef<HTMLDivElement>(null);
 
   const parseMermaidToFlow = (mermaidText: string) => {
     const lines = mermaidText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     const parsedNodes: ParsedNode[] = [];
     const parsedEdges: ParsedEdge[] = [];
     const nodeSet = new Set<string>();
+    const nodeLayer = new Map<string, number>();
+    const layerStack: number[] = [];
+    let layerCounter = -1;
 
     for (const line of lines) {
-      if (line.match(/^(graph|flowchart|subgraph|end|style)/i)) {
+      // manage subgraph blocks to infer visual layers
+      if (/^subgraph\b/i.test(line)) {
+        layerCounter += 1;
+        layerStack.push(layerCounter);
+        continue;
+      }
+      if (/^end\b/i.test(line)) {
+        layerStack.pop();
+        continue;
+      }
+      if (/^(graph|flowchart|style)\b/i.test(line)) {
         continue;
       }
 
-      const connectionMatch = line.match(/^(.+?)\s*(-->|---|--)\s*(.+?)(?:\s*:\s*(.+))?$/);
+      // Support mermaid connection with optional label: A --|label|--> B, A --> B, A -- B, A --- B, A -.-> B
+      const connectionMatch = line.match(/^(.+?)\s*-(?:-|\.)>\s*(.+)$|^(.+?)\s*--\s*(?:\|([^|]+)\|\s*)?>\s*(.+)$/);
       if (connectionMatch) {
-        const [, source, arrow, target, label] = connectionMatch;
+        // Two patterns: 1) group1->group2 simple  2) group3 --|label|> group5
+        const simpleTarget = connectionMatch[2];
+        const sourceSimple = connectionMatch[1];
+        const labeledSource = connectionMatch[3];
+        const betweenLabel = connectionMatch[4];
+        const labeledTarget = connectionMatch[5];
+
+        const srcRaw = labeledSource || sourceSimple || '';
+        const tgtRaw = labeledTarget || simpleTarget || '';
+        const label = (betweenLabel || '').trim() || (line.includes(':') ? line.split(':').slice(1).join(':').trim() : undefined);
         
         const extractNode = (nodeStr: string) => {
-          const match = nodeStr.match(/^(\w+)(?:\[([^\]]+)\])?/);
-          if (match) {
-            const [, id, nodeLabel] = match;
-            return { id, label: nodeLabel || id };
-          }
-          return { id: nodeStr.trim(), label: nodeStr.trim() };
+          const s = nodeStr.trim();
+          // id is token up to first bracket/space
+          const idMatch = s.match(/^([A-Za-z0-9_.-]+)/);
+          const id = idMatch ? idMatch[1] : s;
+          // Support [label], (label), {label}, ((label))
+          const box = s.match(/\[([^\]]+)\]/);
+          const round = s.match(/\(([^)]+)\)/);
+          const curly = s.match(/\{([^}]+)\}/);
+          const nodeLabel = (box?.[1] || curly?.[1] || round?.[1] || '').trim();
+          return { id, label: nodeLabel || id };
         };
 
-        const sourceNode = extractNode(source);
-        const targetNode = extractNode(target);
+        const sourceNode = extractNode(srcRaw);
+        const targetNode = extractNode(tgtRaw);
 
         if (!nodeSet.has(sourceNode.id)) {
-          parsedNodes.push(sourceNode);
+          parsedNodes.push({ ...sourceNode, layer: layerStack.length ? layerStack[layerStack.length-1] : undefined });
           nodeSet.add(sourceNode.id);
+          if (layerStack.length) nodeLayer.set(sourceNode.id, layerStack[layerStack.length-1]);
         }
         if (!nodeSet.has(targetNode.id)) {
-          parsedNodes.push(targetNode);
+          parsedNodes.push({ ...targetNode, layer: layerStack.length ? layerStack[layerStack.length-1] : undefined });
           nodeSet.add(targetNode.id);
+          if (layerStack.length) nodeLayer.set(targetNode.id, layerStack[layerStack.length-1]);
         }
 
         parsedEdges.push({
@@ -104,54 +141,159 @@ const FlowDiagramInner = ({
         });
       }
 
-      const standaloneMatch = line.match(/^(\w+)(?:\[([^\]]+)\])?$/);
+      const standaloneMatch = line.match(/^([A-Za-z0-9_.-]+)(?:\[([^\]]+)\])?$/);
       if (standaloneMatch && !line.includes('-->') && !line.includes('--')) {
         const [, id, nodeLabel] = standaloneMatch;
         if (!nodeSet.has(id)) {
-          parsedNodes.push({ id, label: nodeLabel || id });
+          const lyr = layerStack.length ? layerStack[layerStack.length-1] : undefined;
+          parsedNodes.push({ id, label: nodeLabel || id, layer: lyr });
           nodeSet.add(id);
+          if (lyr !== undefined) nodeLayer.set(id, lyr);
         }
       }
     }
 
-    return { nodes: parsedNodes, edges: parsedEdges };
+    // Filter isolated nodes (no degree) to reduce noise
+    const degree = new Map<string, number>();
+    for (const n of parsedNodes) degree.set(n.id, 0);
+    for (const e of parsedEdges) {
+      degree.set(e.source, (degree.get(e.source) || 0) + 1);
+      degree.set(e.target, (degree.get(e.target) || 0) + 1);
+    }
+    const filteredNodes = parsedNodes.filter(n => (degree.get(n.id) || 0) > 0);
+    const validSet = new Set(filteredNodes.map(n => n.id));
+    const filteredEdges = parsedEdges.filter(e => validSet.has(e.source) && validSet.has(e.target));
+
+    return { nodes: filteredNodes, edges: filteredEdges };
+  };
+
+  // Compute a layered layout using a simple topological algorithm
+  const layoutElements = (baseNodes: RFNode[], baseEdges: RFEdge[]) => {
+    const levelGap = density === 'compact' ? 110 : density === 'spacious' ? 240 : 180;
+    const nodeGap = density === 'compact' ? 150 : density === 'spacious' ? 280 : 210;
+
+    const idToIndex = new Map<string, number>();
+    baseNodes.forEach((n, i) => idToIndex.set(n.id, i));
+
+    // Build indegree map
+    const indeg = new Map<string, number>();
+    baseNodes.forEach((n) => indeg.set(n.id, 0));
+    baseEdges.forEach((e) => indeg.set(e.target, (indeg.get(e.target) || 0) + 1));
+
+    // Prefer explicit layers (from subgraphs) if present
+    const anyLayer = baseNodes.some((n) => (n as any).data && (n as any).data.label && (n as any).layer !== undefined);
+    if (anyLayer) {
+      // Collect by layer index found on our parsed nodes (attached later below when creating baseNodes)
+      const byLayer = new Map<number, string[]>();
+      baseNodes.forEach((n) => {
+        const lyr = (n as any).layer as number | undefined;
+        const id = n.id;
+        const key = typeof lyr === 'number' ? lyr : 0;
+        if (!byLayer.has(key)) byLayer.set(key, []);
+        byLayer.get(key)!.push(id);
+      });
+      const sortedLayers = Array.from(byLayer.keys()).sort((a,b)=>a-b);
+      const posNodes = baseNodes.map(n => ({ ...n }));
+      sortedLayers.forEach((layerIdx, idx) => {
+        const layer = byLayer.get(layerIdx)!;
+        layer.sort();
+        layer.forEach((id, i) => {
+          const nodeIndex = idToIndex.get(id)!;
+          const xLR = idx * levelGap;
+          const yLR = i * nodeGap;
+          const xTB = i * nodeGap;
+          const yTB = idx * levelGap;
+          posNodes[nodeIndex].position = direction === 'LR' ? { x: xLR, y: yLR } : { x: xTB, y: yTB };
+        });
+      });
+      return posNodes;
+    }
+
+    // Kahn's algorithm for levels
+    const queue: string[] = [];
+    indeg.forEach((v, k) => { if (v === 0) queue.push(k); });
+    const levels: string[][] = [];
+    const remainingEdges = baseEdges.map(e => ({ ...e }));
+
+    const outgoing = new Map<string, string[]>();
+    baseEdges.forEach(e => {
+      if (!outgoing.has(e.source)) outgoing.set(e.source, []);
+      outgoing.get(e.source)!.push(e.target);
+    });
+
+    const placed = new Set<string>();
+    while (queue.length) {
+      const layer: string[] = [];
+      const size = queue.length;
+      for (let i = 0; i < size; i++) {
+        const id = queue.shift()!;
+        if (placed.has(id)) continue;
+        placed.add(id);
+        layer.push(id);
+        for (const t of outgoing.get(id) || []) {
+          indeg.set(t, (indeg.get(t) || 0) - 1);
+          if ((indeg.get(t) || 0) === 0) queue.push(t);
+        }
+      }
+      if (layer.length) levels.push(layer);
+      if (levels.length > 200) break; // guard
+    }
+
+    // Fallback if cycle: keep previous positions but spread
+    if (placed.size !== baseNodes.length) {
+      return baseNodes.map((n, i) => ({
+        ...n,
+        position: { x: (i % 6) * nodeGap, y: Math.floor(i / 6) * levelGap }
+      }));
+    }
+
+    // Assign positions per level
+    const posNodes = baseNodes.map(n => ({ ...n }));
+    levels.forEach((layer, layerIdx) => {
+      const count = layer.length;
+      layer.sort();
+      layer.forEach((id, i) => {
+        const idx = idToIndex.get(id)!;
+        const xLR = layerIdx * levelGap;
+        const yLR = i * nodeGap;
+        const xTB = i * nodeGap;
+        const yTB = layerIdx * levelGap;
+        posNodes[idx].position = direction === 'LR' ? { x: xLR, y: yLR } : { x: xTB, y: yTB };
+      });
+    });
+
+    return posNodes;
   };
 
   const createFlowElements = (parsedNodes: ParsedNode[], parsedEdges: ParsedEdge[]) => {
-    const flowNodes: Node[] = parsedNodes.map((node, index) => {
-      const cols = Math.min(Math.ceil(Math.sqrt(parsedNodes.length)), 5);
-      const x = (index % cols) * 220 + 50;
-      const y = Math.floor(index / cols) * 120 + 50;
+    const baseNodes: RFNode[] = parsedNodes.map((node) => ({
+      id: node.id,
+      type: 'default',
+      position: { x: 0, y: 0 },
+      data: { label: node.label },
+      // carry layer info for layout
+      ...(node.layer !== undefined ? { layer: node.layer } : {}),
+      style: {
+        background: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(20px) saturate(200%)',
+        color: '#ffffff',
+        border: '1px solid rgba(255, 255, 255, 0.3)',
+        borderRadius: '12px',
+        fontSize: '12px',
+        fontWeight: '600',
+        padding: '12px 16px',
+        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+        minWidth: '140px',
+        minHeight: '40px',
+        textAlign: 'center',
+        transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+      },
+    }));
 
-      return {
-        id: node.id,
-        type: 'default',
-        position: { x, y },
-        data: { 
-          label: node.label,
-        },
-        style: {
-          background: 'rgba(0, 0, 0, 0.6)',
-          backdropFilter: 'blur(20px) saturate(200%)',
-          color: '#ffffff',
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          borderRadius: '12px',
-          fontSize: '12px',
-          fontWeight: '600',
-          padding: '12px 16px',
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 0 1px rgba(255, 255, 255, 0.05)',
-          minWidth: '120px',
-          minHeight: '40px',
-          textAlign: 'center',
-          transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        },
-      };
-    });
-
-    const flowEdges: Edge[] = parsedEdges.map((edge, index) => ({
+    const baseEdges: RFEdge[] = parsedEdges.map((edge, index) => ({
       id: `edge-${index}`,
       source: edge.source,
       target: edge.target,
@@ -183,10 +325,11 @@ const FlowDiagramInner = ({
         width: 18,
         height: 18
       },
-      animated: !edge.label
+      animated: animateEdges && !edge.label
     }));
 
-    return { nodes: flowNodes, edges: flowEdges };
+    const flowNodes = layoutElements(baseNodes, baseEdges);
+    return { nodes: flowNodes, edges: baseEdges };
   };
 
   useEffect(() => {
@@ -199,7 +342,7 @@ const FlowDiagramInner = ({
     } catch (error) {
       console.error('Error parsing diagram:', error);
     }
-  }, [editableChart, setNodes, setEdges]);
+  }, [editableChart, setNodes, setEdges, density, direction, animateEdges]);
 
   useEffect(() => {
     setEditableChart(chart);
@@ -236,19 +379,19 @@ const FlowDiagramInner = ({
     setDownloading(true);
     
     try {
-      const canvas = await html2canvas(downloadRef.current, {
-        backgroundColor: 'rgba(10, 10, 12, 0.98)',
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        width: downloadRef.current.offsetWidth,
-        height: downloadRef.current.offsetHeight,
+      const dataUrl = await toPng(downloadRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+        backgroundColor: '#0a0a0c',
+        // Filter out <style> tags to avoid oklab/oklch serialization issues
+        filter: (node) => {
+          return !(node instanceof Element && node.tagName === 'STYLE');
+        },
       });
-      
-      const dataURL = canvas.toDataURL('image/png');
+
       const link = document.createElement('a');
       link.download = `${title || 'architecture-diagram'}.png`;
-      link.href = dataURL;
+      link.href = dataUrl;
       link.click();
     } catch (error) {
       console.error('Error downloading image:', error);
@@ -272,6 +415,41 @@ const FlowDiagramInner = ({
     setIsFullscreen(!isFullscreen);
   };
 
+  // Toggle a body class so the global layout/header can react to fullscreen state
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const cls = 'visualize-fullscreen';
+      if (isFullscreen) {
+        document.body.classList.add(cls);
+      } else {
+        document.body.classList.remove(cls);
+      }
+      return () => {
+        document.body.classList.remove(cls);
+      };
+    }
+  }, [isFullscreen]);
+
+  // Close dropdowns on outside click or ESC
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      const t = (e.target as unknown) as Element | null;
+      if (t) {
+        if (densityRef.current && !densityRef.current.contains(t)) setShowDensityMenu(false);
+        if (flowRef.current && !flowRef.current.contains(t)) setShowFlowMenu(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setShowDensityMenu(false); setShowFlowMenu(false); }
+    };
+    document.addEventListener('mousedown', onDocClick);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDocClick);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, []);
+
   // Fullscreen overlay
   if (isFullscreen) {
     return (
@@ -292,6 +470,89 @@ const FlowDiagramInner = ({
           </div>
           
           <div className="flex items-center gap-3">
+            {/* Density selector (custom dropdown) */}
+            <div ref={densityRef} className="hidden md:flex items-center gap-2 mr-2 relative">
+              <span className="text-white/60 text-xs">Density</span>
+              <button
+                onClick={() => { setShowDensityMenu((v)=>!v); setShowFlowMenu(false); }}
+                className="flex items-center gap-2 bg-black/40 border border-white/20 text-white/80 text-xs rounded-lg px-3 py-2 hover:bg-black/50 hover:border-white/30 transition-all"
+              >
+                {density === 'compact' && 'Compact'}
+                {density === 'cozy' && 'Cozy'}
+                {density === 'spacious' && (
+                  <span className="inline-flex items-center gap-1">
+                    Spacious
+                    <span className="ml-1 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gradient-to-r from-indigo-500/40 via-purple-500/40 to-pink-500/40 border border-white/20 text-white/90 shadow-[0_0_15px_rgba(168,85,247,0.35)]">
+                      <Zap className="w-3 h-3" /> Crazy
+                    </span>
+                  </span>
+                )}
+              </button>
+              {showDensityMenu && (
+                <div className="absolute top-full left-0 mt-2 w-56 bg-black/70 backdrop-blur-2xl border border-white/20 rounded-xl shadow-2xl overflow-hidden z-50">
+                  <div className="p-1">
+                    <button
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${density==='compact' ? 'bg-white/15 text-white' : 'text-white/80 hover:bg-white/10'}`}
+                      onClick={() => { setDensity('compact'); setShowDensityMenu(false); }}
+                    >
+                      Compact — tighter spacing
+                    </button>
+                    <button
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all mt-1 ${density==='cozy' ? 'bg-white/15 text-white' : 'text-white/80 hover:bg-white/10'}`}
+                      onClick={() => { setDensity('cozy'); setShowDensityMenu(false); }}
+                    >
+                      Cozy — balanced spacing
+                    </button>
+                    <button
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all mt-1 group relative ${density==='spacious' ? 'bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 text-white border border-white/10' : 'text-white/90 hover:bg-white/10'}`}
+                      onClick={() => { setDensity('spacious'); setShowDensityMenu(false); }}
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <span className="inline-flex items-center justify-center w-5 h-5 rounded-md bg-gradient-to-br from-indigo-500/30 to-pink-500/30 border border-white/20 shadow-inner">
+                          <Zap className="w-3.5 h-3.5" />
+                        </span>
+                        <span>
+                          <span className="font-semibold">Spacious</span> — go big
+                        </span>
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Direction toggle (custom dropdown) */}
+            <div ref={flowRef} className="hidden md:flex items-center gap-2 mr-2 relative">
+              <span className="text-white/60 text-xs">Flow</span>
+              <button
+                onClick={() => { setShowFlowMenu((v)=>!v); setShowDensityMenu(false); }}
+                className="flex items-center gap-2 bg-black/40 border border-white/20 text-white/80 text-xs rounded-lg px-3 py-2 hover:bg-black/50 hover:border-white/30 transition-all"
+              >
+                {direction === 'TB' ? 'Top-Bottom' : 'Left-Right'}
+              </button>
+              {showFlowMenu && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-black/70 backdrop-blur-2xl border border-white/20 rounded-xl shadow-2xl overflow-hidden z-50">
+                  <div className="p-1">
+                    <button
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all ${direction==='TB' ? 'bg-white/15 text-white' : 'text-white/80 hover:bg-white/10'}`}
+                      onClick={() => { setDirection('TB'); setShowFlowMenu(false); }}
+                    >
+                      Top-Bottom
+                    </button>
+                    <button
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-all mt-1 ${direction==='LR' ? 'bg-white/15 text-white' : 'text-white/80 hover:bg-white/10'}`}
+                      onClick={() => { setDirection('LR'); setShowFlowMenu(false); }}
+                    >
+                      Left-Right
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Edge animation toggle */}
+            <div className="hidden md:flex items-center gap-2 mr-2">
+              <label className="text-white/60 text-xs">Animate</label>
+              <input type="checkbox" checked={animateEdges} onChange={(e)=>setAnimateEdges(e.target.checked)} />
+            </div>
             <Button
               variant="ghost"
               size="sm"

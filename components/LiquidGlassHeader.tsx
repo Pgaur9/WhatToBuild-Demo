@@ -71,6 +71,10 @@ export default function LiquidGlassHeader() {
         body.dialog-open header {
           display: none !important;
         }
+        /* Hide header while visualize fullscreen overlay is active */
+        body.visualize-fullscreen header {
+          display: none !important;
+        }
       `}</style>
       
       <header 

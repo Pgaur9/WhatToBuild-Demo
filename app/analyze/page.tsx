@@ -180,18 +180,29 @@ function categorizeFiles(files: FileSummary[]): RepositoryStructure {
   
   files.forEach(file => {
     const path = file.path.toLowerCase();
-    
+
+    // Components
     if (path.includes('component') || path.includes('/ui/') || path.includes('/components/')) {
       structure.components.push(file.path);
-    } else if (path.includes('/pages/') || path.includes('/page.') || path.includes('/views/')) {
+
+    // Pages/Views (include Next.js app router, traditional pages, and views)
+    } else if (path.includes('/pages/') || path.includes('/page.') || path.includes('/views/') || path.startsWith('app/')) {
       structure.pages.push(file.path);
-    } else if (path.includes('/api/') || path.includes('controller') || path.includes('route.') || path.includes('endpoint')) {
+
+    // API & routing (include app/api and custom routes)
+    } else if (path.includes('/api/') || path.includes('controller') || path.includes('route.') || path.includes('endpoint') || path.includes('/routes/')) {
       structure.apis.push(file.path);
+
+    // Data Models (schemas, types, interfaces, entities)
     } else if (path.includes('model') || path.includes('schema') || path.includes('entity') || path.includes('type') || path.includes('interface')) {
       structure.dataModels.push(file.path);
-    } else if (path.includes('util') || path.includes('helper') || path.includes('service') || path.includes('lib')) {
+
+    // Utilities (helpers, services, libs, hooks, store)
+    } else if (path.includes('util') || path.includes('helper') || path.includes('service') || path.includes('lib') || path.includes('hook') || path.includes('/store/')) {
       structure.utilities.push(file.path);
-    } else if (path.includes('config') || path.includes('.json') || path.includes('.yml') || path.includes('.env') || path.includes('.rc')) {
+
+    // Configurations (config, JSON/YAML, env, rc)
+    } else if (path.includes('config') || path.includes('.json') || path.includes('.yml') || path.includes('.yaml') || path.includes('.env') || path.includes('.rc')) {
       structure.configurations.push(file.path);
     }
   });
@@ -412,6 +423,10 @@ function AnalyzePageContent() {
                       <FileCode2 className="w-4 h-4 mr-2" />
                       Key Files
                     </TabsTrigger>
+                    <TabsTrigger value="workflow" className="data-[state=active]:bg-white/10">
+                      <Workflow className="w-4 h-4 mr-2" />
+                      Workflow
+                    </TabsTrigger>
                     <TabsTrigger value="issues" className="data-[state=active]:bg-white/10">
                       <AlertCircle className="w-4 h-4 mr-2" />
                       Issues
@@ -467,6 +482,469 @@ function AnalyzePageContent() {
                         );
                       })}
                     </div>
+                  </div>
+                </TabsContent>
+                
+                {/* Workflow Tab */}
+                <TabsContent value="workflow" className="p-6 space-y-6">
+                  {/* Step-by-step timeline */}
+                  <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+                      <Workflow className="w-5 h-5 text-indigo-400" />
+                      Analysis Workflow (Step-by-step)
+                    </h3>
+                    <ol className="relative border-s border-white/10 ms-3 space-y-6">
+                      <li>
+                        <div className="absolute -start-1.5 mt-1.5 h-3 w-3 rounded-full bg-indigo-400 shadow" />
+                        <h4 className="text-white font-semibold">Input Repository</h4>
+                        <p className="text-white/70 text-sm">The page reads <code className="text-white/80">repo</code> from query string and initializes state.</p>
+                      </li>
+                      <li>
+                        <div className="absolute -start-1.5 mt-1.5 h-3 w-3 rounded-full bg-indigo-400 shadow" />
+                        <h4 className="text-white font-semibold">Analyze Repo (server)</h4>
+                        <p className="text-white/70 text-sm">Calls <code className="text-white/80">/api/analyze-repo</code> to get file summaries. Results are cached in-memory for this session.</p>
+                      </li>
+                      <li>
+                        <div className="absolute -start-1.5 mt-1.5 h-3 w-3 rounded-full bg-indigo-400 shadow" />
+                        <h4 className="text-white font-semibold">Categorize & Build Tree</h4>
+                        <p className="text-white/70 text-sm">Client categorizes files (UI components, pages, APIs, models, utils, configs) and builds a navigable tree.</p>
+                      </li>
+                      <li>
+                        <div className="absolute -start-1.5 mt-1.5 h-3 w-3 rounded-full bg-indigo-400 shadow" />
+                        <h4 className="text-white font-semibold">Explore Structure</h4>
+                        <p className="text-white/70 text-sm">Use the Structure tab to select files. The Details tab shows summaries and metadata.</p>
+                      </li>
+                      <li>
+                        <div className="absolute -start-1.5 mt-1.5 h-3 w-3 rounded-full bg-indigo-400 shadow" />
+                        <h4 className="text-white font-semibold">Fetch File Content (on demand)</h4>
+                        <p className="text-white/70 text-sm">On "View File Content", calls <code className="text-white/80">/api/get-file-content</code> and opens a dialog with the source.</p>
+                      </li>
+                      <li>
+                        <div className="absolute -start-1.5 mt-1.5 h-3 w-3 rounded-full bg-indigo-400 shadow" />
+                        <h4 className="text-white font-semibold">Issues & Key Files</h4>
+                        <p className="text-white/70 text-sm">Dedicated tabs display GitHub issues and a curated set of key files.</p>
+                      </li>
+                    </ol>
+                  </div>
+
+                  {/* Architecture diagram (detailed) */}
+                  <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-white mb-4">Architecture Overview (Detailed)</h3>
+                    <div className="overflow-x-auto">
+                      <div className="min-w-[1024px] grid grid-cols-12 gap-4 items-stretch">
+                        {/* Client column */}
+                        <div className="col-span-4 space-y-4">
+                          <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                            <h4 className="text-white font-semibold mb-2">Client</h4>
+                            <ul className="text-white/70 text-sm space-y-1 list-disc list-inside">
+                              <li>AnalyzePageContent</li>
+                              <li>Tabs: Overview / Structure / Details / KeyFiles / Issues / Workflow</li>
+                              <li>Components: FileTree, FileDetailsDialog, RepositoryIssues, RepositoryKeyFiles</li>
+                              <li>State: summaries, cachedAnalysisRef, selectedFile, activeTab</li>
+                            </ul>
+                          </div>
+                          <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                            <h5 className="text-white font-medium mb-1">Client Responsibilities</h5>
+                            <ul className="text-white/70 text-xs space-y-1 list-disc list-inside">
+                              <li>Read <code className="text-white/80">repo</code> from URL</li>
+                              <li>Call APIs and cache results per-repo</li>
+                              <li>Build file tree and categories</li>
+                              <li>Open dialog and fetch file content on demand</li>
+                            </ul>
+                          </div>
+                        </div>
+                        {/* Server column */}
+                        <div className="col-span-4 space-y-4">
+                          <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                            <h4 className="text-white font-semibold mb-2">Server (Next.js API Routes)</h4>
+                            <ul className="text-white/70 text-sm space-y-1 list-disc list-inside">
+                              <li>/api/analyze-repo → list files + summaries</li>
+                              <li>/api/get-file-content → file source</li>
+                              <li>/api/get-repo-issues → issues list</li>
+                            </ul>
+                          </div>
+                          <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                            <h5 className="text-white font-medium mb-1">Analyze Pipeline</h5>
+                            <ul className="text-white/70 text-xs space-y-1 list-disc list-inside">
+                              <li>Resolve repo refs</li>
+                              <li>Traverse contents (top-level → nested)</li>
+                              <li>Heuristics to summarize by filename/path</li>
+                              <li>Return FileSummary[]</li>
+                            </ul>
+                          </div>
+                        </div>
+                        {/* GitHub column */}
+                        <div className="col-span-4 space-y-4">
+                          <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                            <h4 className="text-white font-semibold mb-2">GitHub</h4>
+                            <ul className="text-white/70 text-sm space-y-1 list-disc list-inside">
+                              <li>REST: repo, contents, issues</li>
+                              <li>GraphQL: optional (contribs, metadata)</li>
+                              <li>Rate limits & pagination</li>
+                            </ul>
+                          </div>
+                          <div className="rounded-lg border border-white/10 bg-black/20 p-4">
+                            <h5 className="text-white font-medium mb-1">Security</h5>
+                            <ul className="text-white/70 text-xs space-y-1 list-disc list-inside">
+                              <li>Server-side tokens only</li>
+                              <li>Handle private/empty repos gracefully</li>
+                            </ul>
+                          </div>
+                        </div>
+                        {/* Direction arrows */}
+                        <div className="col-span-12 -mt-2">
+                          <svg className="w-full h-12" viewBox="0 0 1200 80" preserveAspectRatio="none">
+                            <defs>
+                              <marker id="arrowA" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto-start-reverse">
+                                <path d="M0,0 L8,4 L0,8 z" fill="currentColor" />
+                              </marker>
+                            </defs>
+                            <line x1="200" y1="40" x2="550" y2="40" stroke="currentColor" strokeWidth="2" markerEnd="url(#arrowA)" className="text-white/50" />
+                            <line x1="650" y1="40" x2="1000" y2="40" stroke="currentColor" strokeWidth="2" markerEnd="url(#arrowA)" className="text-white/50" />
+                          </svg>
+                          <div className="flex justify-between text-xs text-white/50">
+                            <span>Client → API (summaries, file, issues)</span>
+                            <span>API → GitHub (REST/GraphQL)</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sequence flow (detailed) */}
+                  <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-white mb-4">Request Sequence (End-to-end)</h3>
+                    <div className="overflow-x-auto">
+                      <div className="min-w-[1024px] grid grid-cols-12 gap-4">
+                        {/* Steps */}
+                        <div className="col-span-12 grid grid-cols-12 gap-4">
+                          <div className="col-span-3">
+                            <div className="rounded-lg border border-white/10 bg-black/30 p-4 h-full">
+                              <h4 className="text-white font-semibold mb-1">1. Load</h4>
+                              <p className="text-white/70 text-sm">Client reads <code className="text-white/80">repo</code> and shows loading state</p>
+                            </div>
+                          </div>
+                          <div className="col-span-3">
+                            <div className="rounded-lg border border-white/10 bg-black/30 p-4 h-full">
+                              <h4 className="text-white font-semibold mb-1">2. Analyze</h4>
+                              <p className="text-white/70 text-sm">Call <code className="text-white/80">/api/analyze-repo</code> → summaries[]</p>
+                            </div>
+                          </div>
+                          <div className="col-span-3">
+                            <div className="rounded-lg border border-white/10 bg-black/30 p-4 h-full">
+                              <h4 className="text-white font-semibold mb-1">3. Render</h4>
+                              <p className="text-white/70 text-sm">Build tree, categories, insights</p>
+                            </div>
+                          </div>
+                          <div className="col-span-3">
+                            <div className="rounded-lg border border-white/10 bg-black/30 p-4 h-full">
+                              <h4 className="text-white font-semibold mb-1">4. Inspect</h4>
+                              <p className="text-white/70 text-sm">Select file → <code className="text-white/80">/api/get-file-content</code></p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Connecting arrows */}
+                        <div className="col-span-12 -mt-2">
+                          <svg className="w-full h-12" viewBox="0 0 1200 80" preserveAspectRatio="none">
+                            <defs>
+                              <marker id="arrowB" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto-start-reverse">
+                                <path d="M0,0 L8,4 L0,8 z" fill="currentColor" />
+                              </marker>
+                            </defs>
+                            <line x1="120" y1="40" x2="400" y2="40" stroke="currentColor" strokeWidth="2" markerEnd="url(#arrowB)" className="text-white/50" />
+                            <line x1="520" y1="40" x2="800" y2="40" stroke="currentColor" strokeWidth="2" markerEnd="url(#arrowB)" className="text-white/50" />
+                            <line x1="920" y1="40" x2="1120" y2="40" stroke="currentColor" strokeWidth="2" markerEnd="url(#arrowB)" className="text-white/50" />
+                          </svg>
+                        </div>
+                        {/* Issues branch */}
+                        <div className="col-span-12 grid grid-cols-12 gap-4">
+                          <div className="col-span-6">
+                            <div className="rounded-lg border border-white/10 bg-black/20 p-4 h-full">
+                              <h4 className="text-white font-semibold mb-1">Issues Tab</h4>
+                              <p className="text-white/70 text-sm">Calls <code className="text-white/80">/api/get-repo-issues</code> to render open issues with filters</p>
+                            </div>
+                          </div>
+                          <div className="col-span-6">
+                            <div className="rounded-lg border border-white/10 bg-black/20 p-4 h-full">
+                              <h4 className="text-white font-semibold mb-1">Key Files Tab</h4>
+                              <p className="text-white/70 text-sm">Renders curated important files with quick links</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Legend & States */}
+                  <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-white mb-4">Legend, States & Errors</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                        <h4 className="text-white font-semibold mb-2">Legend</h4>
+                        <ul className="text-white/70 text-sm space-y-1 list-disc list-inside">
+                          <li>Dark blocks: modules/components</li>
+                          <li>Light blocks: sub-processes</li>
+                          <li>Arrows: data requests</li>
+                        </ul>
+                      </div>
+                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                        <h4 className="text-white font-semibold mb-2">Loading States</h4>
+                        <ul className="text-white/70 text-sm space-y-1 list-disc list-inside">
+                          <li>Initial analyze spinner (Workflow icon)</li>
+                          <li>File content fetch busy state</li>
+                        </ul>
+                      </div>
+                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                        <h4 className="text-white font-semibold mb-2">Error Handling</h4>
+                        <ul className="text-white/70 text-sm space-y-1 list-disc list-inside">
+                          <li>Private/empty repo → friendly message</li>
+                          <li>Network/API failures → error banner</li>
+                          <li>Rate limit → suggest retry/backoff</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                  {/* API Contracts */}
+                  <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-white mb-4">API Contracts (Requests & Responses)</h3>
+                    <div className="overflow-x-auto">
+                      <div className="min-w-[960px] grid grid-cols-12 gap-4">
+                        <div className="col-span-4">
+                          <div className="rounded-lg border border-white/10 bg-black/30 p-4 h-full">
+                            <h4 className="text-white font-semibold mb-2">GET /api/analyze-repo</h4>
+                            <p className="text-white/60 text-xs mb-2">Query: <code className="text-white/80">repo=&lt;owner/name&gt;</code></p>
+                            <pre className="text-xs text-white/80 bg-black/40 p-3 rounded border border-white/10 overflow-auto"><code>{`// 200 OK\n{\n  "summaries": [\n    { "path": "src/components/Button.tsx", "summary": "Button component with variants" },\n    { "path": "pages/index.tsx", "summary": "Home page" }\n  ]\n}`}</code></pre>
+                          </div>
+                        </div>
+                        <div className="col-span-4">
+                          <div className="rounded-lg border border-white/10 bg-black/30 p-4 h-full">
+                            <h4 className="text-white font-semibold mb-2">GET /api/get-file-content</h4>
+                            <p className="text-white/60 text-xs mb-2">Query: <code className="text-white/80">repo, path</code></p>
+                            <pre className="text-xs text-white/80 bg-black/40 p-3 rounded border border-white/10 overflow-auto"><code>{`// 200 OK\n{\n  "content": "export const Button = () => { /* ... */ }"\n}`}</code></pre>
+                          </div>
+                        </div>
+                        <div className="col-span-4">
+                          <div className="rounded-lg border border-white/10 bg-black/30 p-4 h-full">
+                            <h4 className="text-white font-semibold mb-2">GET /api/get-repo-issues</h4>
+                            <p className="text-white/60 text-xs mb-2">Query: <code className="text-white/80">repo, state, labels, page</code></p>
+                            <pre className="text-xs text-white/80 bg-black/40 p-3 rounded border border-white/10 overflow-auto"><code>{`// 200 OK\n{\n  "issues": [ { "id": 1, "title": "Bug", "state": "open" } ],\n  "page": 1,\n  "hasMore": true\n}`}</code></pre>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Categorization Rules */}
+                  <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-white mb-4">File Categorization Rules</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                        <h4 className="text-white font-semibold">UI Components</h4>
+                        <ul className="text-white/70 text-sm list-disc list-inside mt-2">
+                          <li>path includes: <code className="text-white/80">component</code>, <code className="text-white/80">/ui/</code>, <code className="text-white/80">/components/</code></li>
+                        </ul>
+                      </div>
+                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                        <h4 className="text-white font-semibold">Pages/Views</h4>
+                        <ul className="text-white/70 text-sm list-disc list-inside mt-2">
+                          <li>path includes: <code className="text-white/80">/pages/</code>, <code className="text-white/80">/page.</code>, <code className="text-white/80">/views/</code></li>
+                        </ul>
+                      </div>
+                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                        <h4 className="text-white font-semibold">API Endpoints</h4>
+                        <ul className="text-white/70 text-sm list-disc list-inside mt-2">
+                          <li>path includes: <code className="text-white/80">/api/</code>, <code className="text-white/80">controller</code>, <code className="text-white/80">route.</code>, <code className="text-white/80">endpoint</code></li>
+                        </ul>
+                      </div>
+                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                        <h4 className="text-white font-semibold">Data Models</h4>
+                        <ul className="text-white/70 text-sm list-disc list-inside mt-2">
+                          <li>path includes: <code className="text-white/80">model</code>, <code className="text-white/80">schema</code>, <code className="text-white/80">entity</code>, <code className="text-white/80">type</code>, <code className="text-white/80">interface</code></li>
+                        </ul>
+                      </div>
+                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                        <h4 className="text-white font-semibold">Utilities</h4>
+                        <ul className="text-white/70 text-sm list-disc list-inside mt-2">
+                          <li>path includes: <code className="text-white/80">util</code>, <code className="text-white/80">helper</code>, <code className="text-white/80">service</code>, <code className="text-white/80">lib</code></li>
+                        </ul>
+                      </div>
+                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                        <h4 className="text-white font-semibold">Configurations</h4>
+                        <ul className="text-white/70 text-sm list-disc list-inside mt-2">
+                          <li>path includes: <code className="text-white/80">config</code>, <code className="text-white/80">.json</code>, <code className="text-white/80">.yml</code>, <code className="text-white/80">.env</code>, <code className="text-white/80">.rc</code></li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Caching & State Machine */}
+                  <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-white mb-4">Caching & UI State Machine</h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                        <h4 className="text-white font-semibold mb-2">Cache Behavior</h4>
+                        <ul className="text-white/70 text-sm list-disc list-inside space-y-1">
+                          <li>Key: <code className="text-white/80">cachedAnalysisRef[repo]</code></li>
+                          <li>Hit: reuse summaries → skip API call</li>
+                          <li>Miss: call <code className="text-white/80">/api/analyze-repo</code> then store</li>
+                          <li>Invalidation: page reload or repo param change</li>
+                        </ul>
+                      </div>
+                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                        <h4 className="text-white font-semibold mb-2">State Machine</h4>
+                        <div className="overflow-x-auto">
+                          <svg className="min-w-[560px] h-40" viewBox="0 0 1000 240">
+                            <defs>
+                              <marker id="arrowSM" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto-start-reverse">
+                                <path d="M0,0 L8,4 L0,8 z" fill="currentColor" />
+                              </marker>
+                            </defs>
+                            <rect x="20" y="40" width="180" height="48" rx="8" className="fill-transparent" stroke="currentColor" opacity="0.4" />
+                            <text x="110" y="70" textAnchor="middle" className="fill-current" opacity="0.8">idle</text>
+                            <rect x="260" y="40" width="220" height="48" rx="8" className="fill-transparent" stroke="currentColor" opacity="0.4" />
+                            <text x="370" y="70" textAnchor="middle" className="fill-current" opacity="0.8">loading (analyze)</text>
+                            <rect x="540" y="40" width="200" height="48" rx="8" className="fill-transparent" stroke="currentColor" opacity="0.4" />
+                            <text x="640" y="70" textAnchor="middle" className="fill-current" opacity="0.8">ready</text>
+                            <rect x="800" y="40" width="180" height="48" rx="8" className="fill-transparent" stroke="currentColor" opacity="0.4" />
+                            <text x="890" y="70" textAnchor="middle" className="fill-current" opacity="0.8">error</text>
+                            <line x1="200" y1="64" x2="260" y2="64" stroke="currentColor" strokeWidth="2" markerEnd="url(#arrowSM)" />
+                            <line x1="480" y1="64" x2="540" y2="64" stroke="currentColor" strokeWidth="2" markerEnd="url(#arrowSM)" />
+                            <line x1="480" y1="64" x2="800" y2="64" stroke="currentColor" strokeWidth="2" markerEnd="url(#arrowSM)" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pagination & Rate Limits */}
+                  <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-white mb-2">Pagination & Rate Limits</h3>
+                    <p className="text-white/70 text-sm mb-4">Issues and contents may paginate; GitHub imposes rate limits.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                        <h4 className="text-white font-semibold mb-2">Pagination</h4>
+                        <ul className="text-white/70 text-sm list-disc list-inside space-y-1">
+                          <li>Client passes <code className="text-white/80">page</code> param for issues</li>
+                          <li>Server propagates pagination to GitHub</li>
+                          <li>UI shows next/prev based on <code className="text-white/80">hasMore</code></li>
+                        </ul>
+                      </div>
+                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                        <h4 className="text-white font-semibold mb-2">Rate Limits</h4>
+                        <ul className="text-white/70 text-sm list-disc list-inside space-y-1">
+                          <li>Backoff on 403 / x-ratelimit-remaining=0</li>
+                          <li>Show message and retry guidance</li>
+                          <li>Consider caching and fewer requests</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Data Lineage */}
+                  <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-white mb-4">Data Lineage: GitHub → API → UI</h3>
+                    <div className="overflow-x-auto">
+                      <div className="min-w-[960px] grid grid-cols-12 gap-4 items-start">
+                        <div className="col-span-4">
+                          <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                            <h4 className="text-white font-semibold mb-2">GitHub /contents</h4>
+                            <pre className="text-xs text-white/80 bg-black/40 p-3 rounded border border-white/10 overflow-auto"><code>{`[\n  { "path": "src/index.tsx", "type": "file" },\n  { "path": "src/components", "type": "dir" }\n]`}</code></pre>
+                          </div>
+                        </div>
+                        <div className="col-span-4">
+                          <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                            <h4 className="text-white font-semibold mb-2">API → FileSummary[]</h4>
+                            <pre className="text-xs text-white/80 bg-black/40 p-3 rounded border border-white/10 overflow-auto"><code>{`[\n  { "path": "src/index.tsx", "summary": "Entrypoint" },\n  { "path": "src/components/Button.tsx", "summary": "Button UI" }\n]`}</code></pre>
+                          </div>
+                        </div>
+                        <div className="col-span-4">
+                          <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                            <h4 className="text-white font-semibold mb-2">UI Render</h4>
+                            <ul className="text-white/70 text-sm list-disc list-inside">
+                              <li>Overview: insights from categories</li>
+                              <li>Structure: tree from paths</li>
+                              <li>Details: summary + metadata</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Repository Map (from current analysis) */}
+                  <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-white mb-4">Repository Map (Files → Category)</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-[960px] w-full text-left text-sm">
+                        <thead className="text-white/60">
+                          <tr>
+                            <th className="py-2 pr-4">Path</th>
+                            <th className="py-2 pr-4">Category</th>
+                            <th className="py-2 pr-4">Shown In</th>
+                            <th className="py-2 pr-4">Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/10">
+                          {summaries.slice(0, 100).map((f, i) => {
+                            const p = f.path.toLowerCase();
+                            let cat = 'Other';
+                            if (p.includes('component') || p.includes('/ui/') || p.includes('/components/')) cat = 'UI Component';
+                            else if (p.includes('/pages/') || p.includes('/page.') || p.includes('/views/')) cat = 'Page/View';
+                            else if (p.includes('/api/') || p.includes('controller') || p.includes('route.') || p.includes('endpoint')) cat = 'API';
+                            else if (p.includes('model') || p.includes('schema') || p.includes('entity') || p.includes('type') || p.includes('interface')) cat = 'Data Model';
+                            else if (p.includes('util') || p.includes('helper') || p.includes('service') || p.includes('lib')) cat = 'Utility';
+                            else if (p.includes('config') || p.includes('.json') || p.includes('.yml') || p.includes('.env') || p.includes('.rc')) cat = 'Configuration';
+                            return (
+                              <tr key={i} className="hover:bg-white/5">
+                                <td className="py-2 pr-4 text-white/80 truncate max-w-[520px]" title={f.path}>{f.path}</td>
+                                <td className="py-2 pr-4 text-white/70">{cat}</td>
+                                <td className="py-2 pr-4 text-white/60">Structure, Details</td>
+                                <td className="py-2 pr-4">
+                                  <Button size="sm" variant="outline" className="bg-white/5 border-white/20 hover:bg-white/10"
+                                    onClick={() => {
+                                      setSelectedFile({
+                                        name: f.path.split('/').pop() || f.path,
+                                        path: f.path,
+                                        type: 'file',
+                                        extension: (f.path.split('.').pop() || '').toLowerCase(),
+                                        summary: f.summary,
+                                      });
+                                      setActiveTab('details');
+                                      fetchFileContent(f.path);
+                                      setIsFileDialogOpen(true);
+                                    }}
+                                  >View</Button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                      {summaries.length > 100 && (
+                        <p className="text-xs text-white/50 mt-2">Showing first 100 files. Use Structure tab to explore all.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* ASCII Sequence (readable textual diagram) */}
+                  <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-white mb-2">Textual Sequence Diagram</h3>
+                    <pre className="text-xs text-white/80 bg-black/40 p-3 rounded border border-white/10 overflow-auto"><code>{`User
+  │
+  ├─> AnalyzePage (reads ?repo)
+  │     └─ set isLoading=true
+  │
+  ├─> GET /api/analyze-repo?repo=owner/name
+  │     └─ GitHub REST /contents ... → build FileSummary[]
+  │
+  ├─ render Overview/Structure/Details tabs
+  │     └─ build tree + categories from FileSummary[]
+  │
+  ├─ (on file click) GET /api/get-file-content?repo&path
+  │     └─ open FileDetailsDialog with content
+  │
+  └─ Issues tab → GET /api/get-repo-issues?repo&page=…
+        └─ paginate until hasMore=false`}</code></pre>
                   </div>
                 </TabsContent>
                 

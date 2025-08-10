@@ -55,6 +55,62 @@ export class GeminiService {
     console.log('GeminiService initialized with model: gemini-2.5-flash');
   }
 
+  async generateDetailedArchitectureDiagram(context: {
+    repoFullName: string;
+    readme?: string;
+    fileTreeSample: string[]; // list of file paths
+    dependencies?: Record<string, string> | null;
+    scripts?: Record<string, string> | null;
+    categories: Record<string, string[]>; // e.g., pages, apiRoutes, components, models, utils, configs, workflows
+  }): Promise<{ diagram: string; prompt: string }> {
+    const { repoFullName, readme, fileTreeSample, dependencies, scripts, categories } = context;
+
+    const system = `You are a principal software architect. Using the provided repository context, produce a highly readable, detailed Mermaid flowchart that helps a developer understand the full system. Use subgraphs for layers and group related nodes. Keep labels short, avoid parentheses/brackets in labels, and prefer 1-3 word titles. Show external services (e.g., GitHub Actions, databases, third-party APIs) as nodes too.`;
+
+    const guidance = `
+Return JSON:
+{"diagram": "graph TD..."}
+
+Diagram requirements:
+- Use graph TD
+- Use subgraphs in this order if applicable: Client(UI) -> Routing -> Controllers/Handlers -> Services/Business -> Data Access -> Data Stores -> External Integrations -> CI/CD
+- From Pages/UI to API routes, then to services/utils, then to models/db, show edges accordingly
+- Include up to 12 nodes per layer; prefer representative entries from categories provided
+- Show technology hints in node labels with a short suffix (e.g., "Next.js", "Prisma", "MongoDB") only if concise
+- Always include legend subgraph explaining edge directions and symbols
+- Keep arrows simple: -->
+- No code blocks or markdown fences; only the JSON
+`;
+
+    const input = {
+      repo: repoFullName,
+      overview: {
+        dependencies: dependencies || null,
+        scripts: scripts || null
+      },
+      categories,
+      fileTreeSample: fileTreeSample.slice(0, 300),
+      readmePreview: readme ? readme.slice(0, 8000) : null
+    };
+
+    const prompt = `${system}\n${guidance}\nContext:\n${JSON.stringify(input, null, 2)}`;
+
+    try {
+      const result = await this.model.generateContent(prompt);
+      const responseText = result.response.text();
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('No JSON object with diagram found');
+      const parsed = JSON.parse(jsonMatch[0]);
+      let diagram = typeof parsed.diagram === 'string' ? parsed.diagram : '';
+      if (!diagram.trim().startsWith('graph')) throw new Error('Invalid diagram format');
+      diagram = this.ensureMermaidDarkTheme(this.cleanMermaidDiagram(diagram));
+      return { diagram, prompt };
+    } catch (err) {
+      console.error('Error generating detailed architecture diagram:', err);
+      throw err;
+    }
+  }
+
   private cleanMermaidDiagram(diagram: string): string {
     // Just basic cleaning - React Flow will handle the rest
     let cleaned = diagram.replace(/<[^>]*>/g, ''); // Remove HTML
@@ -62,6 +118,12 @@ export class GeminiService {
     cleaned = cleaned.replace(/[\u201C\u201D]/g, '"'); // Fix quotes
     cleaned = cleaned.replace(/\([^)]*\)/g, ''); // Remove parentheses
     return cleaned.trim();
+  }
+
+  private ensureMermaidDarkTheme(diagram: string): string {
+    const initHeader = "%%{init: { 'theme': 'dark', 'themeVariables': { 'primaryColor': '#0f172a', 'primaryTextColor': '#e5e7eb', 'primaryBorderColor': '#475569', 'lineColor': '#64748b', 'secondaryColor': '#111827', 'tertiaryColor': '#0b1220', 'fontSize': '14px', 'edgeLabelBackground':'#0b1220' }, 'flowchart': { 'nodeSpacing': 50, 'rankSpacing': 60, 'htmlLabels': true } }}%%\n";
+    if (diagram.startsWith('%%{init:')) return diagram; // already themed
+    return initHeader + diagram;
   }
 
   async generateProjectIdea(prompt: string): Promise<ProjectIdea> {
@@ -308,7 +370,7 @@ CRITICAL RULES - generate valid Mermaid syntax:
       }
 
       // Clean the diagram to ensure valid Mermaid syntax
-      diagram = this.cleanMermaidDiagram(diagram);
+      diagram = this.ensureMermaidDarkTheme(this.cleanMermaidDiagram(diagram));
 
       return {
         diagram: diagram,
