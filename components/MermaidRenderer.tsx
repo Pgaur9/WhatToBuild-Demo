@@ -33,10 +33,10 @@ const cleanMermaidSyntax = (diagram: string): string => {
     return content;
   });
 
-  // 4. Remove any lines that are just decorative (e.g., '---', '===')
+  
   cleaned = cleaned.split('\n').filter(line => !/^[=-]{3,}$/.test(line.trim())).join('\n');
 
-  // 5. Trim lines and remove empty lines
+ 
   cleaned = cleaned.split('\n').map(line => line.trim()).filter(Boolean).join('\n');
 
   return cleaned;
@@ -61,7 +61,7 @@ export function MermaidRenderer({ chart }: MermaidRendererProps) {
         const cleanedChart = cleanMermaidSyntax(chart);
         const uniqueId = `mermaid-graph-${Date.now()}`;
         
-        // Mermaid's render function can still throw. We catch it here.
+        
         const { svg } = await mermaid.render(uniqueId, cleanedChart);
         if (isMounted) {
           container.innerHTML = svg;

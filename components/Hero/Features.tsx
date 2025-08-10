@@ -57,8 +57,8 @@ const Features = ({ forceDarkMode = true }) => {
       title: "Generate a Great README",
       description: "Paste a repo URL, analyze the codebase, and draft a polished README with live edit and preview.",
       icon: <FaFileAlt />,
-      // Placeholder: using a neutral poster; update video when available
-      videoSrc: "",
+
+      videoSrc: "https://res.cloudinary.com/duy8dp4tq/video/upload/v1754788911/tcrrmufmrctktm16cfhu.mp4",
       posterSrc: "https://www.solidbackgrounds.com/images/1280x720/1280x720-black-solid-color-background.jpg"
     },
     {
@@ -82,7 +82,7 @@ const Features = ({ forceDarkMode = true }) => {
       title: "Compare GitHub Devs and See Who Wins",
       description: "Compare GitHub profiles, analyze contribution patterns, and visualize developer statistics side by side",
       icon: <FaUsers />,
-      videoSrc: "https://res.cloudinary.com/duy8dp4tq/video/upload/v1751725107/nactlyoprqxqpqko9fej.mp4",
+      videoSrc: "https://res.cloudinary.com/duy8dp4tq/video/upload/v1754790105/hb98grhvl3ctchpqdhsm.mp4",
       posterSrc: "https://www.solidbackgrounds.com/images/1280x720/1280x720-black-solid-color-background.jpg"
     }
   ];
