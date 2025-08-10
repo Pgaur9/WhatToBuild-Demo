@@ -370,7 +370,7 @@ export default function SearchPage() {
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={
                   searchMode === 'repo' ? "Search for repositories (e.g., 'react-native')" :
-                  searchMode === 'find' ? "Enter GitHub repo URL or owner/repo (e.g., 'facebook/react' or 'https://github.com/facebook/react')" :
+                  searchMode === 'find' ? "Enter owner/repo (e.g., 'facebook/react')" :
                   "Describe your project idea (e.g., 'a chat app with react')"
                 }
                 className="flex-grow p-6 text-lg bg-transparent border-0 text-white/90 placeholder:text-white/40 focus-visible:ring-0 focus-visible:outline-none transition-all duration-300 focus:scale-[1.02]"
@@ -394,7 +394,7 @@ export default function SearchPage() {
             {searchMode === 'repo' ? 
               "Search for specific GitHub repositories by name or keywords" :
               searchMode === 'find' ? 
-              "Find exact repositories by GitHub URL or owner/repo name" :
+              "Find exact repositories by owner/repo name" :
               "Describe what you want to build and find matching open-source projects"}
           </div>
         </form>
