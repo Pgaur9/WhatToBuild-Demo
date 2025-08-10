@@ -148,18 +148,19 @@ export default function OpenSourcePage() {
       }
     };
 
+    await Promise.all(Array.from({ length: Math.min(concurrency, repos.length) }, () => runNext()));
+  };
+
   // Helper: detect and filter out issues with CJK (Chinese/Japanese/Korean) characters
-  const isCJKText = (text?: string) => {
+  const isCJKText = (text?: string): boolean => {
     if (!text) return false;
     // Unified CJK, Hiragana, Katakana, Hangul ranges
     const cjkRegex = /[\u3400-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]/;
     return cjkRegex.test(text);
   };
 
-  const filterOutCJKIssues = (list: GitHubIssue[]) =>
+  const filterOutCJKIssues = (list: GitHubIssue[]): GitHubIssue[] =>
     list.filter((issue) => !isCJKText(`${issue.title || ''} ${issue.body || ''}`));
-    await Promise.all(Array.from({ length: Math.min(concurrency, repos.length) }, () => runNext()));
-  };
 
   const fetchTrendingRepos = async (selectedFilter: string, selectedLanguage: string, pageNumber: number) => {
     try {
