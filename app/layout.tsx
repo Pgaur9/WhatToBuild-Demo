@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 import { cn } from "@/lib/utils";
 import LiquidGlassHeader from "@/components/LiquidGlassHeader";
@@ -29,6 +30,7 @@ export default function RootLayout({
           </main>
         </div>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
