@@ -235,7 +235,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Links
 
-- **Live Demo**: [what-to-build.vercel.app](https://what-to-build.vercel.app)
+- **Live Demo**: [what-to-build.niladri.tech](https://what-to-build.niladri.tech)
 - **Repository**: [github.com/NiladriHazra/WhatToBuild](https://github.com/NiladriHazra/WhatToBuild)
 - **Issues**: [Report bugs or request features](https://github.com/NiladriHazra/WhatToBuild/issues)
 
