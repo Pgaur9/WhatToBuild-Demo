@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +13,10 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { default as ReactMarkdown } from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
+import type { Components } from "react-markdown";
+
 import {
   Github,
   Eye,
@@ -22,24 +26,113 @@ import {
   Download,
   RefreshCw,
   Loader2,
+  Wand2,
+  Check,
 } from "lucide-react";
+
+// Ensure clean GitHub-flavored Markdown spacing and no stray HTML wrappers
+function normalizeMarkdown(input: string): string {
+  let s = input || "";
+  // Convert common HTML headings to Markdown
+  s = s.replace(/<h([1-6])[^>]*>([\s\S]*?)<\/h\1>/gi, (_, level: string, text: string) => {
+    const hashes = "#".repeat(Number(level));
+    return `\n${hashes} ${text.trim()}\n`;
+  });
+  // Strip simple center wrappers/divs
+  s = s.replace(/<div[^>]*>\s*/gi, "\n").replace(/\s*<\/div>/gi, "\n");
+  // Replace <br> with line breaks
+  s = s.replace(/<br\s*\/?>(\s*)/gi, "\n");
+  // Ensure a blank line before/after block elements (headings, lists, code, tables, images)
+  s = s
+    // Ensure space after list markers
+    .replace(/^(\s*)([-*+])(\S)/gm, "$1$2 $3")
+    // Blank line before headings
+    .replace(/([^\n])\n(#{1,6} )/g, "$1\n\n$2")
+    // Ensure blank lines before common blocks
+    .replace(/([^\n])\n(#{1,6} )/g, "$1\n\n$2")
+    .replace(/([^\n])\n(\s*[-*+] )/g, "$1\n\n$2")
+    .replace(/([^\n])\n(```)/g, "$1\n\n$2")
+    .replace(/([^\n])\n(> )/g, "$1\n\n$2");
+  // Collapse 3+ blank lines to 2
+  s = s.replace(/\n{3,}/g, "\n\n");
+  // Ensure blank line between plain text lines (not lists/quotes/headings/code/tables)
+  s = s.replace(
+    /^(?!\|)(?!\s*[>#\-\*\+0-9]+[\.\)]\s)(?!#{1,6}\s)(?!```)([^\n]+)\n(?!\|)(?!\s*[>#\-\*\+0-9]+[\.\)]\s)(?!#{1,6}\s)(?!```)([^\n]+)/gm,
+    (m, a, b) => `${a.trim()}\n\n${b.trim()}`
+  );
+  // Ensure code fences are isolated lines
+  s = s
+    .replace(/\s*```(\w+)?\s*\n?/g, (m) => `\n\n${m.trim()}\n`)
+    .replace(/\n\n\n+/g, "\n\n");
+  // Ensure tables have blank lines around, but collapse accidental blank lines within tables
+  s = s
+    .replace(/\n([^\n]*\|[^\n]*\n\s*\|?\s*[-: ]+\|[-:| ]+[^\n]*\n[\s\S]*?(?=\n\n|$))/g, (m, tbl) => `\n\n${tbl.replace(/\n\n\|/g, '\n|')}\n\n`)
+    .replace(/\n\n\|/g, '\n|');
+  // Trim trailing whitespace
+  s = s.replace(/[ \t]+$/gm, "");
+  return s.trim() + "\n";
+}
 
 export default function ReadmePage() {
   const [repo, setRepo] = useState("");
-  const [userNotes, setUserNotes] = useState("");
+  const [userNotes, setUserNotes] = useState<string>("");
+  const [githubToken, setGithubToken] = useState("");
+  const [showTokenDialog, setShowTokenDialog] = useState(false);
   const [markdown, setMarkdown] = useState<string>("\n# README\n\nStart by generating a README from your repository, then edit here. ✨\n");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showTokenDialog, setShowTokenDialog] = useState(false);
-  const [githubToken, setGithubToken] = useState<string>("");
+  const [geminiKey, setGeminiKey] = useState<string>("");
+  const [showGeminiDialog, setShowGeminiDialog] = useState(false);
+  const [refineInstruction, setRefineInstruction] = useState<string>("Improve clarity and conciseness while preserving meaning.");
+  const [isRefining, setIsRefining] = useState(false);
+  const [hasSelection, setHasSelection] = useState(false);
+  const [showRefineTip, setShowRefineTip] = useState(false);
+  const [flashEditor, setFlashEditor] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [animLabel, setAnimLabel] = useState<string | null>(null);
+  const [showRefinePopover, setShowRefinePopover] = useState(false);
+  const [showToolbarRefine, setShowToolbarRefine] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const editorRef = useRef<HTMLTextAreaElement | null>(null);
+  // PR flow state
+  const [isCreatingPr, setIsCreatingPr] = useState(false);
+  const [showPrDialog, setShowPrDialog] = useState(false);
+  const [prUrl, setPrUrl] = useState<string>("");
 
   // Load token from localStorage for convenience
   useEffect(() => {
     try {
       const saved = localStorage.getItem("wtb_github_token");
       if (saved) setGithubToken(saved);
+      const g = localStorage.getItem("wtb_gemini_key");
+      if (g) setGeminiKey(g);
+      const savedMd = localStorage.getItem("wtb_readme_markdown");
+      if (savedMd) setMarkdown(savedMd);
+      const savedNotes = localStorage.getItem("wtb_readme_user_notes");
+      if (savedNotes) setUserNotes(savedNotes);
     } catch {}
   }, []);
+
+  // Track selection presence on the textarea
+  const updateSelectionState = () => {
+    const el = editorRef.current;
+    if (!el) return;
+    const start = el.selectionStart ?? 0;
+    const end = el.selectionEnd ?? 0;
+    setHasSelection(end > start && !!markdown.slice(start, end).trim());
+  };
+
+  useEffect(() => {
+    const el = editorRef.current;
+    if (!el) return;
+    const handlers = ["select", "keyup", "mouseup", "input"]; // update on common events
+    handlers.forEach((evt) => el.addEventListener(evt as any, updateSelectionState));
+    return () => {
+      handlers.forEach((evt) => el.removeEventListener(evt as any, updateSelectionState));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editorRef.current, markdown]);
 
   const handleSaveToken = () => {
     try {
@@ -49,9 +142,115 @@ export default function ReadmePage() {
     setShowTokenDialog(false);
   };
 
+  // Persist markdown drafts
+  useEffect(() => {
+    try {
+      localStorage.setItem("wtb_readme_markdown", markdown);
+    } catch {}
+  }, [markdown]);
+
+  // Utility: sleep
+  const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+
+  // Animate replacing a selection with a per-character typing effect
+  const animateRefineReplace = async (start: number, end: number, refined: string, baseStepMs = 8) => {
+    const before = markdown.slice(0, start);
+    const after = markdown.slice(end);
+    const text = refined.replace(/\r\n/g, "\n");
+    setIsAnimating(true);
+    setAnimLabel("Refining… typing");
+
+    // Start by clearing selection (so we type into empty space)
+    setMarkdown(before + after);
+    await new Promise((r) => setTimeout(r, 0));
+
+    let acc = "";
+    const total = text.length;
+    for (let i = 0; i < total; i++) {
+      acc += text[i];
+      setMarkdown(before + acc + after);
+      // Move caret to end of typed text to show a live cursor in the textarea
+      if (editorRef.current) {
+        const pos = before.length + acc.length;
+        editorRef.current.selectionStart = pos;
+        editorRef.current.selectionEnd = pos;
+        // Keep view pinned near caret for long inserts
+        editorRef.current.scrollTop = editorRef.current.scrollHeight;
+      }
+      // Natural typing cadence: slightly slower after newlines/periods
+      const ch = text[i];
+      const extra = ch === '\n' ? 10 : ch === '.' ? 6 : ch === ',' ? 3 : 0;
+      const jitter = Math.floor(Math.random() * 4); // 0-3ms
+      await delay(baseStepMs + extra + jitter);
+      // Fast path for very long outputs: occasionally batch-write chunks
+      if (total > 1500 && i % 20 === 0) await delay(0);
+    }
+
+    setIsAnimating(false);
+    setAnimLabel(null);
+    // Place caret at end
+    setTimeout(() => {
+      if (!editorRef.current) return;
+      const pos = before.length + text.length;
+      editorRef.current.selectionStart = pos;
+      editorRef.current.selectionEnd = pos;
+      editorRef.current.focus();
+    }, 0);
+  };
+
+  // Animate initial README generation with per-character typing effect
+  const animateSetMarkdown = async (content: string, baseStepMs = 6) => {
+    const text = content.replace(/\r\n/g, "\n");
+    setIsAnimating(true);
+    setAnimLabel("Generating… typing");
+    setMarkdown("");
+    await new Promise((r) => setTimeout(r, 0));
+    let acc = "";
+    for (let i = 0; i < text.length; i++) {
+      acc += text[i];
+      setMarkdown(acc);
+      if (editorRef.current) {
+        const pos = acc.length;
+        editorRef.current.selectionStart = pos;
+        editorRef.current.selectionEnd = pos;
+        editorRef.current.scrollTop = editorRef.current.scrollHeight;
+      }
+      const ch = text[i];
+      const extra = ch === '\n' ? 8 : ch === '.' ? 4 : ch === ',' ? 2 : 0;
+      const jitter = Math.floor(Math.random() * 4);
+      await delay(baseStepMs + extra + jitter);
+      if (text.length > 1800 && i % 20 === 0) await delay(0);
+    }
+    setIsAnimating(false);
+    setAnimLabel(null);
+    setTimeout(() => {
+      if (!editorRef.current) return;
+      const end = acc.length;
+      editorRef.current.selectionStart = end;
+      editorRef.current.selectionEnd = end;
+    }, 0);
+  };
+
+  // Persist user notes
+  useEffect(() => {
+    try {
+      localStorage.setItem("wtb_readme_user_notes", userNotes);
+    } catch {}
+  }, [userNotes]);
+
+  const handleSaveGeminiKey = () => {
+    try {
+      if (geminiKey) localStorage.setItem("wtb_gemini_key", geminiKey);
+      else localStorage.removeItem("wtb_gemini_key");
+    } catch {}
+    setShowGeminiDialog(false);
+  };
+
   const handleGenerate = async () => {
     if (!repo.trim()) {
       setError("Please enter a GitHub repo URL or owner/repo.");
+      setShowErrorDialog(true);
       return;
     }
     setIsGenerating(true);
@@ -60,23 +259,48 @@ export default function ReadmePage() {
       const res = await fetch("/api/generate-readme", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repo, githubToken: githubToken || undefined, userNotes }),
+        body: JSON.stringify({ repo, githubToken: githubToken || undefined, userNotes: userNotes || undefined }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || "Failed to generate README");
-      setMarkdown(data.markdown || "");
+      const result = await res.json();
+      const raw = (result.markdown || result.content || "") as string;
+      const formatted = normalizeMarkdown(raw);
+      // Hide loading overlay before typing animation starts
+      setIsGenerating(false);
+      // Animate first paint with typing effect
+      await animateSetMarkdown(formatted);
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Something went wrong";
       setError(message);
+      setShowErrorDialog(true);
     } finally {
+      // Ensure overlay is off (already turned off before typing)
       setIsGenerating(false);
     }
   };
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(markdown);
-    } catch {}
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(markdown);
+      } else {
+        // Fallback for insecure contexts
+        const ta = document.createElement('textarea');
+        ta.value = markdown;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1200);
+    } catch (e) {
+      setError('Failed to copy to clipboard');
+      setShowErrorDialog(true);
+      console.error(e);
+    }
   };
 
   const handleDownload = () => {
@@ -87,6 +311,162 @@ export default function ReadmePage() {
     a.download = "README.md";
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  // Create README PR via server API using user's GitHub token
+  const handleCreatePr = async () => {
+    if (!repo.trim()) {
+      setError("Please enter a GitHub repo URL or owner/repo.");
+      setShowErrorDialog(true);
+      return;
+    }
+    if (!githubToken) {
+      setShowTokenDialog(true);
+      return;
+    }
+    setIsCreatingPr(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/create-readme-pr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          repo,
+          markdown,
+          token: githubToken,
+          commitMessage: 'chore(readme): update README via WhatToBuild',
+          prTitle: 'Update README via WhatToBuild',
+          prBody: 'This PR updates the README generated/refined in WhatToBuild.'
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'Failed to create PR');
+      setPrUrl(data.url as string);
+      setShowPrDialog(true);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Failed to create PR';
+      setError(message);
+      setShowErrorDialog(true);
+    } finally {
+      setIsCreatingPr(false);
+    }
+  };
+
+  // Refine selected text in editor using user-provided Gemini key (client-side)
+  const handleRefineSelection = async () => {
+    if (!editorRef.current) return;
+    const textarea = editorRef.current;
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? 0;
+    const selected = markdown.slice(start, end);
+    if (!selected || !selected.trim()) {
+      setError("Select some text in the editor to refine.");
+      setShowRefineTip(true);
+      setFlashEditor(true);
+      setTimeout(() => setFlashEditor(false), 900);
+      return;
+    }
+    if (!geminiKey) {
+      setShowGeminiDialog(true);
+      return;
+    }
+    setIsRefining(true);
+    setError(null);
+    try {
+      const prompt = `Rewrite the following Markdown selection according to the instruction.\nInstruction: ${refineInstruction}\nSelection:\n\n${selected}`;
+      const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-goog-api-key': geminiKey,
+        },
+        body: JSON.stringify({
+          contents: [ { parts: [ { text: prompt } ] } ],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 1024,
+          }
+        })
+      });
+      if (!resp.ok) {
+        const text = await resp.text();
+        throw new Error(`Gemini error ${resp.status}: ${text}`);
+      }
+      const data = await resp.json();
+      const refined = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+      if (!refined) throw new Error('Empty response from Gemini');
+      // Animate replace selection
+      await animateRefineReplace(start, end, refined);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Failed to refine selection';
+      setError(message);
+    } finally {
+      setIsRefining(false);
+    }
+  };
+
+  // Typed ReactMarkdown components to satisfy TS for `inline` on code
+  const markdownComponents: Components = {
+    h1: (props) => (
+      <h1
+        {...props}
+        className="mt-0 mb-4 text-3xl md:text-4xl font-extrabold tracking-tight border-b border-white/10 pb-2"
+      />
+    ),
+    h3: (props) => (
+      <h3
+        {...props}
+        className="mt-6 mb-2 text-xl md:text-2xl font-semibold"
+      />
+    ),
+    h4: (props) => (
+      <h4
+        {...props}
+        className="mt-5 mb-2 text-lg md:text-xl font-semibold"
+      />
+    ),
+    h2: (props) => (
+      <h2
+        {...props}
+        className="mt-8 mb-3 text-2xl md:text-3xl font-bold border-b border-white/10 pb-1"
+      />
+    ),
+    table: ({ children }) => (
+      <div className="my-6 overflow-x-auto rounded-xl border border-white/10 bg-white/5">
+        <table className="w-full text-left text-sm">{children}</table>
+      </div>
+    ),
+    thead: ({ children }) => <thead className="bg-white/5">{children}</thead>,
+    th: (props) => <th {...props} className="px-3 py-2 font-semibold text-white/90" />,
+    td: (props) => <td {...props} className="px-3 py-2 align-top text-white/80" />,
+    tr: (props) => <tr {...props} className="border-t border-white/10" />,
+    blockquote: (props) => (
+      <blockquote {...props} className="border-l-4 border-indigo-400/40 bg-white/5 px-4 py-3 rounded-r-lg" />
+    ),
+    code: (props) => {
+      const { inline, children, ...rest } = props as any;
+      return inline ? (
+        <code {...rest} className="bg-white/10 px-1.5 py-0.5 rounded">{children}</code>
+      ) : (
+        <code {...rest}>{children}</code>
+      );
+    },
+    pre: (props) => <pre {...props} className="bg-white/5 rounded-lg p-4 overflow-auto" />,
+    hr: () => <hr className="my-8 border-white/10" />,
+    ul: (props) => <ul {...props} className="list-disc pl-6 my-4 marker:text-white/60 space-y-1 [&>li>a]:leading-7 [&>li>a]:underline-offset-4" />,
+    ol: (props) => <ol {...props} className="list-decimal pl-6 my-4 marker:text-white/60 space-y-1 [&>li>a]:leading-7 [&>li>a]:underline-offset-4" />,
+    a: (props) => <a {...props} className="text-indigo-300 hover:text-indigo-200 underline" />,
+    img: (props) => <img {...props} className="inline-block align-middle mr-2 mb-2 rounded" />,
+    p: (props) => {
+      const childrenArray = React.Children.toArray(props.children);
+      const isAllImages =
+        childrenArray.length > 0 &&
+        childrenArray.every((c) => React.isValidElement(c) && (c.type as any) === 'img');
+      if (isAllImages) {
+        return <div className="flex flex-wrap items-center gap-2 my-3">{props.children}</div>;
+      }
+      return <p {...props} />;
+    },
   };
 
   return (
@@ -164,20 +544,76 @@ export default function ReadmePage() {
         </div>
 
         {/* Editor + Preview */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+        <section className="relative grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
           <div className="relative rounded-2xl bg-black/30 backdrop-blur-2xl border border-white/20 p-4 flex flex-col">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex flex-wrap items-center justify-between gap-y-2 mb-3">
               <div className="flex items-center gap-2 text-white/80">
                 <Pencil className="w-4 h-4" />
                 <span className="text-sm font-medium">Editor</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" className="text-white/70 hover:text-white" onClick={handleCopy}>
+              <div className="flex flex-wrap items-center gap-2 max-w-full">
+                <Button variant="ghost" className="text-white/70 hover:text-white shrink-0 px-2 py-1" onClick={handleCopy}>
                   <Copy className="w-4 h-4 mr-1" /> Copy
                 </Button>
-                <Button variant="ghost" className="text-white/70 hover:text-white" onClick={handleDownload}>
+                <Button variant="ghost" className="text-white/70 hover:text-white shrink-0 px-2 py-1" onClick={handleDownload}>
                   <Download className="w-4 h-4 mr-1" /> Download
                 </Button>
+                {/* Replace Beautify with AI Refine in toolbar */}
+                <div className="relative">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowToolbarRefine((v) => !v)}
+                    disabled={isGenerating}
+                    className="rounded-full bg-indigo-600/25 hover:bg-indigo-600/35 text-indigo-100 border border-indigo-400/40 backdrop-blur px-3 py-2 shadow shrink-0"
+                    title={geminiKey ? "Refine selected text with AI" : "Add your Gemini API key to enable refine"}
+                  >
+                    {isRefining ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1" />}
+                    AI Refine
+                  </Button>
+                  {showToolbarRefine && (
+                    <div className="absolute top-full right-0 mt-2 w-[90vw] max-w-sm sm:w-[360px] rounded-2xl border border-white/20 bg-black/80 backdrop-blur-2xl p-4 shadow-2xl ring-1 ring-white/10 z-30 overflow-hidden">
+                      <div className="text-sm sm:text-base text-white/80 font-medium mb-2">Instruction</div>
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                        <input
+                          value={refineInstruction}
+                          onChange={(e) => setRefineInstruction(e.target.value)}
+                          placeholder="e.g., Improve clarity and conciseness"
+                          className="min-w-0 flex-1 rounded-md border border-white/25 bg-black/40 px-3 py-2.5 text-base sm:text-lg leading-6 text-white placeholder:text-white/50 outline-none focus:border-indigo-400/40 focus:ring-2 focus:ring-indigo-400/20"
+                        />
+                        <Button
+                          onClick={async () => {
+                            await handleRefineSelection();
+                            setShowToolbarRefine(false);
+                          }}
+                          disabled={isGenerating || isRefining}
+                          className="bg-white/10 hover:bg-white/20 text-white shrink-0 px-3.5 py-2 text-sm sm:text-base"
+                          title="Run AI Refine on selected text"
+                        >
+                          {isRefining ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wand2 className="w-4 h-4 mr-2" />}
+                          Go
+                        </Button>
+                      </div>
+                      {!geminiKey && (
+                        <div className="mt-2 text-[11px] text-amber-300/90">Add your Gemini API key to enable refine.</div>
+                      )}
+                      {!hasSelection && (
+                        <div className="mt-1 text-[11px] text-white/70">Tip: select some text in the editor.</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  onClick={handleCreatePr}
+                  disabled={isGenerating || isCreatingPr}
+                  className="text-emerald-300/90 hover:text-emerald-200 shrink-0 px-2 py-1"
+                  title="Create a PR that updates README.md in your repo"
+                >
+                  {isCreatingPr ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Github className="w-4 h-4 mr-1" />}
+                  Create PR
+                </Button>
+                {/* AI Refine controls moved to floating action inside editor */}
+                <div className="hidden" />
               </div>
             </div>
             <Separator className="bg-white/10 mb-3" />
@@ -190,12 +626,28 @@ export default function ReadmePage() {
                 <Skeleton className="h-64 md:h-[28rem] w-full bg-white/10" />
               </div>
             ) : (
-              <textarea
-                value={markdown}
-                onChange={(e) => setMarkdown(e.target.value)}
-                className="flex-1 w-full resize-none min-h-[420px] md:min-h-[620px] bg-transparent text-white/90 placeholder:text-white/40 outline-none"
-                placeholder="# Your Awesome Project\n\nWrite your README here..."
-              />
+              <>
+                <textarea
+                  value={markdown}
+                  onChange={(e) => {
+                    setMarkdown(e.target.value);
+                    setShowRefineTip(false);
+                  }}
+                  ref={editorRef}
+                  onSelect={updateSelectionState}
+                  onKeyUp={updateSelectionState}
+                  onMouseUp={updateSelectionState}
+                  className={`flex-1 w-full resize-none min-h-[420px] md:min-h-[620px] bg-transparent text-white/90 placeholder:text-white/40 outline-none pb-16 pr-12 ${
+                    flashEditor ? "ring-2 ring-indigo-400/70 rounded-md" : ""
+                  }`}
+                  placeholder="# Your Awesome Project\n\nWrite your README here..."
+                />
+                {isAnimating && (
+                  <div className="pointer-events-none absolute top-2 right-2 text-xs text-white/80 bg-white/10 border border-white/20 rounded-md px-2 py-1 backdrop-blur-md">
+                    {animLabel || "Working…"}
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -214,12 +666,57 @@ export default function ReadmePage() {
                 <Skeleton className="h-64 md:h-[28rem] w-full bg-white/10" />
               </div>
             ) : (
-              <article className="prose prose-invert max-w-none">
-                <ReactMarkdown>{markdown}</ReactMarkdown>
+              <article className="prose prose-invert max-w-none leading-relaxed prose-headings:mt-8 prose-headings:mb-4 prose-p:my-4 prose-ul:my-4 prose-ol:my-4 prose-li:my-1.5 prose-code:bg-white/5 prose-code:px-1.5 prose-code:py-0.5 prose-pre:my-5 prose-pre:bg-white/5 prose-pre:rounded-lg prose-table:my-6 prose-th:px-3 prose-td:px-3">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkBreaks]}
+                  components={markdownComponents}
+                >
+                  {markdown}
+                </ReactMarkdown>
               </article>
             )}
           </div>
         </section>
+
+        {/* Popup when AI Refine clicked without a selection */}
+        <Dialog open={showRefineTip} onOpenChange={setShowRefineTip}>
+          <DialogContent className="bg-black/60 backdrop-blur-xl border border-white/15">
+            <DialogHeader>
+              <DialogTitle className="text-white">Select text to refine</DialogTitle>
+              <DialogDescription className="text-white/80">
+                Highlight some Markdown in the editor, then click <span className="font-medium">AI Refine</span>.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2">
+              <Button
+                onClick={() => {
+                  setShowRefineTip(false);
+                  setTimeout(() => editorRef.current?.focus(), 0);
+                }}
+                className="bg-white/10 hover:bg-white/20 text-white"
+              >
+                Got it
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+      {/* Error dialog */}
+      <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
+        <DialogContent className="bg-black/70 backdrop-blur-xl border border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-white">Something went wrong</DialogTitle>
+            <DialogDescription className="text-white/70">
+              {error || 'An unexpected error occurred.'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end">
+            <Button className="bg-white/10 hover:bg-white/20 text-white" onClick={() => setShowErrorDialog(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
         {error && (
           <div className="max-w-3xl mx-auto mt-6 text-center text-sm text-red-400">
@@ -227,6 +724,18 @@ export default function ReadmePage() {
           </div>
         )}
       </main>
+
+      {/* Copied toast */}
+      {copied && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+          <div className="flex items-center gap-2 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-100 backdrop-blur px-4 py-2 text-sm shadow-lg">
+            <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-emerald-500/30 border border-emerald-400/40">
+              <Check className="h-3.5 w-3.5 animate-pulse" />
+            </span>
+            Copied!
+          </div>
+        </div>
+      )}
 
       {isGenerating && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -286,6 +795,66 @@ export default function ReadmePage() {
                 Cancel
               </Button>
               <Button className="bg-white/10 hover:bg-white/20 text-white" onClick={handleSaveToken}>
+                Save
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* PR created dialog */}
+      <Dialog open={showPrDialog} onOpenChange={setShowPrDialog}>
+        <DialogContent className="bg-black/70 backdrop-blur-xl border border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-white">Pull Request Created</DialogTitle>
+            <DialogDescription className="text-white/60">
+              Your README changes were pushed to a branch and a PR was opened. You can review and merge it on GitHub.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center gap-3">
+            <a
+              href={prUrl || '#'}
+              target="_blank"
+              rel="noreferrer"
+              className="text-emerald-300 hover:text-emerald-200 underline"
+            >
+              {prUrl || 'View PR'}
+            </a>
+          </div>
+          <div className="flex justify-end">
+            <Button className="bg-white/10 hover:bg-white/20 text-white" onClick={() => setShowPrDialog(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Gemini key dialog for AI refine */}
+      <Dialog open={showGeminiDialog} onOpenChange={setShowGeminiDialog}>
+        <DialogContent className="bg-black/70 backdrop-blur-xl border border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-white">Enable AI Refine (Gemini)</DialogTitle>
+            <DialogDescription className="text-white/60">
+              Enter your personal Gemini API key to refine selected parts of your README on-device. We never store or send your key to our server.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <label className="block text-sm text-white/70">Gemini API Key</label>
+            <Input
+              type="password"
+              value={geminiKey}
+              onChange={(e) => setGeminiKey(e.target.value)}
+              placeholder="AIza********************************"
+              className="bg-black/40 border-white/20 text-white"
+            />
+            <div className="text-xs text-white/50">
+              Get a key from Google AI Studio. The key stays in your browser (localStorage) and requests go directly from your device to Gemini.
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="ghost" className="text-white/80" onClick={() => setShowGeminiDialog(false)}>
+                Cancel
+              </Button>
+              <Button className="bg-white/10 hover:bg-white/20 text-white" onClick={handleSaveGeminiKey}>
                 Save
               </Button>
             </div>

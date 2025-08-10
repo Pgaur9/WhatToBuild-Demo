@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { Buffer } from 'node:buffer';
 
 // Helper: parse owner/repo from URL or raw string
 function parseRepo(input: string): { owner: string; repo: string } | null {
@@ -115,11 +116,90 @@ async function getFileContent(owner: string, repo: string, path: string, token?:
   return '';
 }
 
+// Normalize generated Markdown to be clean GitHub-flavored Markdown (no stray HTML, proper spacing)
+function normalizeMarkdown(input: string): string {
+  let s = input || '';
+  // Convert HTML headings to MD
+  s = s.replace(/<h([1-6])[^>]*>([\s\S]*?)<\/h\1>/gi, (_, lvl: string, text: string) => {
+    const hashes = '#'.repeat(Number(lvl));
+    return `\n${hashes} ${text.trim()}\n`;
+  });
+  // Drop simple wrapper divs and center blocks
+  s = s.replace(/<div[^>]*>\s*/gi, '\n').replace(/\s*<\/div>/gi, '\n');
+  // <br> -> newline
+  s = s.replace(/<br\s*\/?>(\s*)/gi, '\n');
+  // Ensure space after list markers
+  s = s.replace(/^(\s*)([-*+])(\S)/gm, '$1$2 $3');
+  // Ensure blank lines before common blocks
+  s = s
+    .replace(/([^\n])\n(#{1,6} )/g, '$1\n\n$2')
+    .replace(/([^\n])\n(\s*[-*+] )/g, '$1\n\n$2')
+    .replace(/([^\n])\n(```)/g, '$1\n\n$2')
+    .replace(/([^\n])\n(> )/g, '$1\n\n$2');
+  // Collapse excessive blank lines
+  s = s.replace(/\n{3,}/g, '\n\n');
+  // Standardize code fences (```lang) and ensure isolated lines
+  s = s
+    .replace(/^[ \t]*```[ \t]*([a-zA-Z0-9_-]+)?[ \t]*$/gm, (m, lang) => `\n\n\
+\`\`\`${lang ? lang.trim() : ''}\n`) // open fence
+    .replace(/^[ \t]*\`\`\`[ \t]*$/gm, '```') // trim stray spaces on closing
+    .replace(/\n\n\n+/g, '\n\n');
+
+  // Fix shields-style badges accidentally written as [[Label]](url)
+  s = s.replace(/\[\[[^\]]+\]\]\((https?:\/\/img\.shields\.io\/[^)]+)\)/g, '![]($1)');
+  // Also convert [![alt](img)](link) preserved; no change needed
+  // Merge consecutive badge image lines into a single line
+  s = s.replace(/(?:^!\[[^\]]*\]\([^\)]+\)\s*\n){2,}/gm, (block) => block.trim().split(/\n+/).join(' ')+"\n\n");
+
+  // Ensure tables have header separator if missing (simple 3+ col case)
+  s = s.replace(/\n(\|[^\n]*\|)\n(?!\|?\s*-)/g, (m, header) => {
+    const cols = header.split('|').filter(Boolean).length;
+    const sep = '|' + Array(cols).fill('---').join('|') + '|';
+    return `\n${header}\n${sep}\n`;
+  });
+  // Ensure blank lines around tables
+  s = s.replace(/\n([^\n]*\|[^\n]*\n\s*\|?\s*-+[^\n]*\n[\s\S]*?(?=\n\n|$))/g, (m, tbl) => `\n\n${tbl}\n\n`);
+  // Robust table reconstruction: collapse inner blanks, ensure single table block
+  {
+    const lines = s.split('\n');
+    const out: string[] = [];
+    let i = 0;
+    const isTableLine = (ln: string) => /^\s*\|.*\|\s*$/.test(ln);
+    const isSepLine = (ln: string) => /^\s*\|?\s*[-: ]+\|[-:| ]+.*$/.test(ln);
+    while (i < lines.length) {
+      if (isTableLine(lines[i])) {
+        const block: string[] = [];
+        while (i < lines.length && (isTableLine(lines[i]) || isSepLine(lines[i]) || lines[i].trim() === '')) {
+          if (lines[i].trim() !== '') block.push(lines[i].trim());
+          i++;
+        }
+        if (block.length) {
+          const header = block[0];
+          const colCount = header.split('|').filter(Boolean).length;
+          const hasSep = block[1] && isSepLine(block[1]);
+          const sep = '|' + Array(colCount).fill('---').join('|') + '|';
+          const fixed = hasSep ? block : [header, sep, ...block.slice(1)];
+          if (out.length && out[out.length - 1] !== '') out.push('');
+          out.push(...fixed);
+          out.push('');
+        }
+        continue;
+      }
+      out.push(lines[i]);
+      i++;
+    }
+    s = out.join('\n');
+  }
+  // Trim trailing whitespace
+  s = s.replace(/[ \t]+$/gm, '');
+  return s.trim() + '\n';
+}
+
 function buildPrompt(repoFullName: string, repoMeta: GitHubRepoMeta, files: Array<{ path: string; content: string }>) {
   const metaSnippet = `Repository: ${repoFullName}\nDescription: ${repoMeta?.description ?? ''}\nStars: ${repoMeta?.stargazers_count ?? 'N/A'}\nLanguage: ${repoMeta?.language ?? 'N/A'}`;
   const fileSummaries = files.map(f => `---\nPath: ${f.path}\n\n${f.content.substring(0, 4000)}`).join('\n\n');
 
-  return `You are an expert open-source maintainer. Generate a comprehensive, professional README.md for the repository below.\n\nRequirements:\n- Clear title and short description\n- Badges (e.g., build, license, npm/pypi if applicable)\n- Table of Contents\n- Features\n- Architecture overview\n- Tech stack\n- Getting Started (installation, prerequisites)\n- Configuration (env variables)\n- Usage with code examples\n- Project structure\n- Roadmap or TODO\n- Contributing\n- Testing\n- License\n- Acknowledgements\n\nWrite in Markdown, use headings and code fences. Prefer concise, actionable content. Derive details from the provided files and metadata. If something is unknown, suggest sensible defaults and placeholders.\n\n${metaSnippet}\n\nProject files (samples):\n${fileSummaries}`;
+  return `You are an expert open-source maintainer. Generate a comprehensive, professional README.md for the repository below.\n\nStrict formatting rules:\n- Output must be GitHub-Flavored Markdown (GFM) only.\n- Do NOT use raw HTML tags (no <div>, <h3>, <center>, etc.).\n- Ensure proper spacing:\n  - Exactly one blank line between sections and before/after lists, code blocks, and tables.\n  - A space after list markers (-, *, +).\n- Use fenced code blocks with language hints.\n\nContent requirements (use this exact section order unless user notes say otherwise):\n1. Title and short description\n2. Badges (build, license, package, coverage if applicable)\n3. Table of Contents\n4. Key Features (bulleted)\n5. Architecture Overview (1–2 paragraphs + optional diagram code block)\n6. Tech Stack (as a table)\n7. Getting Started (installation, prerequisites)\n8. Configuration (as a table of env vars)\n9. Usage (code examples)\n10. Project Structure (tree in a fenced code block)\n11. Scripts (as a table of npm/pnpm/yarn scripts, if relevant)\n12. Roadmap (checkbox task list)\n13. Contributing\n14. Testing\n15. License\n16. Acknowledgements\n\nTables — use these schemas exactly and include a blank line before and after each table:\n- Tech Stack:\n\n| Area | Tool | Version |\n|---|---|---|\n| Frontend | Next.js | 15.x |\n\n- Configuration:\n\n| ENV | Description | Example |\n|---|---|---|\n| NEXT_PUBLIC_API | Public API base URL | https://api.example.com |\n\n- Scripts (skip if not applicable):\n\n| Command | Description |\n|---|---|\n| dev | Start local dev server |\n\nRoadmap format (example):\n\n- [ ] Improve documentation\n- [ ] Add e2e tests\n- [ ] Publish Docker image\n\nPrefer concise, actionable content. Derive details from the provided files and metadata. If something is unknown, suggest sensible defaults and placeholders.\n\n${metaSnippet}\n\nProject files (samples):\n${fileSummaries}`;
 }
 
 export async function POST(req: NextRequest) {
@@ -189,8 +269,9 @@ export async function POST(req: NextRequest) {
     if (!text) {
       return NextResponse.json({ error: 'Empty response from Gemini' }, { status: 500 });
     }
-
-    return NextResponse.json({ markdown: text });
+    const cleaned = normalizeMarkdown(text);
+    
+    return NextResponse.json({ markdown: cleaned });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unexpected error';
     return NextResponse.json({ error: message }, { status: 500 });
