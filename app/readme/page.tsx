@@ -90,7 +90,6 @@ export default function ReadmePage() {
   const [flashEditor, setFlashEditor] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [animLabel, setAnimLabel] = useState<string | null>(null);
-  const [showRefinePopover, setShowRefinePopover] = useState(false);
   const [showToolbarRefine, setShowToolbarRefine] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -126,10 +125,10 @@ export default function ReadmePage() {
   useEffect(() => {
     const el = editorRef.current;
     if (!el) return;
-    const handlers = ["select", "keyup", "mouseup", "input"]; // update on common events
-    handlers.forEach((evt) => el.addEventListener(evt as any, updateSelectionState));
+    const handlers: Array<"select" | "keyup" | "mouseup" | "input"> = ["select", "keyup", "mouseup", "input"]; // update on common events
+    handlers.forEach((evt) => el.addEventListener(evt, updateSelectionState));
     return () => {
-      handlers.forEach((evt) => el.removeEventListener(evt as any, updateSelectionState));
+      handlers.forEach((evt) => el.removeEventListener(evt, updateSelectionState));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editorRef.current, markdown]);
@@ -444,24 +443,30 @@ export default function ReadmePage() {
       <blockquote {...props} className="border-l-4 border-indigo-400/40 bg-white/5 px-4 py-3 rounded-r-lg" />
     ),
     code: (props) => {
-      const { inline, children, ...rest } = props as any;
+      const { inline, children, ...rest } = props as React.ComponentProps<'code'> & { inline?: boolean };
       return inline ? (
         <code {...rest} className="bg-white/10 px-1.5 py-0.5 rounded">{children}</code>
       ) : (
         <code {...rest}>{children}</code>
       );
     },
-    pre: (props) => <pre {...props} className="bg-white/5 rounded-lg p-4 overflow-auto" />,
+    pre: (props: React.ComponentProps<'pre'>) => <pre {...props} className="bg-white/5 rounded-lg p-4 overflow-auto" />,
     hr: () => <hr className="my-8 border-white/10" />,
-    ul: (props) => <ul {...props} className="list-disc pl-6 my-4 marker:text-white/60 space-y-1 [&>li>a]:leading-7 [&>li>a]:underline-offset-4" />,
-    ol: (props) => <ol {...props} className="list-decimal pl-6 my-4 marker:text-white/60 space-y-1 [&>li>a]:leading-7 [&>li>a]:underline-offset-4" />,
-    a: (props) => <a {...props} className="text-indigo-300 hover:text-indigo-200 underline" />,
-    img: (props) => <img {...props} className="inline-block align-middle mr-2 mb-2 rounded" />,
-    p: (props) => {
+    ul: (props: React.ComponentProps<'ul'>) => (
+      <ul {...props} className="list-disc pl-6 my-4 marker:text-white/60 space-y-1 [&>li>a]:leading-7 [&>li>a]:underline-offset-4" />
+    ),
+    ol: (props: React.ComponentProps<'ol'>) => (
+      <ol {...props} className="list-decimal pl-6 my-4 marker:text-white/60 space-y-1 [&>li>a]:leading-7 [&>li>a]:underline-offset-4" />
+    ),
+    a: (props: React.ComponentProps<'a'>) => <a {...props} className="text-indigo-300 hover:text-indigo-200 underline" />,
+    img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
+      <img {...props} alt={props.alt ?? ''} className="inline-block align-middle mr-2 mb-2 rounded" />
+    ),
+    p: (props: React.ComponentProps<'p'>) => {
       const childrenArray = React.Children.toArray(props.children);
       const isAllImages =
         childrenArray.length > 0 &&
-        childrenArray.every((c) => React.isValidElement(c) && (c.type as any) === 'img');
+        childrenArray.every((c) => React.isValidElement(c) && typeof c.type === 'string' && c.type === 'img');
       if (isAllImages) {
         return <div className="flex flex-wrap items-center gap-2 my-3">{props.children}</div>;
       }
