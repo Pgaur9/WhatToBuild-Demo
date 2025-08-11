@@ -206,6 +206,23 @@ export default function Hero({
       
        {deferHeavy && <FooterLazy />}
 
+      {/* Landing-only fixed Peerlist badge bottom-right */}
+      <a
+        href="https://peerlist.io/bytehumi/project/what-to-build"
+        target="_blank"
+        rel="noreferrer"
+        aria-label="What to Build on Peerlist"
+        className="fixed bottom-4 right-4 z-[60] opacity-90 hover:opacity-100 transition-opacity"
+      >
+        <img
+          src="https://peerlist.io/api/v1/projects/embed/PRJHKKD8BD7OG6OMMCQQPROKJDEMME?showUpvote=true&theme=dark"
+          alt="What to Build on Peerlist"
+          className="h-12 sm:h-14 md:h-16 w-auto drop-shadow-[0_6px_18px_rgba(0,0,0,0.45)]"
+          loading="lazy"
+          decoding="async"
+        />
+      </a>
+
     </Section>
   );
 }
