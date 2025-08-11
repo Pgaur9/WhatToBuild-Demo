@@ -74,7 +74,7 @@ const FlowDiagramInner = ({
   const densityRef = useRef<HTMLDivElement>(null);
   const flowRef = useRef<HTMLDivElement>(null);
 
-  const parseMermaidToFlow = (mermaidText: string) => {
+  const parseMermaidToFlow = React.useCallback((mermaidText: string) => {
     const lines = mermaidText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     const parsedNodes: ParsedNode[] = [];
     const parsedEdges: ParsedEdge[] = [];
@@ -170,7 +170,7 @@ const FlowDiagramInner = ({
     const filteredEdges = parsedEdges.filter(e => validSet.has(e.source) && validSet.has(e.target));
 
     return { nodes: filteredNodes, edges: filteredEdges };
-  };
+  }, []);
 
   // Compute a layered layout using a simple topological algorithm
   const layoutElements = (baseNodes: RFNode[], baseEdges: RFEdge[]) => {
@@ -270,7 +270,7 @@ const FlowDiagramInner = ({
     return posNodes;
   };
 
-  const createFlowElements = (parsedNodes: ParsedNode[], parsedEdges: ParsedEdge[]) => {
+  const createFlowElements = React.useCallback((parsedNodes: ParsedNode[], parsedEdges: ParsedEdge[]) => {
     const baseNodes: RFNode<NodeData>[] = parsedNodes.map((node) => ({
       id: node.id,
       type: 'default',
@@ -333,7 +333,7 @@ const FlowDiagramInner = ({
 
     const flowNodes = layoutElements(baseNodes, baseEdges);
     return { nodes: flowNodes, edges: baseEdges };
-  };
+  }, [animateEdges, density, direction]);
 
   useEffect(() => {
     try {
@@ -345,11 +345,13 @@ const FlowDiagramInner = ({
     } catch (error) {
       console.error('Error parsing diagram:', error);
     }
-  }, [editableChart, setNodes, setEdges, density, direction, animateEdges, createFlowElements, parseMermaidToFlow]);
+  }, [editableChart, density, direction, animateEdges, createFlowElements, parseMermaidToFlow]);
 
   useEffect(() => {
-    setEditableChart(chart);
-  }, [chart]);
+    if (chart !== editableChart) {
+      setEditableChart(chart);
+    }
+  }, [chart, editableChart]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),

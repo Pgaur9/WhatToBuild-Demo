@@ -386,7 +386,7 @@ CRITICAL RULES - generate valid Mermaid syntax:
     const systemPrompt = `
 You are an expert code analyst. For each file provided below, generate a concise, one-sentence summary of its primary purpose or function. Focus on the file's role in the project.
 
-Return a JSON array with the following structure:
+Return ONLY a JSON array (no prose, no markdown fences) with the following structure:
 [
   {
     "path": "<file_path>",
@@ -406,13 +406,70 @@ Here are the files to summarize:
       ]);
       const response = await result.response;
       const rawText = response.text();
-      // The API sometimes wraps the JSON in markdown code fences. Let's remove them.
-      const cleanedText = rawText.replace(/^```(?:json)?\s*/, '').replace(/```$/, '').trim();
-      const summaries = JSON.parse(cleanedText);
-      return summaries;
+
+      // Try to extract a JSON array from the response robustly
+      const tryParseArray = (text: string): unknown => {
+        // Strip common markdown fences first
+        const stripped = text
+          .replace(/^```(?:json)?\s*/i, '')
+          .replace(/```\s*$/i, '')
+          .trim();
+
+        // Prefer the first JSON array in the text
+        const arrayMatch = stripped.match(/\[[\s\S]*\]/);
+        if (arrayMatch) {
+          return JSON.parse(arrayMatch[0]);
+        }
+
+        // As a last resort, slice from first '[' to last ']' if both exist
+        const firstIdx = stripped.indexOf('[');
+        const lastIdx = stripped.lastIndexOf(']');
+        if (firstIdx !== -1 && lastIdx !== -1 && lastIdx > firstIdx) {
+          const candidate = stripped.slice(firstIdx, lastIdx + 1);
+          return JSON.parse(candidate);
+        }
+
+        // Fall through to a direct parse (may throw)
+        return JSON.parse(stripped);
+      };
+
+      let parsed: unknown;
+      try {
+        parsed = tryParseArray(rawText);
+      } catch (e) {
+        console.error('Gemini summarizeFiles raw response (truncated):', rawText.slice(0, 400));
+        throw e;
+      }
+
+      // Validate structure and coerce if necessary
+      const items = Array.isArray(parsed) ? parsed : [];
+      const normalized = items
+        .map((it) => {
+          if (!it || typeof it !== 'object') return null;
+          const obj = it as { path?: unknown; summary?: unknown };
+          const path = typeof obj.path === 'string' ? obj.path : undefined;
+          const summary = typeof obj.summary === 'string' ? obj.summary : undefined;
+          if (!path || !summary) return null;
+          return { path, summary };
+        })
+        .filter(Boolean) as { path: string; summary: string }[];
+
+      if (normalized.length > 0) return normalized;
+
+      // Graceful fallback: generate ultra-simple summaries locally
+      const fallback = files.map(({ path, content }) => ({
+        path,
+        summary: this.generateFallbackSummary(path, content)
+      }));
+      return fallback;
     } catch (error) {
       console.error('Error summarizing files with Gemini:', error);
-      throw new Error('Failed to summarize files.');
+      // Final fallback to avoid breaking /analyze entirely
+      const safeFallback = files.map(({ path, content }) => ({
+        path,
+        summary: this.generateFallbackSummary(path, content)
+      }));
+      return safeFallback;
     }
   }
 
@@ -425,5 +482,27 @@ Here are the files to summarize:
       console.error('Error generating content with Gemini:', error);
       throw new Error('Failed to generate content.');
     }
+  }
+
+  // Create simple summaries when the model output is unusable
+  private generateFallbackSummary(path: string, content: string): string {
+    const lower = path.toLowerCase();
+    if (lower.endsWith('.md')) return `${path} - documentation or project notes.`;
+    if (lower.endsWith('.json')) return `${path} - configuration or structured data.`;
+    if (lower.endsWith('.yml') || lower.endsWith('.yaml')) return `${path} - YAML configuration.`;
+    if (lower.includes('/api/') || /route\.(t|j)sx?$/i.test(lower)) return `${path} - API route or server handler.`;
+    if (lower.includes('/components/') || lower.includes('/ui/')) return `${path} - UI component.`;
+    if (lower.includes('/pages/') || /page\.(t|j)sx?$/i.test(lower)) return `${path} - application page/view.`;
+    if (/model|schema|entity|type|interface/i.test(lower)) return `${path} - data model or type definitions.`;
+    if (/util|helper|service|lib|hook/i.test(lower)) return `${path} - utility, service, or helper functions.`;
+
+    // Peek into content for hints
+    const snippet = (content || '').slice(0, 400);
+    if (/fetch\(|axios\.|request/i.test(snippet)) return `${path} - performs network requests.`;
+    if (/react|useState|useEffect/i.test(snippet)) return `${path} - React component or hook.`;
+    if (/express|next\-?api|router/i.test(snippet)) return `${path} - server route or middleware.`;
+    if (/class |function |const |let /i.test(snippet)) return `${path} - source code implementing app logic.`;
+
+    return `${path} - project file.`;
   }
 }

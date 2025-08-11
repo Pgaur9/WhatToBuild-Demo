@@ -34,11 +34,29 @@ function VisualizePageContent() {
         setError(null);
         try {
           const response = await axios.get(`/api/visualize-repo?repo=${repoFullName}`);
-          setDiagram(response.data.diagram);
-          setPrompt(response.data.prompt);
+          const diag = response?.data?.diagram;
+          const prmpt = response?.data?.prompt ?? null;
+
+          // Validate diagram
+          if (typeof diag !== 'string' || !diag.trim()) {
+            throw new Error('Invalid diagram payload received from server.');
+          }
+          const trimmed = diag.trim();
+          const looksMermaid = trimmed.startsWith('graph') || trimmed.startsWith('flowchart') || trimmed.startsWith('%%{init:');
+          if (!looksMermaid) {
+            throw new Error('Server returned a non-Mermaid diagram.');
+          }
+
+          setDiagram(trimmed);
+          setPrompt(prmpt);
         } catch (err) {
           console.error('Failed to fetch diagram:', err);
-          setError('Could not generate the architecture diagram. The repository might be private, not contain a README, or the README may be too complex to analyze.');
+          const msg = err && typeof err === 'object' && 'message' in err ? String((err as Error).message) : '';
+          if (msg === 'Invalid diagram payload received from server.' || msg === 'Server returned a non-Mermaid diagram.') {
+            setError(msg);
+          } else {
+            setError('Could not generate the architecture diagram. The repository might be private, not contain a README, or the README may be too complex to analyze.');
+          }
         }
         setIsLoading(false);
       };
@@ -71,7 +89,7 @@ function VisualizePageContent() {
         )}
         {error && <p className="text-red-500 text-center p-8 bg-red-900/20 rounded-lg">{error}</p>}
         {diagram && !isLoading && (
-                    <FlowDiagram 
+          <FlowDiagram 
             chart={diagram} 
             title="Repository Architecture" 
             prompt={prompt} 
