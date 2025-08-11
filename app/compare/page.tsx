@@ -100,6 +100,25 @@ export default function ComparePage() {
   const [mounted, setMounted] = useState(false);
   React.useEffect(() => { setMounted(true); }, []);
 
+  // Smooth scrolling performance: pause heavy effects while scrolling
+  React.useEffect(() => {
+    const root = document.documentElement;
+    let scrollTimeout: number | null = null;
+    const onScroll = () => {
+      if (!root.classList.contains('scrolling')) root.classList.add('scrolling');
+      if (scrollTimeout) window.clearTimeout(scrollTimeout);
+      scrollTimeout = window.setTimeout(() => {
+        root.classList.remove('scrolling');
+        scrollTimeout = null;
+      }, 150);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true } as AddEventListenerOptions);
+    return () => {
+      window.removeEventListener('scroll', onScroll as EventListener);
+      if (scrollTimeout) window.clearTimeout(scrollTimeout);
+    };
+  }, []);
+
   // Curated list used for quick chips and shuffle
   const popularUsers = React.useMemo(
     () => [

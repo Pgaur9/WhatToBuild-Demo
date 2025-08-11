@@ -296,6 +296,69 @@
   scroll-behavior: smooth;
 }
 
+/* While scrolling: temporarily disable heavy effects for smoothness */
+:root.scrolling .premium-btn,
+:root.scrolling .roast-section,
+:root.scrolling .battle-verdict,
+:root.scrolling .glass-card,
+:root.scrolling .repo-card,
+:root.scrolling .stat-card {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+:root.scrolling .glass-card:hover,
+:root.scrolling .repo-card:hover,
+:root.scrolling .stat-card:hover {
+  transform: none !important;
+}
+:root.scrolling .winner-crown,
+:root.scrolling .winner-premium,
+:root.scrolling .winner-frost,
+:root.scrolling .animate-pulse-vs {
+  animation-play-state: paused !important;
+}
+
+/* Performance: reduce heavy effects on mobile and reduced-motion users */
+@media (max-width: 1024px) {
+  /* Remove expensive backdrop blurs and large shadows during scroll */
+  .premium-btn,
+  .roast-section,
+  .battle-verdict,
+  .glass-card,
+  .repo-card,
+  .stat-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+  /* Neutralize hover transforms that trigger layer promotions and repaints */
+  .glass-card:hover,
+  .repo-card:hover,
+  .stat-card:hover {
+    transform: none !important;
+  }
+  /* Disable continuous animations that can degrade scroll perf */
+  .winner-crown,
+  .winner-premium,
+  .winner-frost,
+  .animate-pulse-vs {
+    animation: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+  .glass-card:hover,
+  .repo-card:hover,
+  .stat-card:hover {
+    transform: none !important;
+  }
+}
+
 /* Custom scrollbar for suggestions - Hidden */
 .suggestions-scrollbar {
   scrollbar-width: none; /* Firefox */

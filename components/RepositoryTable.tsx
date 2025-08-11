@@ -38,7 +38,7 @@ export default function RepositoryTable({
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
         <Table className="w-full table-fixed">
           <colgroup>
-            <col className="w-[220px] sm:w-[340px] md:w-[480px]" />
+            <col className="w-[180px] sm:w-[240px] md:w-[300px]" />
             <col className="w-[120px] hidden sm:table-column" />
             <col className="w-[90px] hidden sm:table-column" />
             <col className="w-[120px] hidden md:table-column" />
@@ -47,7 +47,7 @@ export default function RepositoryTable({
           <TableHeader>
             <TableRow className="bg-black/50 border-b border-white/10 hover:bg-black/50">
               {/* CHANGE 2: Remove fixed widths, use min-width instead */}
-              <TableHead className="text-left py-4 pl-6 pr-2 text-sm font-semibold text-white/90 uppercase tracking-wider w-[220px] sm:w-[340px] md:w-[480px]">
+              <TableHead className="text-left py-4 pl-6 pr-2 text-sm font-semibold text-white/90 uppercase tracking-wider w-[180px] sm:w-[240px] md:w-[300px]">
                 Repository
               </TableHead>
               <TableHead className="text-left py-4 px-2 text-sm font-semibold text-white/90 uppercase tracking-wider hidden sm:table-cell min-w-[100px]">
@@ -68,17 +68,17 @@ export default function RepositoryTable({
             {repositories.map((repo, index) => (
               <TableRow key={repo.id || index} className="hover:bg-white/5 transition-all duration-300 group border-b border-white/10 backdrop-blur-sm relative overflow-hidden animate-in fade-in slide-in-from-left-2">
                 {/* Remove absolute overlay div for correct table layout */}
-                <TableCell className="py-4 pl-4 pr-2 min-w-0 w-[240px] sm:w-[360px] md:w-[480px]">
+                <TableCell className="py-4 pl-4 pr-2 min-w-0 w-[180px] sm:w-[240px] md:w-[300px]">
                   <div className="flex flex-col min-w-0 w-full">
                     <h3 
-                      className="text-lg font-semibold text-white group-hover:text-white/90 transition-colors cursor-pointer hover:underline truncate w-full"
+                      className="text-sm md:text-base font-semibold text-white group-hover:text-white/90 transition-colors cursor-pointer hover:underline truncate w-full"
                       onClick={() => onViewDetails && onViewDetails(repo)}
                       title={repo.full_name || repo.name}
                     >
                       {repo.full_name || repo.name}
                     </h3>
                     <p
-                      className="hidden md:block text-white/70 text-sm mt-1 w-full"
+                      className="hidden xl:block text-white/60 text-[11px] mt-0.5 w-full"
                       title={repo.description || 'No description available'}
                       style={{
                         display: '-webkit-box',
@@ -92,7 +92,7 @@ export default function RepositoryTable({
                       {repo.description || 'No description available'}
                     </p>
                     {repo.topics && repo.topics.length > 0 && (
-                      <div className="hidden md:flex flex-wrap gap-1 mt-2 w-full overflow-hidden">
+                      <div className="hidden xl:flex flex-wrap gap-1 mt-1 w-full overflow-hidden">
                         {repo.topics.slice(0, 2).map((topic) => (
                           <span key={topic} className="bg-white/10 backdrop-blur-xl border border-white/20 text-white/80 px-2 py-0.5 rounded-full text-xs shadow-sm hover:bg-white/15 hover:border-white/30 transition-all duration-300">
                             {topic}
