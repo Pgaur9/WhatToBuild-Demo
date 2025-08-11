@@ -111,6 +111,25 @@ export default function Hero({
     return () => window.clearTimeout(t);
   }, []);
 
+  // Smooth scroll perf: toggle a root .scrolling class while user scrolls
+  useEffect(() => {
+    const root = document.documentElement;
+    let scrollTimeout: number | null = null;
+    const onScroll = () => {
+      if (!root.classList.contains('scrolling')) root.classList.add('scrolling');
+      if (scrollTimeout) window.clearTimeout(scrollTimeout);
+      scrollTimeout = window.setTimeout(() => {
+        root.classList.remove('scrolling');
+        scrollTimeout = null;
+      }, 150);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true } as AddEventListenerOptions);
+    return () => {
+      window.removeEventListener('scroll', onScroll as EventListener);
+      if (scrollTimeout) window.clearTimeout(scrollTimeout);
+    };
+  }, []);
+
   return (
     <Section
       className={cn(
