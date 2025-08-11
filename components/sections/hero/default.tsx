@@ -93,6 +93,8 @@ export default function Hero({
 }: HeroProps) {
   // Mount gate to defer heavy components until after first paint/idle
   const [deferHeavy, setDeferHeavy] = useState(false);
+  // Cache-buster for Peerlist embed image: stable during session, refreshes on full page reload
+  const [peerlistCB] = useState(() => Date.now());
   useEffect(() => {
     // Prefer idle; fallback to timeout for broader support (typed shims)
     type RIC = (cb: () => void) => number;
@@ -212,15 +214,48 @@ export default function Hero({
         target="_blank"
         rel="noreferrer"
         aria-label="What to Build on Peerlist"
-        className="fixed bottom-4 right-4 z-[60] opacity-90 hover:opacity-100 transition-opacity"
+        className="fixed top-4 sm:top-6 md:top-8 right-4 z-[60] opacity-90 hover:opacity-100 transition-opacity"
       >
-        <img
-          src="https://peerlist.io/api/v1/projects/embed/PRJHKKD8BD7OG6OMMCQQPROKJDEMME?showUpvote=true&theme=dark"
-          alt="What to Build on Peerlist"
-          className="h-12 sm:h-14 md:h-16 w-auto drop-shadow-[0_6px_18px_rgba(0,0,0,0.45)]"
-          loading="lazy"
-          decoding="async"
-        />
+        <div
+          className={
+            cn(
+              "group relative overflow-hidden rounded-2xl",
+             
+              "transition-all duration-300"
+            )
+          }
+        >
+          {/* Content image */}
+          <img
+            src={`https://peerlist.io/api/v1/projects/embed/PRJHKKD8BD7OG6OMMCQQPROKJDEMME?showUpvote=true&theme=dark&_cb=${peerlistCB}`}
+            alt="What to Build on Peerlist"
+            className="h-12 sm:h-14 md:h-16 w-auto select-none rounded-2xl"
+            loading="lazy"
+            decoding="async"
+            style={{ filter: "saturate(1.04) contrast(1.04)" }}
+          />
+
+          {/* Internal glass gloss (slightly stronger on hover) */}
+          <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[linear-gradient(to_bottom,rgba(255,255,255,0.16),rgba(255,255,255,0.06)_18%,transparent_45%)] mix-blend-overlay opacity-75 group-hover:opacity-90 transition-opacity duration-300" />
+
+          {/* Inset borders and depth inside the badge */}
+          <div
+            className="pointer-events-none absolute inset-0 rounded-2xl"
+            style={{
+              boxShadow:
+                "inset 0 0 0 1px rgba(255,255,255,0.08), inset 0 10px 20px rgba(255,255,255,0.06), inset 0 -12px 24px rgba(0,0,0,0.35)"
+            }}
+          />
+
+          {/* Sleek neutral hover sheen (no colors) */}
+          <div
+            className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition duration-300"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02) 38%, transparent 70%)",
+            }}
+          />
+        </div>
       </a>
 
     </Section>
