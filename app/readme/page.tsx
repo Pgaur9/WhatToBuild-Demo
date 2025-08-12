@@ -28,6 +28,7 @@ import {
   Loader2,
   Wand2,
   Check,
+  ChevronsDown,
 } from "lucide-react";
 
 // Ensure clean GitHub-flavored Markdown spacing and no stray HTML wrappers
@@ -90,10 +91,48 @@ export default function ReadmePage() {
   const [flashEditor, setFlashEditor] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [animLabel, setAnimLabel] = useState<string | null>(null);
+  // Store the full target content to allow resuming the typing animation
+  const [pendingTarget, setPendingTarget] = useState<string | null>(null);
   const [showToolbarRefine, setShowToolbarRefine] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [copied, setCopied] = useState(false);
   const editorRef = useRef<HTMLTextAreaElement | null>(null);
+  const previewRef = useRef<HTMLDivElement | null>(null);
+  const [followBottom, setFollowBottom] = useState(false);
+  
+  // Helpers: sticky auto-scroll only when user is near the bottom
+  const isNearBottom = (el: HTMLElement, threshold = 80) => {
+    return el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+  };
+  const stickToBottomIfNeeded = (el: HTMLElement | null) => {
+    if (!el) return;
+    if (isNearBottom(el)) {
+      // Use rAF to avoid layout thrash during rapid updates
+      requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight;
+      });
+    }
+  };
+
+  // When user enables follow mode, keep scrolling to bottom smoothly on updates
+  useEffect(() => {
+    if (!followBottom) return;
+    const id = requestAnimationFrame(() => {
+      if (editorRef.current) {
+        editorRef.current.scrollTop = editorRef.current.scrollHeight;
+      }
+      if (previewRef.current) {
+        previewRef.current.scrollTop = previewRef.current.scrollHeight;
+      }
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [followBottom, markdown]);
+
+  // Auto-disable follow when work is done
+  useEffect(() => {
+    if (!isGenerating && !isAnimating && !pendingTarget) setFollowBottom(false);
+  }, [isGenerating, isAnimating, pendingTarget]);
   // PR flow state
   const [isCreatingPr, setIsCreatingPr] = useState(false);
   const [showPrDialog, setShowPrDialog] = useState(false);
@@ -174,9 +213,10 @@ export default function ReadmePage() {
         const pos = before.length + acc.length;
         editorRef.current.selectionStart = pos;
         editorRef.current.selectionEnd = pos;
-        // Keep view pinned near caret for long inserts
-        editorRef.current.scrollTop = editorRef.current.scrollHeight;
+        stickToBottomIfNeeded(editorRef.current);
       }
+      // Also keep preview stuck to bottom if user hasn't scrolled up
+      stickToBottomIfNeeded(previewRef.current);
       // Natural typing cadence: slightly slower after newlines/periods
       const ch = text[i];
       const extra = ch === '\n' ? 10 : ch === '.' ? 6 : ch === ',' ? 3 : 0;
@@ -202,7 +242,7 @@ export default function ReadmePage() {
   const animateSetMarkdown = async (content: string, baseStepMs = 6) => {
     const text = content.replace(/\r\n/g, "\n");
     setIsAnimating(true);
-    setAnimLabel("Generating… typing");
+    setAnimLabel("Generating Readme...");
     setMarkdown("");
     await new Promise((r) => setTimeout(r, 0));
     let acc = "";
@@ -213,8 +253,9 @@ export default function ReadmePage() {
         const pos = acc.length;
         editorRef.current.selectionStart = pos;
         editorRef.current.selectionEnd = pos;
-        editorRef.current.scrollTop = editorRef.current.scrollHeight;
+        stickToBottomIfNeeded(editorRef.current);
       }
+      stickToBottomIfNeeded(previewRef.current);
       const ch = text[i];
       const extra = ch === '\n' ? 8 : ch === '.' ? 4 : ch === ',' ? 2 : 0;
       const jitter = Math.floor(Math.random() * 4);
@@ -229,6 +270,39 @@ export default function ReadmePage() {
       editorRef.current.selectionStart = end;
       editorRef.current.selectionEnd = end;
     }, 0);
+  };
+
+  // Continue typing into the editor from the current content up to the stored target
+  const animateContinueToTarget = async (baseStepMs = 6) => {
+    if (!pendingTarget) return;
+    const text = pendingTarget.replace(/\r\n/g, "\n");
+    const startIndex = markdown.length;
+    if (!text.startsWith(markdown)) {
+      // If diverged, just replace with target and exit
+      setMarkdown(text);
+      setPendingTarget(null);
+      return;
+    }
+    setIsAnimating(true);
+    setAnimLabel("Resuming...");
+    for (let i = startIndex; i < text.length; i++) {
+      setMarkdown(text.slice(0, i + 1));
+      if (editorRef.current) {
+        const pos = i + 1;
+        editorRef.current.selectionStart = pos;
+        editorRef.current.selectionEnd = pos;
+        stickToBottomIfNeeded(editorRef.current);
+      }
+      stickToBottomIfNeeded(previewRef.current);
+      const ch = text[i];
+      const extra = ch === '\n' ? 8 : ch === '.' ? 4 : ch === ',' ? 2 : 0;
+      const jitter = Math.floor(Math.random() * 4);
+      await delay(baseStepMs + extra + jitter);
+      if (text.length > 1800 && i % 20 === 0) await delay(0);
+    }
+    setIsAnimating(false);
+    setAnimLabel(null);
+    setPendingTarget(null);
   };
 
   // Persist user notes
@@ -263,10 +337,14 @@ export default function ReadmePage() {
       const result = await res.json();
       const raw = (result.markdown || result.content || "") as string;
       const formatted = normalizeMarkdown(raw);
+      // Store full target so we can resume if animation is interrupted
+      setPendingTarget(formatted);
       // Hide loading overlay before typing animation starts
       setIsGenerating(false);
       // Animate first paint with typing effect
       await animateSetMarkdown(formatted);
+      // Clear target when finished
+      setPendingTarget(null);
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Something went wrong";
       setError(message);
@@ -461,7 +539,7 @@ export default function ReadmePage() {
     a: (props: React.ComponentProps<'a'>) => <a {...props} className="text-indigo-300 hover:text-indigo-200 underline" />,
     // We intentionally allow raw <img> tags inside rendered README markdown, since these may come
     // from external sources and Next/Image optimization isn't always applicable here.
-    // eslint-disable-next-line @next/next/no-img-element
+  
     img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
       <img {...props} alt={props.alt ?? ''} className="inline-block align-middle mr-2 mb-2 rounded" />
     ),
@@ -578,6 +656,17 @@ export default function ReadmePage() {
                     {isRefining ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1" />}
                     AI Refine
                   </Button>
+                  {/* Resume typing button appears when we have a pending target and current text is a prefix */}
+                  {!isAnimating && pendingTarget && markdown.length < pendingTarget.length && pendingTarget.startsWith(markdown) && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => { void animateContinueToTarget(); }}
+                      className="ml-2 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur px-3 py-2 shrink-0"
+                      title="Continue typing the generated README"
+                    >
+                      Resume typing
+                    </Button>
+                  )}
                   {showToolbarRefine && (
                     <div className="absolute top-full right-0 mt-2 w-[90vw] max-w-sm sm:w-[360px] rounded-2xl border border-white/20 bg-black/80 backdrop-blur-2xl p-4 shadow-2xl ring-1 ring-white/10 z-30 overflow-hidden">
                       <div className="text-sm sm:text-base text-white/80 font-medium mb-2">Instruction</div>
@@ -651,15 +740,18 @@ export default function ReadmePage() {
                   placeholder="# Your Awesome Project\n\nWrite your README here..."
                 />
                 {isAnimating && (
-                  <div className="pointer-events-none absolute top-2 right-2 text-xs text-white/80 bg-white/10 border border-white/20 rounded-md px-2 py-1 backdrop-blur-md">
-                    {animLabel || "Working…"}
+                  <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
+                    <div className="flex items-center gap-2 rounded-full bg-black/60 border border-white/10 backdrop-blur px-3 py-1.5 shadow-lg">
+                      <Loader2 className="h-3.5 w-3.5 text-white/90 animate-spin" />
+                      <span className="text-xs text-white/85" aria-live="polite">{animLabel || "typing…"}</span>
+                    </div>
                   </div>
                 )}
               </>
             )}
           </div>
 
-          <div className="relative rounded-2xl bg-black/30 backdrop-blur-2xl border border-white/20 p-4 overflow-auto">
+          <div ref={previewRef} className="relative rounded-2xl bg-black/30 backdrop-blur-2xl border border-white/20 p-4 overflow-auto">
             <div className="flex items-center gap-2 text-white/80 mb-3">
               <Eye className="w-4 h-4" />
               <span className="text-sm font-medium">Preview</span>
@@ -869,6 +961,23 @@ export default function ReadmePage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Sticky scroll-to-bottom button: always visible */}
+      <button
+        type="button"
+        onClick={() => {
+          setFollowBottom(true);
+          if (editorRef.current) editorRef.current.scrollTop = editorRef.current.scrollHeight;
+          if (previewRef.current) previewRef.current.scrollTop = previewRef.current.scrollHeight;
+          window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+        }}
+        className="fixed bottom-6 right-6 z-40 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur text-white shadow-lg"
+        title="Scroll to bottom and follow until done"
+        aria-label="Scroll to bottom"
+      >
+        <ChevronsDown className="h-5 w-5" />
+      </button>
+ 
     </div>
   );
 }

@@ -193,7 +193,7 @@ export default function Hero({
             >
               <div className="w-[250px] h-14 rounded-2xl bg-gray-900/40 backdrop-blur-md overflow-hidden">
                 <img
-                  src={`https://peerlist.io/api/v1/projects/embed/PRJHKKD8BD7OG6OMMCQQPROKJDEMME?showUpvote=true&theme=dark&_cb=${peerlistCB}&_r=${peerlistTs}-${peerlistAttempt}`}
+                  src={`/api/badges/peerlist?cb=${peerlistCB}-${peerlistTs}-${peerlistAttempt}`}
                   alt="What to build"
                   width={250}
                   height={56}
@@ -223,7 +223,7 @@ export default function Hero({
             >
               <div className="w-[250px] h-14 rounded-2xl bg-gray-900/40 backdrop-blur-md overflow-hidden">
                 <img
-                  src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1004213&theme=dark&t=${peerlistCB}&r=${productHuntTs}-${productHuntAttempt}`}
+                  src={`/api/badges/producthunt?t=${peerlistCB}-${productHuntTs}-${productHuntAttempt}`}
                   alt="What To Build - Concept to discover & analyze relevant open-source projects | Product Hunt"
                   width={250}
                   height={56}
