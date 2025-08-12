@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import Script from "next/script";
 
 import { cn } from "@/lib/utils";
 import LiquidGlassHeader from "@/components/LiquidGlassHeader";
@@ -37,6 +38,7 @@ export default function RootLayout({
         </div>
         <Analytics />
         <SpeedInsights />
+        <Script src="https://scripts.simpleanalyticscdn.com/latest.js" />
       </body>
     </html>
   );
