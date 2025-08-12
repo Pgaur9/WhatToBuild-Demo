@@ -4,6 +4,7 @@ import { ArrowRightIcon } from "lucide-react";
 import { ReactNode, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 
+
 // Defer heavy, below-the-fold components to client after first paint
 const MagicBean = dynamic(() => import("@/components/Hero/MagicBean").then(m => ({ default: m.MagicBean })), {
   ssr: false,
@@ -94,7 +95,35 @@ export default function Hero({
   // Mount gate to defer heavy components until after first paint/idle
   const [deferHeavy, setDeferHeavy] = useState(false);
   // Cache-buster for Peerlist embed image: stable during session, refreshes on full page reload
+ 
   const [peerlistCB] = useState(() => Date.now());
+  // Skeleton loading states for badges
+  const [peerlistLoaded, setPeerlistLoaded] = useState(true);
+  const [productHuntLoaded, setProductHuntLoaded] = useState(true);
+  // Retry logic states
+  const [peerlistAttempt, setPeerlistAttempt] = useState(0);
+  const [productHuntAttempt, setProductHuntAttempt] = useState(0);
+  const [peerlistTs, setPeerlistTs] = useState(() => Date.now());
+  const [productHuntTs, setProductHuntTs] = useState(() => Date.now());
+
+  // If an image hasn't loaded in time, retry with a fresh cache-buster (max 3 retries)
+  useEffect(() => {
+    if (peerlistLoaded || peerlistAttempt >= 1) return;
+    const timeout = window.setTimeout(() => {
+      setPeerlistAttempt((a) => a + 1);
+      setPeerlistTs(Date.now());
+    }, 1500);
+    return () => window.clearTimeout(timeout);
+  }, [peerlistLoaded, peerlistAttempt]);
+
+  useEffect(() => {
+    if (productHuntLoaded || productHuntAttempt >= 1) return;
+    const timeout = window.setTimeout(() => {
+      setProductHuntAttempt((a) => a + 1);
+      setProductHuntTs(Date.now());
+    }, 1500);
+    return () => window.clearTimeout(timeout);
+  }, [productHuntLoaded, productHuntAttempt]);
   useEffect(() => {
     // Prefer idle; fallback to timeout for broader support (typed shims)
     type RIC = (cb: () => void) => number;
@@ -140,7 +169,7 @@ export default function Hero({
       )}
     >
       <div className="max-w-container mx-auto flex flex-col gap-12 pt-16 sm:gap-24">
-        <div className="flex flex-col items-center gap-6 text-center sm:gap-12">
+        <div className="flex flex-col items-center gap-4 text-center sm:gap-8">
           {badge !== false && badge}
           <h1 className="animate-appear from-foreground to-foreground dark:to-muted-foreground relative z-10 inline-block bg-gradient-to-r bg-clip-text text-3xl leading-tight font-semibold text-balance text-white drop-shadow-2xl sm:text-5xl sm:leading-tight md:text-6xl md:leading-tight">
             What to <span className="inline-block align-middle"><PointerHighlight rectangleClassName="border-2 border-blue-400" pointerClassName="text-blue-400" containerClassName="inline-block align-middle"><span className="font-bold text-white-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] transform hover:scale-110 transition-all duration-300" style={{
@@ -153,47 +182,69 @@ export default function Hero({
             {description}
           </p>
           {/* Badges: Peerlist + Product Hunt, below description */}
-          <div className="animate-appear opacity-0 delay-200 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-            {/* Peerlist badge */}
+          <div className="animate-appear opacity-0 delay-200 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 relative z-20">
+            {/* Peerlist badge (styled) */}
             <a
               href="https://peerlist.io/bytehumi/project/what-to-build"
               target="_blank"
               rel="noreferrer"
               aria-label="What to Build on Peerlist"
-              className="block cursor-pointer relative z-10 hover:scale-105 transition-transform duration-200"
+              className="block cursor-pointer hover:scale-105 transition-transform duration-200"
             >
-              <div className="rounded-2xl bg-gray-800/60 border border-gray-600/30 hover:border-gray-500/50 transition-colors duration-200">
+              <div className="w-[250px] h-14 rounded-2xl bg-gray-900/40 backdrop-blur-md overflow-hidden">
                 <img
-                  src={`https://peerlist.io/api/v1/projects/embed/PRJHKKD8BD7OG6OMMCQQPROKJDEMME?showUpvote=true&theme=dark&_cb=${peerlistCB}`}
-                  alt="What to Build on Peerlist"
-                  className="h-14 w-[250px] object-cover rounded-2xl pointer-events-none"
-                  loading="lazy"
+                  src={`https://peerlist.io/api/v1/projects/embed/PRJHKKD8BD7OG6OMMCQQPROKJDEMME?showUpvote=true&theme=dark&_cb=${peerlistCB}&_r=${peerlistTs}-${peerlistAttempt}`}
+                  alt="What to build"
+                  width={250}
+                  height={56}
+                  style={{ width: "100%", height: "100%", objectFit: "cover", clipPath: "inset(1px round 12px)" }}
+                  loading="eager"
+                  fetchPriority="high"
                   decoding="async"
+                  onError={() => {
+                    if (peerlistAttempt < 1) {
+                      setPeerlistAttempt((a) => a + 1);
+                      setPeerlistTs(Date.now());
+                    } else {
+                      setPeerlistLoaded(true);
+                    }
+                  }}
                 />
               </div>
             </a>
 
-            {/* Product Hunt badge */}
+            {/* Product Hunt badge (styled) */}
             <a
-              href="https://www.producthunt.com/products/what-to-build-2?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-what%E2%80%90to%E2%80%90build%E2%80%902"
+              href="https://www.producthunt.com/products/what-to-build-2?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-what&#0045;to&#0045;build&#0045;2"
               target="_blank"
               rel="noreferrer"
-              aria-label="What to Build on Product Hunt"
-              className="block cursor-pointer relative z-10 hover:scale-105 transition-transform duration-200"
+              aria-label="What To Build – Featured on Product Hunt"
+              className="block cursor-pointer hover:scale-105 transition-transform duration-200"
             >
-              <div className="rounded-2xl bg-gray-800/60 border border-gray-600/30 hover:border-gray-500/50 transition-colors duration-200">
+              <div className="w-[250px] h-14 rounded-2xl bg-gray-900/40 backdrop-blur-md overflow-hidden">
                 <img
-                  src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1004213&theme=dark&t=${peerlistCB}`}
-                  alt="What To Build – Featured on Product Hunt"
-                  className="h-14 w-[250px] object-cover rounded-2xl pointer-events-none"
-                  loading="lazy"
+                  src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1004213&theme=dark&t=${peerlistCB}&r=${productHuntTs}-${productHuntAttempt}`}
+                  alt="What To Build - Concept to discover & analyze relevant open-source projects | Product Hunt"
+                  width={250}
+                  height={56}
+                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                  loading="eager"
+                  fetchPriority="high"
                   decoding="async"
+                  onError={() => {
+                    if (productHuntAttempt < 1) {
+                      setProductHuntAttempt((a) => a + 1);
+                      setProductHuntTs(Date.now());
+                    } else {
+                      setProductHuntLoaded(true);
+                    }
+                  }}
                 />
               </div>
             </a>
           </div>
           {mockup !== false && (
-            <div className="relative w-full pt-12 pb-10">
+            <div className="relative w-full pt-6 pb-6">
               <a href="/search" className="block">
                 <MockupFrame
                   className="animate-appear opacity-0 delay-700"

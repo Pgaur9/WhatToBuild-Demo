@@ -22,6 +22,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <link rel="preconnect" href="https://peerlist.io" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://peerlist.io" />
+        <link rel="preconnect" href="https://api.producthunt.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://api.producthunt.com" />
+      </head>
       <body className={cn(inter.className, "bg-black text-white")}> 
         <div className="min-h-screen w-full relative">
           <LiquidGlassHeader />
