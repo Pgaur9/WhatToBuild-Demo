@@ -152,7 +152,46 @@ export default function Hero({
           <p className="text-md animate-appear text-muted-foreground relative z-10 max-w-[740px] font-medium text-balance opacity-0 delay-100 sm:text-xl">
             {description}
           </p>
-          {/* Removed Search Projects button */}
+          {/* Badges: Peerlist + Product Hunt, below description */}
+          <div className="animate-appear opacity-0 delay-200 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            {/* Peerlist badge */}
+            <a
+              href="https://peerlist.io/bytehumi/project/what-to-build"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="What to Build on Peerlist"
+              className="block cursor-pointer relative z-10 hover:scale-105 transition-transform duration-200"
+            >
+              <div className="rounded-2xl bg-gray-800/60 border border-gray-600/30 hover:border-gray-500/50 transition-colors duration-200">
+                <img
+                  src={`https://peerlist.io/api/v1/projects/embed/PRJHKKD8BD7OG6OMMCQQPROKJDEMME?showUpvote=true&theme=dark&_cb=${peerlistCB}`}
+                  alt="What to Build on Peerlist"
+                  className="h-14 w-[250px] object-cover rounded-2xl pointer-events-none"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            </a>
+
+            {/* Product Hunt badge */}
+            <a
+              href="https://www.producthunt.com/products/what-to-build-2?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-what%E2%80%90to%E2%80%90build%E2%80%902"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="What to Build on Product Hunt"
+              className="block cursor-pointer relative z-10 hover:scale-105 transition-transform duration-200"
+            >
+              <div className="rounded-2xl bg-gray-800/60 border border-gray-600/30 hover:border-gray-500/50 transition-colors duration-200">
+                <img
+                  src={`https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1004213&theme=dark&t=${peerlistCB}`}
+                  alt="What To Build – Featured on Product Hunt"
+                  className="h-14 w-[250px] object-cover rounded-2xl pointer-events-none"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            </a>
+          </div>
           {mockup !== false && (
             <div className="relative w-full pt-12 pb-10">
               <a href="/search" className="block">
@@ -207,57 +246,6 @@ export default function Hero({
      
       
        {deferHeavy && <FooterLazy />}
-
-      {/* Landing-only fixed Peerlist badge bottom-right */}
-      <a
-        href="https://peerlist.io/bytehumi/project/what-to-build"
-        target="_blank"
-        rel="noreferrer"
-        aria-label="What to Build on Peerlist"
-        className="fixed top-4 sm:top-6 md:top-8 right-4 z-[60] opacity-90 hover:opacity-100 transition-opacity"
-      >
-        <div
-          className={
-            cn(
-              "group relative overflow-hidden rounded-2xl",
-             
-              "transition-all duration-300"
-            )
-          }
-        >
-          {/* Content image */}
-          <img
-            src={`https://peerlist.io/api/v1/projects/embed/PRJHKKD8BD7OG6OMMCQQPROKJDEMME?showUpvote=true&theme=dark&_cb=${peerlistCB}`}
-            alt="What to Build on Peerlist"
-            className="h-12 sm:h-14 md:h-16 w-auto select-none rounded-2xl"
-            loading="lazy"
-            decoding="async"
-            style={{ filter: "saturate(1.04) contrast(1.04)" }}
-          />
-
-          {/* Internal glass gloss (slightly stronger on hover) */}
-          <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[linear-gradient(to_bottom,rgba(255,255,255,0.16),rgba(255,255,255,0.06)_18%,transparent_45%)] mix-blend-overlay opacity-75 group-hover:opacity-90 transition-opacity duration-300" />
-
-          {/* Inset borders and depth inside the badge */}
-          <div
-            className="pointer-events-none absolute inset-0 rounded-2xl"
-            style={{
-              boxShadow:
-                "inset 0 0 0 1px rgba(255,255,255,0.08), inset 0 10px 20px rgba(255,255,255,0.06), inset 0 -12px 24px rgba(0,0,0,0.35)"
-            }}
-          />
-
-          {/* Sleek neutral hover sheen (no colors) */}
-          <div
-            className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition duration-300"
-            style={{
-              background:
-                "linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02) 38%, transparent 70%)",
-            }}
-          />
-        </div>
-      </a>
-
     </Section>
   );
 }
