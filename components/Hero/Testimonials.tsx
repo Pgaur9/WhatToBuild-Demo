@@ -37,10 +37,33 @@ const ReviewCard = ({
   const content = (
     <figure
       className={cn(
-        "relative h-full w-72 sm:w-80 md:w-96 cursor-pointer overflow-hidden rounded-xl sm:rounded-2xl border p-5 sm:p-6 md:p-7",
-        "border-white/15 bg-black/40 shadow-[0_0_0_1px_rgba(255,255,255,0.08)] backdrop-blur-2xl",
-        "transition-all duration-300 hover:-translate-y-1 hover:border-white/25 hover:bg-black/55 hover:shadow-[0_10px_40px_rgba(0,0,0,0.35)]",
+        "group relative h-full w-72 sm:w-80 md:w-96 cursor-pointer overflow-hidden rounded-xl sm:rounded-2xl border p-5 sm:p-6 md:p-7",
+        "border-white/20 bg-gradient-to-br from-black/98 via-black/90 to-black/98 backdrop-blur-3xl",
+        "transition-all duration-500 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:border-white/30",
+        "hover:shadow-[0_35px_80px_-15px_rgba(0,0,0,0.9),0_0_30px_rgba(255,255,255,0.05)]",
+        // Subtle polished reflection - much darker
+        "before:absolute before:inset-0 before:rounded-xl before:sm:rounded-2xl",
+        "before:bg-[linear-gradient(135deg,rgba(255,255,255,0.15)_0%,rgba(255,255,255,0.08)_25%,rgba(255,255,255,0.04)_50%,transparent_70%)]",
+        "before:opacity-40 before:pointer-events-none before:transition-opacity before:duration-500",
+        "group-hover:before:opacity-60",
+        // Very subtle shimmer effect
+        "after:absolute after:inset-0 after:rounded-xl after:sm:rounded-2xl",
+        "after:bg-[radial-gradient(ellipse_at_top_left,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.06)_30%,transparent_60%)]",
+        "after:opacity-30 after:pointer-events-none after:transition-all after:duration-500",
+        "group-hover:after:opacity-50 group-hover:after:scale-105",
+        // Dark texture overlay
+        "[background-image:linear-gradient(to_bottom_right,rgba(0,0,0,0.98),rgba(0,0,0,0.90),rgba(0,0,0,0.98)),radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.03),transparent_50%)]",
+        "[background-size:100%_100%,80%_80%] [background-position:0_0,0_0]"
       )}
+      style={{
+        boxShadow: `
+          0 32px 64px -12px rgba(0,0,0,0.9),
+          inset 0 3px 6px rgba(255,255,255,0.2),
+          inset 0 -2px 4px rgba(255,255,255,0.1),
+          0 0 0 1px rgba(255,255,255,0.08),
+          0 1px 3px rgba(255,255,255,0.1)
+        `
+      }}
       role="article"
     >
       <div className="flex items-center justify-between">
