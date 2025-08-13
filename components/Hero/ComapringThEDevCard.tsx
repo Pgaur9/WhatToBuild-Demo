@@ -1,6 +1,6 @@
 'use client';
 import { GoodText } from "./GoodText";
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Github, Users, Star, Download, Trophy, Code, Flame, RotateCcw, Calendar } from 'lucide-react';
 import Image from 'next/image';
@@ -409,31 +409,107 @@ const getBadge = (user: GitHubUser, stats: GitHubStats) => {
 };
 
 export function CompareCard() {
-  const [user1, setUser1] = useState<UserApiResponse | null>(null);
-  const [user2, setUser2] = useState<UserApiResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Static data based on the image provided
+  const user1: UserApiResponse = {
+    user: {
+      login: 'NiladriHazra',
+      name: 'Niladri Hazra',
+      avatar_url: 'https://avatars.githubusercontent.com/u/151611097?v=4',
+      bio: 'Digital Craftsperson from Kolkata',
+      public_repos: 21,
+      followers: 22,
+      following: 40,
+      created_at: '2023-11-01T00:00:00Z', // Nov 2023 from image
+      location: 'Kolkata',
+      blog: '',
+      company: ''
+    },
+    stats: {
+      totalStars: 40,
+      totalForks: 8,
+      languages: { TypeScript: 60, JavaScript: 40 },
+      contributions: 793, // Total from image
+      contributionData: [0,0,1,2,3,2,1,0,1,2,3,4,5,4,3,2,1,0,1,2,3,4,5,6,7,8,9,8], // Approximation from graph
+      totalCommits: 793,
+      languageStats: {
+        TypeScript: { count: 60, percentage: 60 },
+        JavaScript: { count: 40, percentage: 40 }
+      },
+      topRepos: [
+        {
+          name: 'WhatToBuild',
+          stars: 20,
+          language: 'TypeScript',
+          description: 'WhatToBuild is an platform that helps to...',
+          updated_at: new Date().toISOString(), // today
+          daysSinceUpdate: 0,
+          commitCount: 67,
+          url: 'https://github.com/NiladriHazra/WhatToBuild'
+        },
+        {
+          name: 'CodePixel_Public',
+          stars: 3,
+          language: 'Unknown',
+          description: null,
+          updated_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 1 month ago
+          daysSinceUpdate: 30,
+          commitCount: 17,
+          url: 'https://github.com/NiladriHazra/CodePixel_Public'
+        }
+      ]
+    }
+  };
 
-  useEffect(() => {
-    const fetchUser = async (username: string): Promise<UserApiResponse | null> => {
-      try {
-        const res = await fetch(`/api/github-user?username=${encodeURIComponent(username)}`);
-        if (!res.ok) return null;
-        return await res.json();
-      } catch {
-        return null;
-      }
-    };
-
-    (async () => {
-      const [u1, u2] = await Promise.all([
-        fetchUser('NiladriHazra'),
-        fetchUser('torvalds'),
-      ]);
-      if (!u1) setError('Failed to load user data');
-      setUser1(u1);
-      setUser2(u2);
-    })();
-  }, []);
+  const user2: UserApiResponse = {
+    user: {
+      login: 'torvalds',
+      name: 'Linus Torvalds',
+      avatar_url: 'https://avatars.githubusercontent.com/u/1024025?v=4',
+      bio: 'Star Collector of Portland',
+      public_repos: 8,
+      followers: 243555,
+      following: 0,
+      created_at: '2011-09-01T00:00:00Z', // Sep 2011 from image
+      location: 'Portland',
+      blog: '',
+      company: ''
+    },
+    stats: {
+      totalStars: 203577,
+      totalForks: 57988,
+      languages: { C: 80, 'C++': 15, OpenSCAD: 5 },
+      contributions: 3042, // Total from image
+      contributionData: [0,1,2,3,4,5,6,7,8,7,6,5,4,3,2,1,0,1,2,3,4,5,6,7,8,9,8,7], // Approximation from graph
+      totalCommits: 3042,
+      languageStats: {
+        C: { count: 80, percentage: 80 },
+        'C++': { count: 15, percentage: 15 },
+        OpenSCAD: { count: 5, percentage: 5 }
+      },
+      topRepos: [
+        {
+          name: 'linux',
+          stars: 199585,
+          language: 'C',
+          description: 'Linux kernel source tree',
+          updated_at: new Date().toISOString(), // today
+          daysSinceUpdate: 0,
+          commitCount: 1381709,
+          url: 'https://github.com/torvalds/linux'
+        },
+        {
+          name: 'uemacs',
+          stars: 1527,
+          language: 'C',
+          description: 'Random version of microemacs with my patches',
+          updated_at: new Date().toISOString(), // today
+          daysSinceUpdate: 0,
+          commitCount: 129,
+          url: 'https://github.com/torvalds/uemacs'
+        }
+      ]
+    }
+  };
 
   return (
     <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -453,34 +529,22 @@ export function CompareCard() {
 
         {/* GitHub User Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {user1 ? (
           <UserComparisonCard 
-              user={user1.user} 
-              stats={user1.stats} 
-              badge={getBadge(user1.user, user1.stats)}
+            user={user1.user} 
+            stats={user1.stats} 
+            badge={getBadge(user1.user, user1.stats)}
             winner={null}
           />
-          ) : (
-            <SkeletonCard />
-          )}
           {/* Hide the second card on mobile (show only NiladriHazra) */}
           <div className="hidden md:block">
-            {user2 ? (
-          <UserComparisonCard 
-                user={user2.user} 
-                stats={user2.stats} 
-                badge={getBadge(user2.user, user2.stats)}
-            winner={null}
-          />
-            ) : (
-              <SkeletonCard />
-            )}
+            <UserComparisonCard 
+              user={user2.user} 
+              stats={user2.stats} 
+              badge={getBadge(user2.user, user2.stats)}
+              winner={null}
+            />
           </div>
         </div>
-
-        {error && (
-          <div className="mt-6 text-center text-white/70 text-sm">{error}</div>
-        )}
       </div>
     </section>
   );

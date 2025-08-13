@@ -1,21 +1,16 @@
+import React from "react";
 import { cn } from "@/lib/utils";
 import { Marquee } from "@/components/magicui/marquee";
 import { GoodTextTestimonials } from "@/components/Hero/GoodText";
 
-const TWEET_URL = "https://x.com/adxtya_jha/status/1955201701310321014";
-const AVATAR_URL = "https://pbs.twimg.com/profile_images/1890067153073704961/lW-CFqgG_400x400.jpg";
-const TWEET_TEXT = "All in one, gg man crazyy";
+import { reviews } from "./testimonials.data";
 
-const reviews = Array.from({ length: 6 }).map(() => ({
-  name: "Aditya",
-  username: "@adxtya_jha",
-  body: TWEET_TEXT,
-  img: AVATAR_URL,
-  href: TWEET_URL,
-}));
+// Split reviews into three rows
+const firstRow = reviews.slice(0, Math.floor(reviews.length / 3));
+const secondRow = reviews.slice(Math.floor(reviews.length / 3), Math.floor(2 * reviews.length / 3));
+const thirdRow = reviews.slice(Math.floor(2 * reviews.length / 3));
 
-const firstRow = reviews.slice(0, reviews.length / 2);
-const secondRow = reviews.slice(reviews.length / 2);
+
 
 const TwitterBird = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" aria-hidden="true" {...props}>
@@ -52,11 +47,55 @@ const ReviewCard = ({
         <div className="flex items-center gap-3">
           <img className="rounded-full border border-white/10" width="40" height="40" alt="" src={img} />
           <div className="min-w-0">
-            <figcaption className="text-sm font-semibold text-white truncate max-w-[11rem]">{name}</figcaption>
+            <figcaption className="text-sm font-semibold text-white truncate max-w-[11rem] flex items-center gap-1">
+              {name}
+              <svg xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" version="1.1" width="16" height="16" viewBox="0 0 256 256" xmlSpace="preserve">
+                <g style={{
+                  stroke: "none", 
+                  strokeWidth: 0, 
+                  strokeDasharray: "none", 
+                  strokeLinecap: "butt", 
+                  strokeLinejoin: "miter", 
+                  strokeMiterlimit: 10, 
+                  fill: "none", 
+                  fillRule: "nonzero", 
+                  opacity: 1
+                }} 
+                transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                  <path d="M 30.091 10.131 L 30.091 10.131 c 5.28 -13.046 23.695 -13.207 29.202 -0.255 l 0 0 l 0 0 c 12.959 -5.491 26.093 7.416 20.829 20.469 l 0 0 l 0 0 c 13.046 5.28 13.207 23.695 0.255 29.202 l 0 0 l 0 0 c 5.491 12.959 -7.416 26.093 -20.469 20.829 l 0 0 l 0 0 c -5.28 13.046 -23.695 13.207 -29.202 0.255 l 0 0 l 0 0 C 17.748 86.122 4.613 73.215 9.878 60.162 l 0 0 l 0 0 C -3.169 54.881 -3.33 36.467 9.623 30.96 l 0 0 l 0 0 C 4.131 18.001 17.038 4.866 30.091 10.131 L 30.091 10.131 z" 
+                  style={{
+                    stroke: "none", 
+                    strokeWidth: 1, 
+                    strokeDasharray: "none", 
+                    strokeLinecap: "butt", 
+                    strokeLinejoin: "miter", 
+                    strokeMiterlimit: 10, 
+                    fill: "rgb(0,150,241)", 
+                    fillRule: "nonzero", 
+                    opacity: 1
+                  }} 
+                  transform=" matrix(1 0 0 1 0 0) " 
+                  strokeLinecap="round"/>
+                  <polygon points="39.66,63.79 23.36,47.76 28.97,42.05 39.3,52.21 59.6,29.58 65.56,34.93 " 
+                  style={{
+                    stroke: "none", 
+                    strokeWidth: 1, 
+                    strokeDasharray: "none", 
+                    strokeLinecap: "butt", 
+                    strokeLinejoin: "miter", 
+                    strokeMiterlimit: 10, 
+                    fill: "rgb(255,255,255)", 
+                    fillRule: "nonzero", 
+                    opacity: 1
+                  }} 
+                  transform="matrix(1 0 0 1 0 0)" />
+                </g>
+              </svg>
+            </figcaption>
             <p className="text-xs font-medium text-white/60 truncate">{username}</p>
           </div>
         </div>
-        <TwitterBird className="w-4 h-4 text-white/70" />
+        <TwitterBird className="w-5 h-5 text-white/70" />
       </div>
       <blockquote className="mt-3 text-[0.95rem] sm:text-[1rem] leading-relaxed text-white/90 line-clamp-4">{body}</blockquote>
     </figure>
@@ -89,7 +128,7 @@ export function Testimonials() {
 
       <Marquee
         pauseOnHover
-        className="w-full px-2 sm:px-8 md:px-16 lg:px-32 [--duration:18s] sm:[--duration:22s] [--gap:0.75rem] sm:[--gap:1.25rem] lg:[--gap:1.75rem]"
+        className="w-full px-2 sm:px-8 md:px-16 lg:px-32 [--duration:18s] sm:[--duration:22s] [--gap:0.75rem] sm:[--gap:1.25rem] lg:[--gap:1.75rem] mb-4"
         repeat={2}
       >
         {firstRow.map((review, idx) => (
@@ -99,11 +138,20 @@ export function Testimonials() {
       <Marquee
         reverse
         pauseOnHover
-        className="w-full px-2 sm:px-8 md:px-16 lg:px-32 [--duration:18s] sm:[--duration:22s] [--gap:0.75rem] sm:[--gap:1.25rem] lg:[--gap:1.75rem]"
+        className="w-full px-2 sm:px-8 md:px-16 lg:px-32 [--duration:18s] sm:[--duration:22s] [--gap:0.75rem] sm:[--gap:1.25rem] lg:[--gap:1.75rem] mb-4"
         repeat={2}
       >
         {secondRow.map((review, idx) => (
           <ReviewCard key={`${review.username}-2-${idx}`} {...review} />
+        ))}
+      </Marquee>
+      <Marquee
+        pauseOnHover
+        className="w-full px-2 sm:px-8 md:px-16 lg:px-32 [--duration:18s] sm:[--duration:22s] [--gap:0.75rem] sm:[--gap:1.25rem] lg:[--gap:1.75rem]"
+        repeat={2}
+      >
+        {thirdRow.map((review, idx) => (
+          <ReviewCard key={`${review.username}-3-${idx}`} {...review} />
         ))}
       </Marquee>
 
