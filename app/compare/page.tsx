@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @next/next/no-img-element */
 'use client';
+import './page.css';
 
 import React, { useState } from 'react';
 import GlassShineAnimation from './animation';
@@ -93,6 +94,94 @@ export default function ComparePage() {
   const [searchTimeout2, setSearchTimeout2] = useState<NodeJS.Timeout | null>(null);
   const [recentDev1, setRecentDev1] = useState<string[]>([]);
   const [recentDev2, setRecentDev2] = useState<string[]>([]);
+  // Main compare action wrapped in useCallback so it is stable for effects
+  const handleCompare = React.useCallback(async () => {
+    if (!username1.trim() || !username2.trim()) {
+      setError('Please enter both usernames');
+      return;
+    }
+
+    // Record confirmed usernames as recents (full words only)
+    setRecentDev1((prev) => {
+      const u = username1.trim();
+      if (!u) return prev;
+      const next = [u, ...prev.filter((x) => x !== u)];
+      return next.slice(0, 8);
+    });
+    setRecentDev2((prev) => {
+      const u = username2.trim();
+      if (!u) return prev;
+      const next = [u, ...prev.filter((x) => x !== u)];
+      return next.slice(0, 8);
+    });
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const [user1Response, user2Response] = await Promise.all([
+        fetch(`/api/github-user?username=${username1.trim()}`),
+        fetch(`/api/github-user?username=${username2.trim()}`)
+      ]);
+
+      if (!user1Response.ok || !user2Response.ok) {
+        throw new Error('Failed to fetch user data');
+      }
+
+      const user1Result = await user1Response.json();
+      const user2Result = await user2Response.json();
+
+      if (user1Result.stats.topRepos) {
+        user1Result.stats.topRepos.sort((a: { stars: number }, b: { stars: number }) => b.stars - a.stars);
+      }
+      if (user2Result.stats.topRepos) {
+        user2Result.stats.topRepos.sort((a: { stars: number }, b: { stars: number }) => b.stars - a.stars);
+      }
+
+      setUser1Data(user1Result.user);
+      setUser2Data(user2Result.user);
+      setUser1Stats(user1Result.stats);
+      setUser2Stats(user2Result.stats);
+
+      const roastResponse = await fetch('/api/generate-roast', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user1: user1Result,
+          user2: user2Result
+        })
+      });
+
+      if (roastResponse.ok) {
+        const roastData = await roastResponse.json();
+        setRoastText(roastData.roast);
+        setBattleStats(roastData.battleStats);
+        const user1Score = user1Result.stats.totalStars + user1Result.user.followers + user1Result.stats.contributions;
+        const user2Score = user2Result.stats.totalStars + user2Result.user.followers + user2Result.stats.contributions;
+        setWinner(user1Score > user2Score ? user1Result.user.login : user2Result.user.login);
+      } else {
+        console.error('Failed to generate roast:', roastResponse.status);
+        setRoastText(`🔥 **${user1Result.user.login}** vs **${user2Result.user.login}** \n\nThe battle data has been analyzed! Check out the brutal comparison above! 💀`);
+        setBattleStats({
+          totalCommitsCompared: (user1Result.stats.totalCommits || 0) + (user2Result.stats.totalCommits || 0),
+            totalStarsClashed: user1Result.stats.totalStars + user2Result.stats.totalStars,
+            totalReposJudged: user1Result.user.public_repos + user2Result.user.public_repos,
+            totalContributions: user1Result.stats.contributions + user2Result.stats.contributions,
+        });
+        const user1Score = user1Result.stats.totalStars + user1Result.user.followers + user1Result.stats.contributions;
+        const user2Score = user2Result.stats.totalStars + user2Result.user.followers + user2Result.stats.contributions;
+        setWinner(user1Score > user2Score ? user1Result.user.login : user2Result.user.login);
+      }
+
+      setShowResults(true);
+    } catch (err) {
+      setError('Failed to fetch user data. Please check the usernames.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [username1, username2]);
+
 
   // Curated list used for quick chips and shuffle
   const popularUsers = React.useMemo(
@@ -241,104 +330,7 @@ export default function ComparePage() {
     }
   }, [showResults, roastText]);
 
-  const handleCompare = async () => {
-    if (!username1.trim() || !username2.trim()) {
-      setError('Please enter both usernames');
-      return;
-    }
-
-    // Record confirmed usernames as recents (full words only)
-    setRecentDev1((prev) => {
-      const u = username1.trim();
-      if (!u) return prev;
-      const next = [u, ...prev.filter((x) => x !== u)];
-      return next.slice(0, 8);
-    });
-    setRecentDev2((prev) => {
-      const u = username2.trim();
-      if (!u) return prev;
-      const next = [u, ...prev.filter((x) => x !== u)];
-      return next.slice(0, 8);
-    });
-
-    setIsLoading(true);
-    setError('');
-
-    try {
-      // Fetch both users' data
-      const [user1Response, user2Response] = await Promise.all([
-        fetch(`/api/github-user?username=${username1.trim()}`),
-        fetch(`/api/github-user?username=${username2.trim()}`)
-      ]);
-
-      if (!user1Response.ok || !user2Response.ok) {
-        throw new Error('Failed to fetch user data');
-      }
-
-      const user1Result = await user1Response.json();
-      const user2Result = await user2Response.json();
-
-      // Sort top repos by stars for better display
-      if (user1Result.stats.topRepos) {
-        user1Result.stats.topRepos.sort((a: { stars: number }, b: { stars: number }) => b.stars - a.stars);
-      }
-      if (user2Result.stats.topRepos) {
-        user2Result.stats.topRepos.sort((a: { stars: number }, b: { stars: number }) => b.stars - a.stars);
-      }
-
-      setUser1Data(user1Result.user);
-      setUser2Data(user2Result.user);
-      setUser1Stats(user1Result.stats);
-      setUser2Stats(user2Result.stats);
-
-      // Generate roast comparison
-      const roastResponse = await fetch('/api/generate-roast', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user1: user1Result,
-          user2: user2Result
-        })
-      });
-
-      if (roastResponse.ok) {
-        const roastData = await roastResponse.json();
-        setRoastText(roastData.roast);
-        setBattleStats(roastData.battleStats);
-        
-        // Determine winner based on multiple factors
-        const user1Score = user1Result.stats.totalStars + user1Result.user.followers + user1Result.stats.contributions;
-        const user2Score = user2Result.stats.totalStars + user2Result.user.followers + user2Result.stats.contributions;
-        setWinner(user1Score > user2Score ? user1Result.user.login : user2Result.user.login);
-      } else {
-        console.error('Failed to generate roast:', roastResponse.status);
-        // Set a fallback roast if the API fails
-        setRoastText(`🔥 **${user1Result.user.login}** vs **${user2Result.user.login}** 
-        
-The battle data has been analyzed! Check out the brutal comparison above! 💀`);
-        
-        // Calculate fallback battle stats
-        setBattleStats({
-          totalCommitsCompared: (user1Result.stats.totalCommits || 0) + (user2Result.stats.totalCommits || 0),
-          totalStarsClashed: user1Result.stats.totalStars + user2Result.stats.totalStars,
-          totalReposJudged: user1Result.user.public_repos + user2Result.user.public_repos,
-          totalContributions: user1Result.stats.contributions + user2Result.stats.contributions,
-        });
-        
-        const user1Score = user1Result.stats.totalStars + user1Result.user.followers + user1Result.stats.contributions;
-        const user2Score = user2Result.stats.totalStars + user2Result.user.followers + user2Result.stats.contributions;
-        setWinner(user1Score > user2Score ? user1Result.user.login : user2Result.user.login);
-      }
-
-      setShowResults(true);
-
-    } catch (err) {
-      setError('Failed to fetch user data. Please check the usernames.');
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // handleCompare moved above and memoized
 
   const downloadAsImage = async () => {
     const element = document.getElementById('battle-cards');
