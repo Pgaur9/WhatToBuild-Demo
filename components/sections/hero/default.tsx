@@ -3,6 +3,8 @@
 import { ArrowRightIcon } from "lucide-react";
 import { ReactNode, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { Testimonials } from "@/components/Hero/Testimonials";
+import GitHubStarBadge from "@/components/Hero/GitHubStarBadge";
 
 
 // Defer heavy, below-the-fold components to client after first paint
@@ -168,6 +170,14 @@ export default function Hero({
         className,
       )}
     >
+      {/* Top-right GitHub star badge for homepage */}
+      <div className="pointer-events-auto fixed right-4 top-4 z-40 hidden sm:block">
+        <GitHubStarBadge repoFullName="NiladriHazra/WhatToBuild" />
+      </div>
+      {/* Mobile placement: floating bottom-right to avoid header overlap */}
+      <div className="sm:hidden fixed right-3 bottom-3 z-40">
+        <GitHubStarBadge repoFullName="NiladriHazra/WhatToBuild" compact />
+      </div>
       <div className="max-w-container mx-auto flex flex-col gap-12 pt-16 sm:gap-24">
         <div className="flex flex-col items-center gap-4 text-center sm:gap-8">
           {badge !== false && badge}
@@ -287,6 +297,8 @@ export default function Hero({
       {deferHeavy && <CompareCardLazy />}
 
       {deferHeavy && <ReadmeLazy />}
+
+      {deferHeavy && <Testimonials />}
       
       {deferHeavy && <Section2Lazy />}
 

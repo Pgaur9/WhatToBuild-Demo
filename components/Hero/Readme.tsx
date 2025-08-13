@@ -25,24 +25,24 @@ const Readme: React.FC = () => {
   };
 
   return (
-    <section className="relative px-4 sm:px-6 lg:px-8 py-8 sm:py-12 -mt-6 sm:-mt-10">
+    <section className="relative px-3 sm:px-6 lg:px-8 py-6 sm:py-12 -mt-4 sm:-mt-10">
       {/* Background subtle glow */}
       <Glow variant="center" className="opacity-30" />
 
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Header matching Compare Developers style */}
-        <div className="text-center mb-10 sm:mb-12">
+        <div className="text-center mb-6 sm:mb-12">
           <h2
-            className="text-3xl md:text-4xl font-bold mb-4 text-white drop-shadow-[0_2px_8px_rgba(255,255,255,0.25)] tracking-wide"
+            className="text-2xl md:text-4xl font-bold mb-3 sm:mb-4 text-white drop-shadow-[0_2px_8px_rgba(255,255,255,0.25)] tracking-wide"
             style={{ textTransform: 'uppercase', letterSpacing: '0.08em' }}
           >
             GENERATE GITHUB <span className="inline-block align-middle"><GoodTextReadme /></span>
           </h2>
-          <p className="max-w-3xl mx-auto text-lg text-white/70 leading-relaxed">
+          <p className="max-w-3xl mx-auto text-base sm:text-lg text-white/70 leading-relaxed px-2">
             Analyze repositories, auto-outline sections, and craft a polished README with live preview
           </p>
         </div>
-        <div className="relative rounded-2xl md:rounded-3xl border border-white/10 p-2 transition-all duration-300 hover:border-white/20 shadow-[0_0_60px_-20px_rgba(99,102,241,0.35)]">
+        <div className="relative rounded-2xl md:rounded-3xl border border-white/10 p-1.5 sm:p-2 transition-all duration-300 hover:border-white/20 shadow-[0_0_60px_-20px_rgba(99,102,241,0.35)]">
           <GlowingEffect
             blur={0}
             borderWidth={2}
@@ -56,28 +56,28 @@ const Readme: React.FC = () => {
             {/* Top gradient accent */}
             <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(99,102,241,0.15),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(168,85,247,0.12),transparent_35%),radial-gradient(circle_at_50%_100%,rgba(34,197,94,0.12),transparent_35%)]" />
 
-            <div className="relative p-7 sm:p-10">
-              <div className="flex flex-col lg:flex-row gap-8 lg:items-center">
+            <div className="relative p-5 sm:p-10">
+              <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 lg:items-center">
                 {/* Left: icon and copy */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center gap-3 mb-2 sm:mb-3">
                     <div className="w-fit rounded-lg border border-white/20 bg-white/5 p-2 backdrop-blur-sm">
                       <FaFileAlt className="h-4 w-4 text-white" />
                     </div>
-                    <h2 className="text-3xl md:text-4xl font-semibold text-white tracking-tight">
+                    <h2 className="text-2xl md:text-4xl font-semibold text-white tracking-tight">
                       Generate a Great README
                     </h2>
                   </div>
-                  <p className="text-white/70 leading-relaxed max-w-2xl text-base sm:text-lg">
+                  <p className="text-white/70 leading-relaxed max-w-2xl text-sm sm:text-lg">
                     Turn any GitHub repository into a polished, professional README. Paste a repo URL or owner/repo, and start crafting with live preview.
                   </p>
                 </div>
 
                 {/* Right: input + CTA */}
                 <div className="w-full lg:w-[640px]">
-                  <div className="rounded-2xl border border-white/10 bg-black/35 backdrop-blur-md p-5 sm:p-6 shadow-inner">
+                  <div className="rounded-2xl border border-white/10 bg-black/35 backdrop-blur-md p-4 sm:p-6 shadow-inner">
                     <label className="block text-xs sm:text-sm text-white/70 mb-2">Repository URL or owner/repo</label>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <div className="relative flex-1">
                         <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-white/50">
                           <FaLink className="h-5 w-5" />
@@ -86,14 +86,14 @@ const Readme: React.FC = () => {
                           value={repoUrl}
                           onChange={(e) => setRepoUrl(e.target.value)}
                           placeholder="https://github.com/owner/repo or owner/repo"
-                          className="w-full rounded-xl border border-white/10 bg-black/50 pl-10 pr-3 py-3.5 text-base sm:text-lg text-white placeholder-white/40 outline-none focus:border-white/20 focus:ring-0"
+                          className="w-full rounded-xl border border-white/10 bg-black/50 pl-10 pr-3 py-3 text-sm sm:text-lg text-white placeholder-white/40 outline-none focus:border-white/20 focus:ring-0"
                         />
                       </div>
                       <Link
                         href={buildHref()}
-                        className="inline-flex items-center gap-2 whitespace-nowrap rounded-xl border border-white/20 bg-white/10 px-6 py-3.5 text-base sm:text-lg font-semibold text-white hover:bg-white/15 transition-all hover:scale-[1.02]"
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-white/20 bg-white/10 px-5 sm:px-6 py-3 text-sm sm:text-lg font-semibold text-white hover:bg-white/15 transition-all hover:scale-[1.02]"
                       >
-                        <FaPlay className="h-5 w-5" />
+                        <FaPlay className="h-4 w-4 sm:h-5 sm:w-5" />
                         Open
                       </Link>
                     </div>
@@ -105,7 +105,7 @@ const Readme: React.FC = () => {
               </div>
 
               {/* Highlights */}
-              <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
                 {[
                   {
                     title: 'Smart Outline',
@@ -124,9 +124,9 @@ const Readme: React.FC = () => {
                     desc: 'Begin with a template and refine with AI—fast, clean, and consistent.'
                   },
                 ].map((item) => (
-                  <div key={item.title} className="rounded-2xl border border-white/10 bg-black/35 px-6 py-5 backdrop-blur-sm shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
-                    <div className="text-base sm:text-lg font-semibold text-white">{item.title}</div>
-                    <div className="text-sm sm:text-base text-white/60 mt-1">{item.desc}</div>
+                  <div key={item.title} className="rounded-xl sm:rounded-2xl border border-white/10 bg-black/35 px-4 py-4 sm:px-6 sm:py-5 backdrop-blur-sm shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
+                    <div className="text-sm sm:text-lg font-semibold text-white">{item.title}</div>
+                    <div className="text-xs sm:text-base text-white/60 mt-1">{item.desc}</div>
                   </div>
                 ))}
               </div>

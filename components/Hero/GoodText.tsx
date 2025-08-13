@@ -38,3 +38,15 @@ export function GoodTextReadme(): JSX.Element {
   );
 }
 
+export function GoodTextTestimonials(): JSX.Element {
+  return (
+    <HoverBorderGradient
+      containerClassName="rounded-full"
+      as="span"
+      className="dark:bg-black bg-white text-black dark:text-white px-5 py-2 text-3xl font-extrabold tracking-wide"
+    >
+      TESTIMONIALS
+    </HoverBorderGradient>
+  );
+}
+

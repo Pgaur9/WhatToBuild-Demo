@@ -1,7 +1,6 @@
-
 'use client';
 import { GoodText } from "./GoodText";
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Github, Users, Star, Download, Trophy, Code, Flame, RotateCcw, Calendar } from 'lucide-react';
 import Image from 'next/image';
@@ -45,11 +44,59 @@ interface GitHubStats {
   }>;
 }
 
+interface UserApiResponse {
+  user: GitHubUser;
+  stats: GitHubStats;
+}
+
 interface UserComparisonCardProps {
   user: GitHubUser;
   stats: GitHubStats;
   badge: { icon: LucideIcon; text: string; color: string };
   winner: string | null;
+}
+
+function SkeletonCard() {
+  return (
+    <div
+      className="glass-card backdrop-blur-3xl backdrop-saturate-200 border rounded-2xl p-6 relative overflow-hidden w-full animate-pulse"
+      style={{
+        background: 'linear-gradient(135deg, rgba(8,8,10,0.98) 80%, rgba(3,3,5,0.96) 100%)',
+        border: '1px solid rgba(255,255,255,0.12)'
+      }}
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-12 h-12 rounded-xl bg-white/10" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 bg-white/10 rounded w-1/3" />
+          <div className="h-3 bg-white/10 rounded w-1/4" />
+        </div>
+        <div className="w-5 h-5 bg-white/10 rounded" />
+      </div>
+      <div className="h-10 bg-white/10 rounded mb-4" />
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        {[0,1,2,3].map((i) => (
+          <div key={i} className="h-12 bg-white/10 rounded" />
+        ))}
+      </div>
+      <div className="h-24 bg-white/10 rounded mb-4" />
+      <div className="space-y-2 mb-4">
+        {[0,1].map((i) => (
+          <div key={i} className="h-6 bg-white/10 rounded" />
+        ))}
+      </div>
+      <div className="flex gap-2 mb-3">
+        {[0,1,2].map((i) => (
+          <div key={i} className="h-6 w-20 bg-white/10 rounded" />
+        ))}
+      </div>
+      <div className="space-y-2">
+        {[0,1].map((i) => (
+          <div key={i} className="h-10 bg-white/10 rounded" />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardProps) {
@@ -276,7 +323,8 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
         {/* Top Repos */}
         <div>
           <h4 className="text-sm font-medium text-white/75 mb-2">Top Repos</h4>
-          <div className="flex flex-row flex-wrap gap-2.5">
+          {/* Desktop/tablet detailed cards */}
+          <div className="hidden md:flex flex-row flex-wrap gap-2.5">
             {stats.topRepos.slice(0, 2).map((repo, index) => (
               <a
                 key={index}
@@ -330,6 +378,21 @@ function UserComparisonCard({ user, stats, badge, winner }: UserComparisonCardPr
               </a>
             ))}
           </div>
+          {/* Mobile simplified list: name + stars only */}
+          <div className="md:hidden space-y-2">
+            {stats.topRepos.slice(0, 2).map((repo, index) => (
+              <a
+                key={index}
+                href={repo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between rounded-lg border border-white/10 bg-black/30 px-3 py-2"
+              >
+                <span className="text-sm font-medium text-white truncate mr-3">{repo.name}</span>
+                <span className="flex items-center gap-1 text-white/70"><Star className="w-3 h-3" />{repo.stars.toLocaleString()}</span>
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -346,110 +409,31 @@ const getBadge = (user: GitHubUser, stats: GitHubStats) => {
 };
 
 export function CompareCard() {
-  // Static, pre-defined data to avoid runtime fetching and improve first-load performance
-  const user1Data: GitHubUser = {
-    login: 'NiladriHazra',
-    name: 'Niladri Hazra',
-    avatar_url: 'https://github.com/NiladriHazra.png',
-    bio: 'Software Engineer & Full Stack Developer',
-    public_repos: 60,
-    followers: 200,
-    following: 50,
-    created_at: '2020-01-01T00:00:00Z',
-    location: 'India',
-    blog: 'https://niladri.dev',
-    company: ''
-  };
+  const [user1, setUser1] = useState<UserApiResponse | null>(null);
+  const [user2, setUser2] = useState<UserApiResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const user2Data: GitHubUser = {
-    login: 'torvalds',
-    name: 'Linus Torvalds',
-    avatar_url: 'https://github.com/torvalds.png',
-    bio: 'Software Engineer',
-    public_repos: 6,
-    followers: 320000,
-    following: 0,
-    created_at: '2011-09-03T00:00:00Z',
-    location: 'Portland, OR',
-    blog: '',
-    company: ''
-  };
+  useEffect(() => {
+    const fetchUser = async (username: string): Promise<UserApiResponse | null> => {
+      try {
+        const res = await fetch(`/api/github-user?username=${encodeURIComponent(username)}`);
+        if (!res.ok) return null;
+        return await res.json();
+      } catch {
+        return null;
+      }
+    };
 
-  // Simple helper to create fixed-length contribution data
-  const makeContribData = (len: number, base: number, variance: number) =>
-    Array.from({ length: len }, (_, i) => base + Math.floor(Math.sin(i / 7) * variance + Math.random() * variance * 0.3));
-
-  const user1Stats: GitHubStats = {
-    totalStars: 1200,
-    totalForks: 200,
-    languages: { TypeScript: 60, JavaScript: 25, Python: 15 },
-    contributions: 850,
-    contributionData: makeContribData(180, 3, 4),
-    totalCommits: 2500,
-    languageStats: {
-      TypeScript: { count: 35, percentage: 58 },
-      JavaScript: { count: 18, percentage: 30 },
-      Python: { count: 7, percentage: 12 },
-    },
-    topRepos: [
-      {
-        name: 'what-to-build',
-        stars: 420,
-        language: 'TypeScript',
-        description: 'Discover and analyze open-source project ideas',
-        updated_at: '2025-07-01T00:00:00Z',
-        daysSinceUpdate: 10,
-        commitCount: 380,
-        url: 'https://github.com/NiladriHazra/what-to-build',
-      },
-      {
-        name: 'liquid-glass-ui',
-        stars: 210,
-        language: 'TypeScript',
-        description: 'Beautiful liquid glass components',
-        updated_at: '2025-06-20T00:00:00Z',
-        daysSinceUpdate: 21,
-        commitCount: 190,
-        url: 'https://github.com/NiladriHazra/liquid-glass-ui',
-      },
-    ],
-  };
-
-  const user2Stats: GitHubStats = {
-    totalStars: 160000,
-    totalForks: 80000,
-    languages: { C: 90, Assembly: 5, Python: 5 },
-    contributions: 1200,
-    contributionData: makeContribData(180, 5, 3),
-    totalCommits: 5000,
-    languageStats: {
-      C: { count: 50, percentage: 90 },
-      Assembly: { count: 5, percentage: 5 },
-      Python: { count: 5, percentage: 5 },
-    },
-    topRepos: [
-      {
-        name: 'linux',
-        stars: 170000,
-        language: 'C',
-        description: 'Linux kernel source tree',
-        updated_at: '2025-07-05T00:00:00Z',
-        daysSinceUpdate: 6,
-        commitCount: 100000,
-        url: 'https://github.com/torvalds/linux',
-      },
-      {
-        name: 'subsurface',
-        stars: 4500,
-        language: 'C',
-        description: 'Subsurface dive log program',
-        updated_at: '2025-06-28T00:00:00Z',
-        daysSinceUpdate: 13,
-        commitCount: 12000,
-        url: 'https://github.com/torvalds/subsurface',
-      },
-    ],
-  };
+    (async () => {
+      const [u1, u2] = await Promise.all([
+        fetchUser('NiladriHazra'),
+        fetchUser('torvalds'),
+      ]);
+      if (!u1) setError('Failed to load user data');
+      setUser1(u1);
+      setUser2(u2);
+    })();
+  }, []);
 
   return (
     <section className="relative py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
@@ -469,38 +453,34 @@ export function CompareCard() {
 
         {/* GitHub User Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {user1 ? (
           <UserComparisonCard 
-            user={user1Data} 
-            stats={user1Stats} 
-            badge={getBadge(user1Data, user1Stats)}
+              user={user1.user} 
+              stats={user1.stats} 
+              badge={getBadge(user1.user, user1.stats)}
             winner={null}
           />
+          ) : (
+            <SkeletonCard />
+          )}
+          {/* Hide the second card on mobile (show only NiladriHazra) */}
+          <div className="hidden md:block">
+            {user2 ? (
           <UserComparisonCard 
-            user={user2Data} 
-            stats={user2Stats} 
-            badge={getBadge(user2Data, user2Stats)}
+                user={user2.user} 
+                stats={user2.stats} 
+                badge={getBadge(user2.user, user2.stats)}
             winner={null}
           />
+            ) : (
+              <SkeletonCard />
+            )}
+          </div>
         </div>
 
-        {/* Call to Action */}
-        {/* <div className="text-center mt-16">
-          <a
-            href="/compare"
-            className="inline-flex items-center gap-2 px-6 py-3 font-semibold rounded-lg transition-all duration-200 hover:scale-105"
-            style={{
-              background: 'linear-gradient(135deg, rgba(8,8,10,0.98) 80%, rgba(3,3,5,0.96) 100%)',
-              boxShadow: '0 8px 32px 0 rgba(0,0,0,0.85), 0 0 24px 8px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.10)',
-              color: '#fff',
-              backdropFilter: 'blur(24px) saturate(180%)',
-            }}
-          >
-            <Github className="h-5 w-5 text-white/80" />
-            <span className="font-medium text-white/90">Start Comparing</span>
-            <span className="inline-block align-middle"><GoodText /></span>
-          </a>
-        </div> */}
+        {error && (
+          <div className="mt-6 text-center text-white/70 text-sm">{error}</div>
+        )}
       </div>
     </section>
   );

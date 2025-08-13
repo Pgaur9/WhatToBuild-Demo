@@ -120,19 +120,68 @@ const Features = ({ forceDarkMode = true }) => {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 mb-16 lg:mb-20">
-          {/* Feature List - Mobile (icons only, 3 rows x 2 cols) */}
-          <div className="order-2 lg:order-1 grid grid-cols-2 gap-3 sm:gap-4 lg:hidden">
+          {/* Feature List - Mobile (icons + inline video) */}
+          <div className="order-1 lg:order-1 grid grid-cols-2 gap-3 sm:gap-4 lg:hidden">
             {premiumFeatures.map((feature) => (
-              <button
-                key={feature.id}
-                onClick={() => handleFeatureClick(feature.id)}
-                aria-label={feature.title}
-                className={`group relative aspect-square rounded-2xl border border-white/10 bg-black/40 backdrop-blur-sm flex items-center justify-center transition-all duration-300 ${
-                  activeFeature === feature.id ? 'ring-1 ring-blue-400/40 shadow-[0_0_16px_2px_rgba(80,180,255,0.18)]' : 'hover:border-white/20'
-                }`}
-              >
-                <div className="text-white text-2xl">{feature.icon}</div>
-              </button>
+              <React.Fragment key={feature.id}>
+                <button
+                  onClick={() => handleFeatureClick(feature.id)}
+                  aria-label={feature.title}
+                  className={`group relative aspect-square rounded-2xl border border-white/10 bg-black/40 backdrop-blur-sm flex items-center justify-center transition-all duration-300 ${
+                    activeFeature === feature.id ? 'ring-1 ring-blue-400/40 shadow-[0_0_16px_2px_rgba(80,180,255,0.18)]' : 'hover:border-white/20'
+                  }`}
+                >
+                  <div className="text-white text-2xl">{feature.icon}</div>
+                </button>
+                {activeFeature === feature.id && (
+                  <div className="col-span-2 -mt-1">
+                    <div 
+                      className="relative rounded-2xl border border-white/10 p-2 transition-all duration-300 hover:border-white/20 group"
+                    >
+                      <GlowingEffect
+                        blur={0}
+                        borderWidth={2}
+                        spread={60}
+                        glow={true}
+                        disabled={false}
+                        proximity={48}
+                        inactiveZone={0.01}
+                      />
+                      <div className="relative overflow-hidden rounded-xl bg-black/40 backdrop-blur-sm border border-white/5">
+                        <div className="relative aspect-video w-full">
+                          {feature.videoSrc ? (
+                            <video 
+                              key={feature.videoSrc}
+                              className="w-full h-full object-cover"
+                              poster={feature.posterSrc}
+                              autoPlay
+                              muted
+                              loop
+                              playsInline
+                              preload="auto"
+                            >
+                              <source src={feature.videoSrc} type="video/mp4" />
+                              Your browser does not support the video tag.
+                            </video>
+                          ) : null}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                        </div>
+                        <div className="p-4 bg-black/40 backdrop-blur-sm">
+                          <div className="flex items-center mb-2">
+                            <div className="w-fit rounded-lg border border-white/20 bg-white/5 p-2 backdrop-blur-sm mr-3">
+                              <div className="h-4 w-4 text-white">
+                                {feature.icon}
+                              </div>
+                            </div>
+                            <h3 className="font-sans text-lg font-semibold text-white">{feature.title}</h3>
+                          </div>
+                          <p className="text-sm text-white/70 leading-relaxed">{feature.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </React.Fragment>
             ))}
           </div>
 
@@ -193,8 +242,8 @@ const Features = ({ forceDarkMode = true }) => {
             ))}
           </div>
 
-          {/* Video Section */}
-          <div className="order-1 lg:order-2 col-span-1 lg:col-span-2">
+          {/* Video Section - Desktop/Tablet only */}
+          <div className="hidden lg:block lg:order-2 col-span-1 lg:col-span-2">
             <div 
               className="relative rounded-2xl border border-white/10 p-2 transition-all duration-300 hover:border-white/20 md:rounded-3xl md:p-3 group"
               style={{

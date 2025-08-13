@@ -71,6 +71,24 @@ body.dialog-open header {
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --animate-marquee: marquee var(--duration) infinite linear;
+  --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+  @keyframes marquee {
+  from {
+    transform: translateX(0);
+    }
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+    }
+  }
+  @keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+    }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+    }
+  }
 }
 
 :root {
@@ -244,8 +262,6 @@ body.dialog-open header {
   opacity: 0;
 }
 
-
-
 @keyframes appear {
   from {
     opacity: 0;
@@ -333,4 +349,3 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
     0 0 60px rgba(59, 130, 246, 0.1);
   border: 2px solid rgba(59, 130, 246, 0.5);
 }
-
