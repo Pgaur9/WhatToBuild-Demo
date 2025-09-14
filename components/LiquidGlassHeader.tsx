@@ -5,15 +5,12 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Menu, X, Home, Search, BarChart3, Eye, Github, Zap, Code } from 'lucide-react';
+import { Menu, X, Home, BarChart3, Eye, Github, GitBranch, FileText } from 'lucide-react';
 
 const navItems = [
-  { href: '/search', icon: Search, label: 'Search' },
-  { href: '/opensource', icon: Code, label: 'Open Source' },
-  // { href: '/analyze', icon: BarChart3, label: 'Analyze' },
-  { href: '/compare', icon: Zap, label: 'Compare' },
-  { href: '/readme', icon: Eye, label: 'Readme' },
-  // { href: '/visualize', icon: Eye, label: 'Visualize' },
+  { href: '/analyze', icon: BarChart3, label: 'Analyze' },
+  { href: '/readme', icon: FileText, label: 'README' },
+  { href: '/visualize', icon: GitBranch, label: 'Visualize' },
 ];
 
 export default function LiquidGlassHeader() {

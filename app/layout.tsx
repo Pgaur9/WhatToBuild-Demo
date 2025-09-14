@@ -1,6 +1,6 @@
 
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+// import { Inter } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -9,7 +9,7 @@ import Script from "next/script";
 import { cn } from "@/lib/utils";
 import LiquidGlassHeader from "@/components/LiquidGlassHeader";
 
-const inter = Inter({ subsets: ["latin"] });
+// const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "What To Build",
@@ -29,7 +29,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://api.producthunt.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://api.producthunt.com" />
       </head>
-      <body className={cn(inter.className, "bg-black text-white")}> 
+      <body className={cn("font-sans", "bg-black text-white")}> 
         <div className="min-h-screen w-full relative">
           <LiquidGlassHeader />
           <main className="relative z-10">

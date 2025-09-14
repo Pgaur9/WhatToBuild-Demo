@@ -16,10 +16,6 @@ const FeaturesLazy = dynamic(() => import("@/components/Hero/Features"), {
   ssr: false,
   loading: () => null,
 });
-const CompareCardLazy = dynamic(() => import("@/components/Hero/ComapringThEDevCard").then(m => ({ default: m.CompareCard })), {
-  ssr: false,
-  loading: () => null,
-});
 const ReadmeLazy = dynamic(() => import("@/components/Hero/Readme"), {
   ssr: false,
   loading: () => null,
@@ -293,8 +289,6 @@ export default function Hero({
       {/* <CanvasCard /> */}
 
        
-
-      {deferHeavy && <CompareCardLazy />}
 
       {deferHeavy && <ReadmeLazy />}
 
