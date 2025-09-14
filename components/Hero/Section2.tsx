@@ -29,21 +29,6 @@ const Section2 = () => {
   // Main feature cards showcasing your website's capabilities
   const mainFeatures = [
     {
-      id: 'search',
-      title: "Smart Repository Search",
-      description: "Search through millions of GitHub repositories with AI-powered filters and instant results.",
-      icon: <FaSearch className="h-6 w-6" />,
-      href: "/search",
-      demo: "Try searching for 'react dashboard' or 'python ml'",
-      features: [
-        { icon: <FaFilter />, text: "Advanced Filters" },
-        { icon: <FaRocket />, text: "Instant Results" },
-        { icon: <FaBrain />, text: "AI-Powered" },
-        { icon: <FaStar />, text: "Quality Ranking" }
-      ],
-      gradient: "from-blue-600/20 via-cyan-500/20 to-blue-600/20"
-    },
-    {
       id: 'analyze',
       title: "Deep Code Analysis",
       description: "Get comprehensive insights into repository structure, dependencies, and code quality metrics.",
@@ -59,47 +44,62 @@ const Section2 = () => {
       gradient: "from-purple-600/20 via-pink-500/20 to-purple-600/20"
     },
     {
-      id: 'compare',
-      title: "Developer Showdown",
-      description: "Compare GitHub developers with fun roasts, detailed stats, and interactive animations.",
-      icon: <FaBalanceScale className="h-6 w-6" />,
-      href: "/compare",
-      demo: "Compare any two GitHub developers",
+      id: 'readme',
+      title: "README Generator",
+      description: "Generate high-quality README files with AI-powered analysis and live preview editing.",
+      icon: <FaCode className="h-6 w-6" />,
+      href: "/readme",
+      demo: "Generate README for any repository",
       features: [
-        { icon: <FaUsers />, text: "Head-to-Head" },
-        { icon: <FaChartLine />, text: "Detailed Stats" },
-        { icon: <FaLightbulb />, text: "AI Roasts" },
-        { icon: <FaRocket />, text: "Animations" }
+        { icon: <FaBrain />, text: "AI-Powered" },
+        { icon: <FaEye />, text: "Live Preview" },
+        { icon: <FaGithub />, text: "PR Creation" },
+        { icon: <FaRocket />, text: "Instant Draft" }
       ],
       gradient: "from-green-600/20 via-teal-500/20 to-green-600/20"
+    },
+    {
+      id: 'visualize',
+      title: "Architecture Visualization",
+      description: "Interactive flow diagrams and dependency graphs for better project understanding.",
+      icon: <FaEye className="h-6 w-6" />,
+      href: "/visualize",
+      demo: "Visualize repository architecture",
+      features: [
+        { icon: <FaEye />, text: "Flow Diagrams" },
+        { icon: <FaChartLine />, text: "Dependencies" },
+        { icon: <FaCode />, text: "Structure Maps" },
+        { icon: <FaRocket />, text: "Interactive" }
+      ],
+      gradient: "from-blue-600/20 via-cyan-500/20 to-blue-600/20"
     }
   ];
 
   // Secondary feature cards for additional capabilities
   const secondaryFeatures = [
     {
-      title: "Project Ideas Generator",
-      description: "Get AI-powered project suggestions tailored to your skills and interests.",
-      icon: <FaLightbulb className="h-5 w-5" />,
-      badge: "AI-Powered"
+      title: "Technology Stack Detection",
+      description: "Automatic identification of frameworks, libraries, and development tools used.",
+      icon: <FaCode className="h-5 w-5" />,
+      badge: "Smart"
     },
     {
-      title: "Repository Visualization",
-      description: "Interactive flow diagrams and dependency graphs for better understanding.",
+      title: "Dependency Mapping",
+      description: "Visualize project dependencies and relationships for better understanding.",
       icon: <FaEye className="h-5 w-5" />,
       badge: "Visual"
     },
     {
-      title: "Open Source Discovery",
-      description: "Find the best repositories to contribute to based on your expertise.",
-      icon: <FaGithub className="h-5 w-5" />,
-      badge: "Community"
+      title: "File Content Summarization",
+      description: "AI-powered summaries of key source files and project structure.",
+      icon: <FaBrain className="h-5 w-5" />,
+      badge: "AI-Powered"
     },
     {
-      title: "Code Quality Insights",
-      description: "Comprehensive analysis of code patterns, best practices, and improvements.",
-      icon: <FaCode className="h-5 w-5" />,
-      badge: "Analysis"
+      title: "Contributor Insights",
+      description: "Analyze team composition, contribution patterns, and development activity.",
+      icon: <FaUsers className="h-5 w-5" />,
+      badge: "Analytics"
     }
   ];
 

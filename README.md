@@ -1,6 +1,6 @@
-#  What to Build?
+#  What to Build - Repository Analysis Tools
 
-> **Discover, analyze, and build amazing projects with comprehensive GitHub insights**
+> **Analyze, understand, and visualize GitHub repositories with comprehensive insights**
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://wtb.niladri.tech)
 
@@ -8,19 +8,9 @@
 
 ## ✨ What is WhatToBuild?
 
-WhatToBuild is an  platform that helps developers discover, analyze, and understand open-source projects. Whether you're looking for inspiration, trying to understand complex codebases, or comparing developer profiles, WhatToBuild provides comprehensive insights to accelerate your development journey.
+WhatToBuild is an AI-powered platform that helps developers analyze, understand, and visualize GitHub repositories. Whether you're exploring complex codebases, documenting projects, or understanding project architecture, WhatToBuild provides comprehensive insights to accelerate your development workflow.
 
 ## 🌟 Key Features
-
-### 🔍 **Smart Project Search**
-- **Discovery**: Find relevant repositories based on concepts and ideas
-- **Project Idea Generation**: Get AI-generated project suggestions with tech stacks
-- **Relevance Scoring**: Advanced algorithms rank projects by relevance to your query
-- **Technology Filtering**: Search by programming languages and frameworks
-
-![Smart Project Search](public/GithubImages/search.png)
-
-
 
 ### 📊 **Deep Repository Analysis**
 - **Code Structure Analysis**: Understand project architecture and file organization
@@ -30,15 +20,6 @@ WhatToBuild is an  platform that helps developers discover, analyze, and underst
 - **Contributor Insights**: Analyze team composition and contribution patterns
 
 ![Deep Repository Analysis](public/GithubImages/analyze.png)
-
-### ⚖️ **Developer Comparison**
-- **Profile Analytics**: Compare GitHub profiles side-by-side
-- **Contribution Patterns**: Analyze coding activity and project diversity
-- **Repository Quality**: Evaluate star counts, fork ratios, and project impact
-- **Language Expertise**: Compare programming language proficiency
-- **Activity Metrics**: Track commits, issues, and collaboration patterns
-
-![Developer Comparison](public/GithubImages/compare.png)
 
 ### 📝 **Generate a Great README**
 - **Instant Draft**: Analyze your GitHub repository to generate a high‑quality README in seconds
@@ -58,14 +39,6 @@ WhatToBuild is an  platform that helps developers discover, analyze, and underst
 - **Contribution Heatmaps**: Timeline visualization of developer activity
 
 ![Interactive Visualizations](public/GithubImages/visualize.png)
-
-### 🔓 **Open Source Discovery**
-- **Good First Issues**: Find beginner-friendly contribution opportunities
-- **Bounty Issues**: Discover paid contribution opportunities
-- **Language-Specific Search**: Filter by programming languages
-- **Project Categorization**: Browse projects by type and domain
-
-![Open Source Discovery](public/GithubImages/opensource.png)
 
 ## 🛠️ Technology Stack
 
@@ -146,25 +119,24 @@ Navigate to [http://localhost:3000](http://localhost:3000) to see the applicatio
 
 ## 📱 Usage
 
-### Search Projects
-1. Visit the homepage and enter a concept or technology
-2. Browse AI-generated project ideas and relevant repositories
-3. Use filters to refine results by language, stars, or activity
-
 ### Analyze Repositories
-1. Click "Analyze" on any repository or enter a GitHub URL
-2. Explore file structure, dependencies, and code summaries
-3. View technology stack and architectural insights
+1. Visit the homepage and click "Analyze Repository"
+2. Enter a GitHub repository URL (e.g., `owner/repo`)
+3. Explore file structure, dependencies, and code summaries
+4. View technology stack and architectural insights
 
-### Compare Developers
-1. Navigate to the Compare section
-2. Enter two GitHub usernames
-3. Review detailed comparison metrics and visualizations
+### Generate README Files
+1. Navigate to the README section or click "Generate README"
+2. Enter a GitHub repository URL
+3. Add optional notes to customize tone and content
+4. Review the live preview and edit as needed
+5. Download, copy, or create a PR to update your repository
 
 ### Visualize Architecture
-1. Select "Visualize" for any repository
-2. Generate interactive diagrams and dependency graphs
-3. Export diagrams for documentation
+1. Visit any repository analysis page
+2. Click "Visualize" or navigate to the visualization section
+3. Generate interactive diagrams and dependency graphs
+4. Export diagrams for documentation
 
 ## 🏗️ Project Structure
 
@@ -172,14 +144,19 @@ Navigate to [http://localhost:3000](http://localhost:3000) to see the applicatio
 WhatToBuild/
 ├── app/                    # Next.js App Router pages
 │   ├── analyze/           # Repository analysis
-│   ├── compare/           # Developer comparison
-│   ├── search/            # Project search
+│   ├── readme/            # README generation
 │   ├── visualize/         # Architecture visualization
 │   └── api/               # API routes
+│       ├── analyze-repo/  # Repository analysis API
+│       ├── generate-readme/ # README generation API
+│       ├── create-readme-pr/ # PR creation API
+│       ├── get-file-content/ # File content API
+│       ├── get-repo-issues/ # Repository issues API
+│       └── visualize-repo/ # Visualization API
 ├── components/            # React components
 │   ├── Hero/             # Landing page sections
 │   ├── ui/               # Reusable UI components
-│   └── page/             # Page-specific components
+│   └── sections/         # Page-specific components
 ├── lib/                  # Utility functions
 │   ├── github.ts         # GitHub API integration
 │   ├── gemini.ts         # AI service integration

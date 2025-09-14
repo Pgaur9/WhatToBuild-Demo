@@ -7,13 +7,20 @@ const page = () => {
     <div className="min-h-screen bg-black text-white">
       <Hero
         title="What to Build?"
-        description="Enter a concept to discover and analyze relevant open-source projects."
+        description="Analyze GitHub repositories with comprehensive insights, generate README files, and visualize project architecture."
         badge={false}
-        buttons={[{
-          href: "/search",
-          text: "Search Projects",
-          variant: "default"
-        }]} 
+        buttons={[
+          {
+            href: "/analyze",
+            text: "Analyze Repository",
+            variant: "default"
+          },
+          {
+            href: "/readme",
+            text: "Generate README",
+            variant: "outline"
+          }
+        ]} 
       />
 
        
