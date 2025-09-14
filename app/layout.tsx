@@ -12,8 +12,8 @@ import LiquidGlassHeader from "@/components/LiquidGlassHeader";
 // const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "What To Build",
-  description: "Get AI-powered project ideas, find similar repositories, and get a visual plan to build it.",
+  title: "What to Build - Repository Analysis Tools",
+  description: "Analyze GitHub repositories with comprehensive insights, generate README files, and visualize project architecture.",
 };
 
 export default function RootLayout({

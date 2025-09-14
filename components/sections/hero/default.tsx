@@ -65,9 +65,9 @@ export default function Hero({
   description = "Enter a concept to discover and analyze relevant open-source projects.",
   mockup = (
     <Screenshot
-      srcLight="/GithubImages/search.png"
-      srcDark="/GithubImages/search.png"
-      alt="Search UI app screenshot"
+      srcLight="/GithubImages/analyze.png"
+      srcDark="/GithubImages/analyze.png"
+      alt="Repository Analysis UI screenshot"
       width={1248}
       height={765}
       className="w-full"
@@ -251,7 +251,7 @@ export default function Hero({
           </div>
           {mockup !== false && (
             <div className="relative w-full pt-6 pb-6">
-              <a href="/search" className="block">
+              <a href="/analyze" className="block">
                 <MockupFrame
                   className="animate-appear opacity-0 delay-700"
                   size="small"

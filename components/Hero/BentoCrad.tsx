@@ -7,17 +7,9 @@ import Link from "next/link";
 export function BentoCrad() {
   return (
     <div className="w-full">
-      <ul className="grid grid-cols-1 gap-4 md:grid-cols-12 md:grid-rows-3 lg:gap-6 xl:max-h-[34rem] xl:grid-rows-2">
+      <ul className="grid grid-cols-1 gap-4 md:grid-cols-12 md:grid-rows-2 lg:gap-6 xl:max-h-[24rem] xl:grid-rows-2">
         <GridItem
           area="md:[grid-area:1/1/2/7] xl:[grid-area:1/1/2/5]"
-          icon={<Search className="h-4 w-4 text-blue-400" />}
-          title="Search Projects"
-          description="Find relevant open-source repositories, generate project ideas, and discover trending projects to contribute to."
-          href="/search"
-        />
-
-        <GridItem
-          area="md:[grid-area:1/7/2/13] xl:[grid-area:2/1/3/5]"
           icon={<BarChart3 className="h-4 w-4 text-green-400" />}
           title="Analyze Repository"
           description="Deep dive into repository structure, analyze code files, view issues, and understand project architecture."
@@ -25,23 +17,15 @@ export function BentoCrad() {
         />
 
         <GridItem
-          area="md:[grid-area:2/1/3/7] xl:[grid-area:1/5/3/8]"
-          icon={<GitCompare className="h-4 w-4 text-purple-400" />}
-          title="Compare Developers"
-          description="Compare GitHub profiles, analyze contribution patterns, and visualize developer statistics side by side."
-          href="/compare"
+          area="md:[grid-area:1/7/2/13] xl:[grid-area:1/5/2/9]"
+          icon={<Code className="h-4 w-4 text-blue-400" />}
+          title="Generate README"
+          description="Create high-quality README files with AI-powered analysis, live preview editing, and GitHub PR integration."
+          href="/readme"
         />
 
         <GridItem
-          area="md:[grid-area:2/7/2/13] xl:[grid-area:1/8/2/13]"
-          icon={<Code className="h-4 w-4 text-orange-400" />}
-          title="Open Source Issues"
-          description="Discover good first issues, bounty issues, and major contributions across different programming languages."
-          href="/opensource"
-        />
-
-        <GridItem
-          area="md:[grid-area:3/1/4/13] xl:[grid-area:2/8/3/13]"
+          area="md:[grid-area:2/1/3/13] xl:[grid-area:1/9/3/13]"
           icon={<Eye className="h-4 w-4 text-cyan-400" />}
           title="Visualize Repository"
           description="Generate interactive flow diagrams and visual representations of repository architecture and dependencies."
