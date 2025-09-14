@@ -235,39 +235,47 @@ export async function POST(req: NextRequest) {
       ? `${basePrompt}\n\nAdditional author notes/preferences:\n${userNotes}`
       : basePrompt;
 
-    // Call Gemini server-side using env key
-    const apiKey = process.env.GEMINI_API_KEY_SECOND;
+    // Call Oracle AI server-side using env key
+    const apiKey = process.env.ORACLE_AI_API_KEY;
     if (!apiKey) {
-      return NextResponse.json({ error: 'Server misconfigured: GEMINI_API_KEY_SECOND missing' }, { status: 500 });
+      return NextResponse.json({ error: 'Server misconfigured: ORACLE_AI_API_KEY missing' }, { status: 500 });
     }
 
-    const geminiResp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
+    const oracleResp = await fetch('https://generativeai.aiservice.us-ashburn-1.oci.oraclecloud.com/20231130/actions/generateText', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-goog-api-key': apiKey,
+        'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        contents: [
-          { parts: [{ text: finalPrompt }] }
-        ],
-        generationConfig: {
+        servingMode: {
+          servingType: "ON_DEMAND",
+          modelId: "cohere.command-r-plus"
+        },
+        chatRequest: {
+          messages: [
+            {
+              role: 'user',
+              content: finalPrompt
+            }
+          ],
+          maxTokens: 4096,
           temperature: 0.3,
-          maxOutputTokens: 4096
+          topP: 0.9
         }
       })
     });
 
-    if (!geminiResp.ok) {
-      const text = await geminiResp.text();
-      return NextResponse.json({ error: `Gemini error ${geminiResp.status}: ${text}` }, { status: 500 });
+    if (!oracleResp.ok) {
+      const text = await oracleResp.text();
+      return NextResponse.json({ error: `Oracle AI error ${oracleResp.status}: ${text}` }, { status: 500 });
     }
 
-    const data = await geminiResp.json();
-    // Extract text from Gemini response
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const data = await oracleResp.json();
+    // Extract text from Oracle AI response
+    const text = data?.chatResponse?.text || data?.text || '';
     if (!text) {
-      return NextResponse.json({ error: 'Empty response from Gemini' }, { status: 500 });
+      return NextResponse.json({ error: 'Empty response from Oracle AI' }, { status: 500 });
     }
     const cleaned = normalizeMarkdown(text);
     

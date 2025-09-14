@@ -234,7 +234,7 @@ const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
         setKeyFiles(topFiles);
         getKeyFilesCache()[repoFullName] = topFiles;
 
-        // Do NOT prefetch Gemini analysis for all files. Only fetch on click in the dialog.
+        // Do NOT prefetch Oracle AI analysis for all files. Only fetch on click in the dialog.
       } catch (err) {
         if (typeof err === 'object' && err !== null && 'name' in err && (err as { name?: string }).name === 'AbortError') {
           setError('Request timed out. The repository might be too large or the server is busy.');
@@ -325,7 +325,7 @@ const getKeyFilesCache = (): { [key: string]: KeyFile[] } => {
     return reason;
   }
 
-  // Function to get detailed analysis of file content using Gemini
+  // Function to get detailed analysis of file content using Oracle AI
   async function getDetailedFileAnalysis(repoFullName: string, filePath: string): Promise<string> {
     // Use AbortController to handle timeouts
     const controller = new AbortController();

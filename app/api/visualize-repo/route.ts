@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GitHubService } from '@/lib/github';
-import { GeminiService } from '@/lib/gemini';
+import { OracleAIService } from '@/lib/oracle-ai';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const github = new GitHubService();
-    const gemini = new GeminiService();
+    const oracleAI = new OracleAIService();
 
     // Fetch README (best-effort)
     let readmeContent: string | undefined;
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
       if (path.startsWith('.github/workflows/')) categories.workflows.push(p);
     }
 
-    const { diagram, prompt } = await gemini.generateDetailedArchitectureDiagram({
+    const { diagram, prompt } = await oracleAI.generateDetailedArchitectureDiagram({
       repoFullName,
       readme: readmeContent,
       fileTreeSample: filePaths.slice(0, 400),

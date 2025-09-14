@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ProjectIdea } from '@/lib/gemini';
+import { ProjectIdea } from '@/lib/oracle-ai';
 import { BrainCircuit, Wand2, Loader2 } from 'lucide-react';
 
 interface ProjectIdeaCardProps {
