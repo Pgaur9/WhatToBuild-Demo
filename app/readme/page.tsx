@@ -82,8 +82,8 @@ export default function ReadmePage() {
   const [markdown, setMarkdown] = useState<string>("\n# README\n\nStart by generating a README from your repository, then edit here. ✨\n");
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [geminiKey, setGeminiKey] = useState<string>("");
-  const [showGeminiDialog, setShowGeminiDialog] = useState(false);
+  const [oracleKey, setOracleKey] = useState<string>("");
+  const [showOracleDialog, setShowOracleDialog] = useState(false);
   const [refineInstruction, setRefineInstruction] = useState<string>("Improve clarity and conciseness while preserving meaning.");
   const [isRefining, setIsRefining] = useState(false);
   const [hasSelection, setHasSelection] = useState(false);
@@ -143,8 +143,8 @@ export default function ReadmePage() {
     try {
       const saved = localStorage.getItem("wtb_github_token");
       if (saved) setGithubToken(saved);
-      const g = localStorage.getItem("wtb_gemini_key");
-      if (g) setGeminiKey(g);
+      const o = localStorage.getItem("wtb_oracle_key");
+      if (o) setOracleKey(o);
       const savedMd = localStorage.getItem("wtb_readme_markdown");
       if (savedMd) setMarkdown(savedMd);
       const savedNotes = localStorage.getItem("wtb_readme_user_notes");
@@ -312,12 +312,12 @@ export default function ReadmePage() {
     } catch {}
   }, [userNotes]);
 
-  const handleSaveGeminiKey = () => {
+  const handleSaveOracleKey = () => {
     try {
-      if (geminiKey) localStorage.setItem("wtb_gemini_key", geminiKey);
-      else localStorage.removeItem("wtb_gemini_key");
+      if (oracleKey) localStorage.setItem("wtb_oracle_key", oracleKey);
+      else localStorage.removeItem("wtb_oracle_key");
     } catch {}
-    setShowGeminiDialog(false);
+    setShowOracleDialog(false);
   };
 
   const handleGenerate = async () => {
@@ -429,7 +429,7 @@ export default function ReadmePage() {
     }
   };
 
-  // Refine selected text in editor using user-provided Gemini key (client-side)
+  // Refine selected text in editor using user-provided Oracle AI key (client-side)
   const handleRefineSelection = async () => {
     if (!editorRef.current) return;
     const textarea = editorRef.current;
@@ -443,35 +443,45 @@ export default function ReadmePage() {
       setTimeout(() => setFlashEditor(false), 900);
       return;
     }
-    if (!geminiKey) {
-      setShowGeminiDialog(true);
+    if (!oracleKey) {
+      setShowOracleDialog(true);
       return;
     }
     setIsRefining(true);
     setError(null);
     try {
       const prompt = `Rewrite the following Markdown selection according to the instruction.\nInstruction: ${refineInstruction}\nSelection:\n\n${selected}`;
-      const resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', {
+      const resp = await fetch('https://generativeai.aiservice.us-ashburn-1.oci.oraclecloud.com/20231130/actions/generateText', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-goog-api-key': geminiKey,
+          'Authorization': `Bearer ${oracleKey}`,
         },
         body: JSON.stringify({
-          contents: [ { parts: [ { text: prompt } ] } ],
-          generationConfig: {
+          servingMode: {
+            servingType: "ON_DEMAND",
+            modelId: "cohere.command-r-plus"
+          },
+          chatRequest: {
+            messages: [
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            maxTokens: 1024,
             temperature: 0.3,
-            maxOutputTokens: 1024,
+            topP: 0.9
           }
         })
       });
       if (!resp.ok) {
         const text = await resp.text();
-        throw new Error(`Gemini error ${resp.status}: ${text}`);
+        throw new Error(`Oracle AI error ${resp.status}: ${text}`);
       }
       const data = await resp.json();
-      const refined = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-      if (!refined) throw new Error('Empty response from Gemini');
+      const refined = data?.chatResponse?.text?.trim() || data?.text?.trim();
+      if (!refined) throw new Error('Empty response from Oracle AI');
       // Animate replace selection
       await animateRefineReplace(start, end, refined);
     } catch (e: unknown) {
@@ -651,7 +661,7 @@ export default function ReadmePage() {
                     onClick={() => setShowToolbarRefine((v) => !v)}
                     disabled={isGenerating}
                     className="rounded-full bg-indigo-600/25 hover:bg-indigo-600/35 text-indigo-100 border border-indigo-400/40 backdrop-blur px-3 py-2 shadow shrink-0"
-                    title={geminiKey ? "Refine selected text with AI" : "Add your Gemini API key to enable refine"}
+                    title={oracleKey ? "Refine selected text with AI" : "Add your Oracle AI API key to enable refine"}
                   >
                     {isRefining ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Wand2 className="w-4 h-4 mr-1" />}
                     AI Refine
@@ -690,8 +700,8 @@ export default function ReadmePage() {
                           Go
                         </Button>
                       </div>
-                      {!geminiKey && (
-                        <div className="mt-2 text-[11px] text-amber-300/90">Add your Gemini API key to enable refine.</div>
+                      {!oracleKey && (
+                        <div className="mt-2 text-[11px] text-amber-300/90">Add your Oracle AI API key to enable refine.</div>
                       )}
                       {!hasSelection && (
                         <div className="mt-1 text-[11px] text-white/70">Tip: select some text in the editor.</div>
@@ -929,32 +939,32 @@ export default function ReadmePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Gemini key dialog for AI refine */}
-      <Dialog open={showGeminiDialog} onOpenChange={setShowGeminiDialog}>
+      {/* Oracle AI key dialog for AI refine */}
+      <Dialog open={showOracleDialog} onOpenChange={setShowOracleDialog}>
         <DialogContent className="bg-black/70 backdrop-blur-xl border border-white/10">
           <DialogHeader>
-            <DialogTitle className="text-white">Enable AI Refine (Gemini)</DialogTitle>
+            <DialogTitle className="text-white">Enable AI Refine (Oracle AI)</DialogTitle>
             <DialogDescription className="text-white/60">
-              Enter your personal Gemini API key to refine selected parts of your README on-device. We never store or send your key to our server.
+              Enter your personal Oracle AI API key to refine selected parts of your README on-device. We never store or send your key to our server.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <label className="block text-sm text-white/70">Gemini API Key</label>
+            <label className="block text-sm text-white/70">Oracle AI API Key</label>
             <Input
               type="password"
-              value={geminiKey}
-              onChange={(e) => setGeminiKey(e.target.value)}
-              placeholder="AIza********************************"
+              value={oracleKey}
+              onChange={(e) => setOracleKey(e.target.value)}
+              placeholder="ocid1.apikey.********************************"
               className="bg-black/40 border-white/20 text-white"
             />
             <div className="text-xs text-white/50">
-              Get a key from Google AI Studio. The key stays in your browser (localStorage) and requests go directly from your device to Gemini.
+              Get a key from Oracle Cloud Console. The key stays in your browser (localStorage) and requests go directly from your device to Oracle AI.
             </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="ghost" className="text-white/80" onClick={() => setShowGeminiDialog(false)}>
+              <Button variant="ghost" className="text-white/80" onClick={() => setShowOracleDialog(false)}>
                 Cancel
               </Button>
-              <Button className="bg-white/10 hover:bg-white/20 text-white" onClick={handleSaveGeminiKey}>
+              <Button className="bg-white/10 hover:bg-white/20 text-white" onClick={handleSaveOracleKey}>
                 Save
               </Button>
             </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GitHubService } from '@/lib/github';
-import { GeminiService } from '@/lib/gemini';
+import { OracleAIService } from '@/lib/oracle-ai';
 
 // List of common source code extensions to prioritize for analysis
 const SOURCE_CODE_EXTENSIONS = [
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
   const [owner, repo] = repoFullName.split('/');
   const github = new GitHubService();
-  const gemini = new GeminiService();
+  const oracleAI = new OracleAIService();
 
   try {
     // 1. Get the full file tree
@@ -143,8 +143,8 @@ export async function GET(request: NextRequest) {
       throw new Error('Could not fetch content for any of the relevant files.');
     }
 
-    // 4. Use Gemini to summarize the files
-    const summaries = await gemini.summarizeFiles(validFiles);
+    // 4. Use Oracle AI to summarize the files
+    const summaries = await oracleAI.summarizeFiles(validFiles);
 
     return NextResponse.json({ summaries });
 

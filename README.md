@@ -4,8 +4,6 @@
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://wtb.niladri.tech)
 
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-
 ## ✨ What is WhatToBuild?
 
 WhatToBuild is an AI-powered platform that helps developers analyze, understand, and visualize GitHub repositories. Whether you're exploring complex codebases, documenting projects, or understanding project architecture, WhatToBuild provides comprehensive insights to accelerate your development workflow.
@@ -26,7 +24,7 @@ WhatToBuild is an AI-powered platform that helps developers analyze, understand,
 - **Flexible Input**: Use `owner/repo` or a full GitHub URL
 - **Personalization**: Add optional notes to steer tone, structure, and highlights
 - **Live Preview**: Edit Markdown with a GitHub‑flavored live preview side‑by‑side
-- **AI Refine**: Improve sections, wording, and structure via Google Gemini
+- **AI Refine**: Improve sections, wording, and structure via Oracle AI
 - **One‑Click Actions**: Copy, download, or create a PR to update `README.md` in your repo
 - **Private Repos**: Use a personal access token in-session for secure access
 
@@ -57,7 +55,7 @@ WhatToBuild is an AI-powered platform that helps developers analyze, understand,
 - **React Three Fiber** - 3D graphics and animations
 
 ### **AI & APIs**
-- **Google Generative AI** - AI-powered analysis and summaries
+- **Oracle AI** - AI-powered analysis and summaries
 - **GitHub API** - Repository data and insights
 - **Mermaid** - Diagram generation
 
@@ -77,7 +75,7 @@ WhatToBuild is an AI-powered platform that helps developers analyze, understand,
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/NiladriHazra/WhatToBuild.git
+git clone https://github.com/YourUsername/WhatToBuild.git
 cd WhatToBuild
 ```
 
@@ -100,7 +98,7 @@ cp .env.example .env.local
 Add your API keys to `.env.local`:
 ```env
 GITHUB_TOKEN=your_github_token_here
-GOOGLE_AI_API_KEY=your_google_ai_key_here
+ORACLE_AI_API_KEY=your_oracle_ai_key_here
 ```
 
 4. **Run the development server**
@@ -191,14 +189,10 @@ We welcome contributions! Here's how to get started:
 - Add tests for new features
 - Update documentation as needed
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 🙏 Acknowledgments
 
 - **GitHub API** for providing comprehensive repository data
-- **Google Generative AI** for powering intelligent analysis
+- **Oracle AI** for powering intelligent analysis
 - **Vercel** for seamless deployment and hosting
 - **Next.js Team** for the amazing framework
 - **Open Source Community** for inspiration and tools
@@ -212,15 +206,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🔗 Links
 
-- **Live Demo**: [what-to-build.niladri.tech](https://what-to-build.niladri.tech)
-- **Repository**: [github.com/NiladriHazra/WhatToBuild](https://github.com/NiladriHazra/WhatToBuild)
-- **Issues**: [Report bugs or request features](https://github.com/NiladriHazra/WhatToBuild/issues)
+- **Live Demo**: [what-to-build.demo.tech](https://what-to-build.demo.tech)
+- **Repository**: [github.com/YourUsername/WhatToBuild](https://github.com/YourUsername/WhatToBuild)
+- **Issues**: [Report bugs or request features](https://github.com/YourUsername/WhatToBuild/issues)
 
 ---
 
 <div align="center">
 
-  Built with ❤️ by [Niladri Hazra](https://github.com/NiladriHazra)  
+  Built with ❤️ for the community  
   ⭐ Star this repo if you find it helpful!
 
 </div>

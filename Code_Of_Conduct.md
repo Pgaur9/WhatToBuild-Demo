@@ -37,11 +37,8 @@ This Code of Conduct applies within all project spaces and also applies when an 
 
 If you experience or witness unacceptable behavior, or have any other concerns:
 
-- Preferably, send a private report to the maintainer: Niladri Hazra
-  - GitHub: https://github.com/NiladriHazra
-  - LinkedIn: https://www.linkedin.com/in/niladri-hazra-b573282a7/
-  - Twitter/X: https://x.com/byteHumi
-- If you are comfortable, you may also open an issue on the repository with the "coc-report" label. Avoid including sensitive details publicly; maintainers can follow up privately.
+- Preferably, send a private report to the project maintainers
+- You may also open an issue on the repository with the "coc-report" label. Avoid including sensitive details publicly; maintainers can follow up privately.
 
 All reports will be reviewed and investigated promptly and fairly. The maintainers will respect the privacy and security of the reporter of any incident.
 

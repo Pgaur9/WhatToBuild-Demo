@@ -1,12 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  throw new Error('GEMINI_API_KEY is not defined in the environment variables');
-}
-console.log('Using Gemini API Key:', apiKey ? `loaded (ends with ${apiKey.slice(-4)})` : 'not loaded');
-
-const genAI = new GoogleGenerativeAI(apiKey);
+const apiKey = process.env.ORACLE_AI_API_KEY;
 
 export interface ProjectIdea {
   title: string;
@@ -48,11 +40,66 @@ export interface GitHubRepo {
   stargazers_count: number;
 }
 
-export class GeminiService {
-  private model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+export class OracleAIService {
+  private apiKey: string;
+  private baseUrl: string;
 
   constructor() {
-    console.log('GeminiService initialized with model: gemini-2.5-flash');
+    if (!apiKey) {
+      throw new Error('ORACLE_AI_API_KEY is not defined in the environment variables');
+    }
+    console.log('Using Oracle AI API Key:', apiKey ? `loaded (ends with ${apiKey.slice(-4)})` : 'not loaded');
+    this.apiKey = apiKey;
+    this.baseUrl = 'https://generativeai.aiservice.us-ashburn-1.oci.oraclecloud.com/20231130';
+    console.log('OracleAIService initialized');
+  }
+
+  private async callOracleAPI(prompt: string, systemPrompt?: string): Promise<string> {
+    try {
+      const messages = [];
+      
+      if (systemPrompt) {
+        messages.push({
+          role: 'system',
+          content: systemPrompt
+        });
+      }
+      
+      messages.push({
+        role: 'user',
+        content: prompt
+      });
+
+      const response = await fetch(`${this.baseUrl}/actions/generateText`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          servingMode: {
+            servingType: "ON_DEMAND",
+            modelId: "cohere.command-r-plus"
+          },
+          chatRequest: {
+            messages: messages,
+            maxTokens: 4000,
+            temperature: 0.7,
+            topP: 0.9
+          }
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Oracle AI API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.chatResponse?.text || data.text || '';
+    } catch (error) {
+      console.error('Oracle AI API call failed:', error);
+      throw new Error('Failed to generate content with Oracle AI');
+    }
   }
 
   async generateDetailedArchitectureDiagram(context: {
@@ -93,11 +140,10 @@ Diagram requirements:
       readmePreview: readme ? readme.slice(0, 8000) : null
     };
 
-    const prompt = `${system}\n${guidance}\nContext:\n${JSON.stringify(input, null, 2)}`;
+    const prompt = `${guidance}\nContext:\n${JSON.stringify(input, null, 2)}`;
 
     try {
-      const result = await this.model.generateContent(prompt);
-      const responseText = result.response.text();
+      const responseText = await this.callOracleAPI(prompt, system);
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('No JSON object with diagram found');
       const parsed = JSON.parse(jsonMatch[0]);
@@ -145,19 +191,14 @@ Return a JSON object with the following structure:
 Make it practical, achievable, and exciting to build.
 `;
 
-    const result = await this.model.generateContent([
-      { text: systemPrompt },
-      { text: `User prompt: ${prompt}` }
-    ]);
-
-    const response = result.response.text();
+    const response = await this.callOracleAPI(`User prompt: ${prompt}`, systemPrompt);
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
     
-    throw new Error('Failed to parse project idea from Gemini response');
+    throw new Error('Failed to parse project idea from Oracle AI response');
   }
 
   async generateProjectPlan(idea: ProjectIdea, userSkills: Record<string, number>): Promise<ProjectPlan> {
@@ -188,19 +229,14 @@ User skills: ${JSON.stringify(userSkills)}
 Adjust complexity based on skill levels.
 `;
 
-    const result = await this.model.generateContent([
-      { text: systemPrompt },
-      { text: `Project: ${JSON.stringify(idea)}` }
-    ]);
-
-    const response = result.response.text();
+    const response = await this.callOracleAPI(`Project: ${JSON.stringify(idea)}`, systemPrompt);
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     
     if (jsonMatch) {
       return JSON.parse(jsonMatch[0]);
     }
     
-    throw new Error('Failed to parse project plan from Gemini response');
+    throw new Error('Failed to parse project plan from Oracle AI response');
   }
 
   async generateAIIDEPrompt(projectPlan: ProjectPlan): Promise<string> {
@@ -219,12 +255,7 @@ The prompt should include:
 Make it actionable and complete so the AI IDE can build the entire project.
 `;
 
-    const result = await this.model.generateContent([
-      { text: systemPrompt },
-      { text: `Project Plan: ${JSON.stringify(projectPlan)}` }
-    ]);
-
-    return result.response.text();
+    return await this.callOracleAPI(`Project Plan: ${JSON.stringify(projectPlan)}`, systemPrompt);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -250,12 +281,7 @@ Return JSON format:
 }
 `;
 
-    const result = await this.model.generateContent([
-      { text: systemPrompt },
-      { text: `Repository data: ${JSON.stringify(repoData)}` }
-    ]);
-
-    const response = result.response.text();
+    const response = await this.callOracleAPI(`Repository data: ${JSON.stringify(repoData)}`, systemPrompt);
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     
     if (jsonMatch) {
@@ -294,14 +320,10 @@ Here are the repositories to rank:
     }));
 
     try {
-      const result = await this.model.generateContent([
-        { text: systemPrompt },
-        { text: JSON.stringify(repoData, null, 2) }
-      ]);
-      const responseText = result.response.text();
+      const responseText = await this.callOracleAPI(JSON.stringify(repoData, null, 2), systemPrompt);
       const jsonMatch = responseText.match(/(\[[\s\S]*\])/);
       if (!jsonMatch) {
-        throw new Error('Failed to find JSON array in Gemini response for ranking.');
+        throw new Error('Failed to find JSON array in Oracle AI response for ranking.');
       }
       const rankings: { id: number; relevance_score: number; relevance_reasoning: string }[] = JSON.parse(jsonMatch[0]);
 
@@ -319,8 +341,8 @@ Here are the repositories to rank:
       return mergedRepos.sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
 
     } catch (error) {
-      console.error('Error ranking repositories with Gemini:', error);
-      // If Gemini fails, return the original list sorted by stars as a fallback
+      console.error('Error ranking repositories with Oracle AI:', error);
+      // If Oracle AI fails, return the original list sorted by stars as a fallback
       return repos.sort((a, b) => b.stargazers_count - a.stargazers_count);
     }
   }
@@ -354,19 +376,18 @@ CRITICAL RULES - generate valid Mermaid syntax:
     const fullPrompt = `${prompt}\n${readmeContent.substring(0, 30000)}`;
 
     try {
-      const result = await this.model.generateContent(fullPrompt);
-      const responseText = result.response.text();
+      const responseText = await this.callOracleAPI(fullPrompt);
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
       if (!jsonMatch) {
-        throw new Error('Failed to find JSON object in Gemini response for diagram.');
+        throw new Error('Failed to find JSON object in Oracle AI response for diagram.');
       }
 
       const parsed = JSON.parse(jsonMatch[0]);
       let diagram = parsed.diagram;
 
       if (typeof diagram !== 'string' || !diagram.trim().startsWith('graph')) {
-        throw new Error('Invalid diagram format received from Gemini.');
+        throw new Error('Invalid diagram format received from Oracle AI.');
       }
 
       // Clean the diagram to ensure valid Mermaid syntax
@@ -377,7 +398,7 @@ CRITICAL RULES - generate valid Mermaid syntax:
         prompt: fullPrompt
       };
     } catch (error) {
-      console.error('Error generating architecture diagram with Gemini:', error);
+      console.error('Error generating architecture diagram with Oracle AI:', error);
       throw new Error('Failed to generate diagram from README.');
     }
   }
@@ -400,12 +421,7 @@ Here are the files to summarize:
     const fileData = files.map(f => ({ path: f.path, content: f.content.substring(0, 2000) })); // Truncate content to be safe
 
     try {
-      const result = await this.model.generateContent([
-        { text: systemPrompt },
-        { text: JSON.stringify(fileData, null, 2) },
-      ]);
-      const response = await result.response;
-      const rawText = response.text();
+      const rawText = await this.callOracleAPI(JSON.stringify(fileData, null, 2), systemPrompt);
 
       // Try to extract a JSON array from the response robustly
       const tryParseArray = (text: string): unknown => {
@@ -437,7 +453,7 @@ Here are the files to summarize:
       try {
         parsed = tryParseArray(rawText);
       } catch (e) {
-        console.error('Gemini summarizeFiles raw response (truncated):', rawText.slice(0, 400));
+        console.error('Oracle AI summarizeFiles raw response (truncated):', rawText.slice(0, 400));
         throw e;
       }
 
@@ -463,7 +479,7 @@ Here are the files to summarize:
       }));
       return fallback;
     } catch (error) {
-      console.error('Error summarizing files with Gemini:', error);
+      console.error('Error summarizing files with Oracle AI:', error);
       // Final fallback to avoid breaking /analyze entirely
       const safeFallback = files.map(({ path, content }) => ({
         path,
@@ -475,11 +491,9 @@ Here are the files to summarize:
 
   async generateContent(prompt: string): Promise<string> {
     try {
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      return response.text();
+      return await this.callOracleAPI(prompt);
     } catch (error) {
-      console.error('Error generating content with Gemini:', error);
+      console.error('Error generating content with Oracle AI:', error);
       throw new Error('Failed to generate content.');
     }
   }
